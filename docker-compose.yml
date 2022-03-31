@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  server:
+    container_name: server
+    build: ./server
+    volumes:
+      - /usr/share/codeconnected/code_runner/client_tls_certificates:/code_runner_certs
+    env_file:
+      - ./server/.env
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - "80:80"
