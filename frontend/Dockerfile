@@ -12,4 +12,3 @@ COPY ./codeconnected-nginx.conf .
 WORKDIR /usr/share/nginx/html
 COPY --from=js-builder /buildstep/index.html .
 COPY --from=js-builder /buildstep/public .
-EXPOSE 80

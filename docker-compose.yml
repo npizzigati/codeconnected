@@ -7,8 +7,12 @@ services:
       - /usr/share/codeconnected/code_runner/client_tls_certificates:/code_runner_certs
     env_file:
       - ./server/.env
+    restart: always
   frontend:
     container_name: frontend
     build: ./frontend
     ports:
-      - "80:80"
+      - "127.0.0.1:5000:80"
+    depends_on:
+      - "server"
+    restart: always
