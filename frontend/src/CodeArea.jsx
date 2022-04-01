@@ -66,7 +66,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: body
     };
-    // fetch('http://127.0.0.1:8080/executeContent', options)
     fetch('/api/executecontent', options)
       .then(response => response.json())
       .then(data => {
