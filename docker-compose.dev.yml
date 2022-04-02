@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  server:
+    volumes:
+      - ./server/bin:/home/appuser
+  frontend:
+    volumes:
+      - ./frontend/public:/usr/share/nginx/html

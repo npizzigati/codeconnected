@@ -1,16 +1,17 @@
 # syntax=docker/dockerfile:1
 
 FROM golang:1.17.8 AS go-builder
-WORKDIR /codeconnected-buildstep/
+WORKDIR /codeconnected-buildstep
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN GOOS=linux go build -o app .
+RUN GOOS=linux go build -o ./bin/app .
 
-# FROM gcr.io/distroless/base-debian11
-FROM ubuntu:20.04
-WORKDIR /app
-COPY --from=go-builder /codeconnected-buildstep/app ./
-# USER nonroot:nonroot
+
+FROM debian:11
+RUN groupadd -r appuser && useradd -m -r appuser -g appuser
+WORKDIR /home/appuser
+COPY --from=go-builder /codeconnected-buildstep/bin/app ./
+USER appuser:appuser
 CMD ["./app"]
