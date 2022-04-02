@@ -6,20 +6,11 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"io"
 	"net/http"
 )
-
-func init() {
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		fmt.Println("No env file found (env may be provided through Docker).")
-	}
-}
 
 func executeContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type contentModel struct {
