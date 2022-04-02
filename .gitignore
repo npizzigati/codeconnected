@@ -1,3 +1,4 @@
 **/*.env
 **/node_modules
 server/bin/
+frontend/public/dist/
