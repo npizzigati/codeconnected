@@ -13,18 +13,50 @@ import { WebrtcProvider } from 'y-webrtc';
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
   const replCommand = useRef('');
+  const replCaretPos = useRef(0);
   const codeAreaDOMRef = useRef(null);
   const [sharedOutputRef, setSharedOutputRef] = useState('');
   const [outputDisplay, setOutputDisplay] = useState('');
-  const [replDisplay, setReplDisplay] =
+  const [replText, setReplText] =
     useReducer((state, change) => {
+      let newContent;
       switch (change.action) {
       case 'add':
-        return state + change.char;
+        if (change.source === 'runner') {
+          newContent = state.content + change.char;
+          replCaretPos.current = newContent.length;
+        } else {
+          replCommand.current = replCommand.current + ev.key;
+          newContent = state.content.slice(0, replCaretPos.current - 1) +
+            change.char +
+            state.content.slice(replCaretPos.current - 1);
+        }
+        break;
       case 'remove':
-        return removeCommandFromDisplay(change.command, state);
+        newContent = removeCommandFromDisplay(change.command, state.content);
+        break;
+      case 'backspace':
+        newContent = state.content.slice(0, state.content.length - 1);
+        replCaretPos.current -= 1;
+        break;
+      case 'none':
+        newContent = state.content;
+        break;
       }
-    }, '');
+      // Insert caret
+      let beforeCursor, underCursor, afterCursor;
+      console.log('replCaretPos.current ' + replCaretPos.current);
+      console.log('newContent.length ' + newContent.length);
+      if (replCaretPos.current === newContent.length) {
+        beforeCursor = newContent;
+        underCursor = ' ';
+      } else {
+        beforeCursor = newContent.slice(0, replCaretPos.current);
+        underCursor = newContent[replCaretPos.current];
+        afterCursor = newContent.slice(replCaretPos.current + 1);
+      }
+      return { content: newContent, beforeCursor, underCursor, afterCursor };
+    }, { content: '' });
   const [ws, setWs] = useState(null);
   /* const [replFocused, setReplFocused] = useState(false); */
   const [cmRef, setCmRef] = useState(null);
@@ -68,8 +100,10 @@ function CodeArea ({ codeContent, setCodeContent }) {
       <textarea ref={codeAreaDOMRef} />
       <button onClick={executeContent}>Run</button>
       <button onClick={openReplWs}>Open My Repl</button>
-      <div id='repl' tabIndex='0' onKeyPress={handleKeyPress}>
-        {replDisplay}
+      <div id='repl' tabIndex='0' onKeyDown={handleKeyPress}>
+        {replText.beforeCursor}
+        <span id='repl-caret'>{replText.underCursor}</span>
+        {replText.afterCursor}
       </div>
       <textarea
         style={{ whiteSpace: 'pre-wrap' }}
@@ -80,18 +114,50 @@ function CodeArea ({ codeContent, setCodeContent }) {
   );
 
   function handleKeyPress (ev) {
+    console.log(`key: ${ev.key}`);
+    console.log(`keyCode: ${ev.keyCode}`);
     ev.preventDefault();
-    if (ev.key === 'Enter') {
+    switch (ev.key) {
+    case 'Enter':
+      // Flag so that we remove current command when output is printed
       isReplPendingResponse.current = true;
-      sendCommand();
+      runCommand();
+      return;
+    case 'Backspace':
+      backspace();
+      return;
+    case 'ArrowLeft':
+      moveReplCaretLeft();
+      return;
+    case 'Shift':
+    case 'OS':
+    case 'Alt':
       return;
     }
 
-    replCommand.current = replCommand.current + ev.key;
-    setReplDisplay({ action: 'add', char: ev.key });
+    setReplText({ action: 'add', char: ev.key, source: 'user' });
+    replCaretPos.current += 1;
   }
 
-  function sendCommand () {
+  function backspace () {
+    if (replCommand.current.length === 0) {
+      return;
+    }
+    replCommand.current = replCommand.current.slice(0, replCommand.current.length - 1);
+    setReplText({ action: 'backspace' });
+  }
+
+  function moveReplCaretLeft () {
+    // if (replCaretPos.current === replText.content.length - replCommand.current.length) {
+    if (replCommand.current.length === 0) {
+      return;
+    }
+    replCaretPos.current -= 1;
+    setReplText({ action: 'none' });
+  }
+
+  function runCommand () {
+    // If ws is closed/closing, open it again before sending command
     if (ws === null || ws.readyState === WebSocket.CLOSED ||
         ws.readyState === WebSocket.CLOSING) {
       const ws = openReplWs();
@@ -111,11 +177,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
     ws.onmessage = function (ev) {
       if (isReplPendingResponse.current === true) {
-        setReplDisplay({ action: 'remove', command: replCommand.current });
+        setReplText({ action: 'remove', command: replCommand.current });
         replCommand.current = '';
         isReplPendingResponse.current = false;
       }
-      setReplDisplay({ action: 'add', char: ev.data });
+      setReplText({ action: 'add', char: ev.data, source: 'runner' });
     };
     return ws;
   }
