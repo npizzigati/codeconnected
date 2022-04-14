@@ -1,0 +1,7 @@
+#repl {
+    border: black 1px solid;
+    width: 400px;
+    height: 400px;
+    white-space: pre-wrap;
+    overflow: scroll;
+}
