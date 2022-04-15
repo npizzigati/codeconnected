@@ -12,51 +12,17 @@ import { WebrtcProvider } from 'y-webrtc';
 
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
-  const replCommand = useRef('');
-  const replCaretPos = useRef(0);
+  const replCmd = useRef('');
+  const replText = useRef('');
+  // This is the positive offset of the repl cursor from right to
+  // left, from the right end cursor position
+  const replCaretOffset = useRef(0);
   const codeAreaDOMRef = useRef(null);
+  const replAreaDOMRef = useRef(null);
+  const replCaretDOMRef = useRef(null);
   const [sharedOutputRef, setSharedOutputRef] = useState('');
   const [outputDisplay, setOutputDisplay] = useState('');
-  const [replText, setReplText] =
-    useReducer((state, change) => {
-      let newContent;
-      switch (change.action) {
-      case 'add':
-        if (change.source === 'runner') {
-          newContent = state.content + change.char;
-          replCaretPos.current = newContent.length;
-        } else {
-          replCommand.current = replCommand.current + ev.key;
-          newContent = state.content.slice(0, replCaretPos.current - 1) +
-            change.char +
-            state.content.slice(replCaretPos.current - 1);
-        }
-        break;
-      case 'remove':
-        newContent = removeCommandFromDisplay(change.command, state.content);
-        break;
-      case 'backspace':
-        newContent = state.content.slice(0, state.content.length - 1);
-        replCaretPos.current -= 1;
-        break;
-      case 'none':
-        newContent = state.content;
-        break;
-      }
-      // Insert caret
-      let beforeCursor, underCursor, afterCursor;
-      console.log('replCaretPos.current ' + replCaretPos.current);
-      console.log('newContent.length ' + newContent.length);
-      if (replCaretPos.current === newContent.length) {
-        beforeCursor = newContent;
-        underCursor = ' ';
-      } else {
-        beforeCursor = newContent.slice(0, replCaretPos.current);
-        underCursor = newContent[replCaretPos.current];
-        afterCursor = newContent.slice(replCaretPos.current + 1);
-      }
-      return { content: newContent, beforeCursor, underCursor, afterCursor };
-    }, { content: '' });
+  const [replTextWithCmd, setReplTextWithCmd] = useState({});
   const [ws, setWs] = useState(null);
   /* const [replFocused, setReplFocused] = useState(false); */
   const [cmRef, setCmRef] = useState(null);
@@ -100,10 +66,10 @@ function CodeArea ({ codeContent, setCodeContent }) {
       <textarea ref={codeAreaDOMRef} />
       <button onClick={executeContent}>Run</button>
       <button onClick={openReplWs}>Open My Repl</button>
-      <div id='repl' tabIndex='0' onKeyDown={handleKeyPress}>
-        {replText.beforeCursor}
-        <span id='repl-caret'>{replText.underCursor}</span>
-        {replText.afterCursor}
+      <div id='repl' ref={replAreaDOMRef} tabIndex='0' onKeyDown={handleKeyPress}>
+        {replTextWithCmd.beforeCaret}
+        <span id='repl-caret' ref={replCaretDOMRef}>{replTextWithCmd.underCaret}</span>
+        {replTextWithCmd.afterCaret}
       </div>
       <textarea
         style={{ whiteSpace: 'pre-wrap' }}
@@ -121,6 +87,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     case 'Enter':
       // Flag so that we remove current command when output is printed
       isReplPendingResponse.current = true;
+      replCaretOffset.current = 0;
       runCommand();
       return;
     case 'Backspace':
@@ -129,31 +96,51 @@ function CodeArea ({ codeContent, setCodeContent }) {
     case 'ArrowLeft':
       moveReplCaretLeft();
       return;
+    case 'ArrowRight':
+      moveReplCaretRight();
+      return;
     case 'Shift':
     case 'OS':
     case 'Alt':
       return;
     }
 
-    setReplText({ action: 'add', char: ev.key, source: 'user' });
-    replCaretPos.current += 1;
+    insertIntoCmd(ev.key);
+    displayReplText();
+    scrolltoReplCaret();
+  }
+
+  function insertIntoCmd (char) {
+    const insertIdx = replCmd.current.length - replCaretOffset.current;
+    replCmd.current = replCmd.current.slice(0, insertIdx) +
+      char + replCmd.current.slice(insertIdx);
   }
 
   function backspace () {
-    if (replCommand.current.length === 0) {
+    if (replCmd.current.length === replCaretOffset.current) {
       return;
     }
-    replCommand.current = replCommand.current.slice(0, replCommand.current.length - 1);
-    setReplText({ action: 'backspace' });
+    const deleteIdx = (replCmd.current.length - replCaretOffset.current) - 1;
+    replCmd.current = replCmd.current.slice(0, deleteIdx) +
+      replCmd.current.slice(deleteIdx + 1);
+    displayReplText();
   }
 
   function moveReplCaretLeft () {
-    // if (replCaretPos.current === replText.content.length - replCommand.current.length) {
-    if (replCommand.current.length === 0) {
+    // if (replCaretPos.current === replTextWithCmd.content.length - replCmd.current.length) {
+    if (replCmd.current.length <= replCaretOffset.current) {
       return;
     }
-    replCaretPos.current -= 1;
-    setReplText({ action: 'none' });
+    replCaretOffset.current += 1;
+    displayReplText();
+  }
+
+  function moveReplCaretRight () {
+    if (replCaretOffset.current === 0) {
+      return;
+    }
+    replCaretOffset.current -= 1;
+    displayReplText();
   }
 
   function runCommand () {
@@ -163,12 +150,12 @@ function CodeArea ({ codeContent, setCodeContent }) {
       const ws = openReplWs();
       ws.onopen = function () {
         console.log('Web socket is open');
-        ws.send(replCommand.current);
+        ws.send(replCmd.current);
         setWs(ws);
       };
       return;
     }
-    ws.send(replCommand.current);
+    ws.send(replCmd.current);
   }
 
   function openReplWs () {
@@ -176,14 +163,56 @@ function CodeArea ({ codeContent, setCodeContent }) {
                                         '/api/openreplws');
 
     ws.onmessage = function (ev) {
+      // If this is the first message since command was sent,
+      // reset the command to empty
       if (isReplPendingResponse.current === true) {
-        setReplText({ action: 'remove', command: replCommand.current });
-        replCommand.current = '';
+        // setReplTextWithCmd({ action: 'remove', command: replCmd.current });
+        replCmd.current = '';
         isReplPendingResponse.current = false;
       }
-      setReplText({ action: 'add', char: ev.data, source: 'runner' });
+      replText.current += ev.data;
+      // Use delay so that initial characters returned are
+      // displayed all at once, to reduce effect of characters
+      // appearing 1 by 1
+      // TODO: Make this so it only updates the display every .1
+      // seconds (instead of only beginning after .1 seconds)
+      setTimeout(() => {
+        displayReplText();
+        scrolltoReplCaret();
+      }, 100);
     };
     return ws;
+  }
+
+  function scrolltoReplCaret () {
+    if (isCaretVisible()) {
+      return;
+    }
+    replCaretDOMRef.current.scrollIntoView({ behavior: 'smooth' });
+
+    function isCaretVisible () {
+      const caret = replCaretDOMRef.current.getBoundingClientRect();
+      const container = replAreaDOMRef.current.getBoundingClientRect();
+      return caret.bottom < container.bottom;
+    }
+  }
+
+
+  function displayReplText () {
+    const textWithCmd = replText.current + replCmd.current;
+    // Caret positioning
+    let beforeCaret, underCaret, afterCaret;
+    if (replCaretOffset.current === 0) {
+      beforeCaret = textWithCmd;
+      underCaret = ' ';
+      afterCaret = '';
+    } else {
+      const caretIdx = textWithCmd.length - replCaretOffset.current;
+      beforeCaret = textWithCmd.slice(0, caretIdx);
+      underCaret = textWithCmd[caretIdx];
+      afterCaret = textWithCmd.slice(caretIdx + 1);
+    }
+    setReplTextWithCmd({ beforeCaret, underCaret, afterCaret });
   }
 
   function executeContent () {
@@ -205,19 +234,19 @@ function CodeArea ({ codeContent, setCodeContent }) {
       });
   }
 
-  function removeCommandFromDisplay (command, currentDisplay) {
-    // Remove last command entered, since runner output will echo it
-    // Remove letter by letter starting from end
-    let newReplDisplay = currentDisplay;
-    for (let i = 1; i <= command.length; i++) {
-      if (command[command.length - i] === currentDisplay[currentDisplay.length - i]) {
-        newReplDisplay = newReplDisplay.slice(0, currentDisplay.length - i);
-      } else {
-        break;
-      }
-    }
-    return newReplDisplay;
-  }
+  // function removeCommandFromDisplay (command, currentDisplay) {
+  //   // Remove last command entered, since runner output will echo it
+  //   // Remove letter by letter starting from end
+  //   let newReplDisplay = currentDisplay;
+  //   for (let i = 1; i <= command.length; i++) {
+  //     if (command[command.length - i] === currentDisplay[currentDisplay.length - i]) {
+  //       newReplDisplay = newReplDisplay.slice(0, currentDisplay.length - i);
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  //   return newReplDisplay;
+  // }
 }
 
 export { CodeArea as default };
