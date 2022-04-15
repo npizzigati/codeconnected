@@ -186,7 +186,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     if (isCaretVisible()) {
       return;
     }
-    replCaretDOMRef.current.scrollIntoView({ behavior: 'smooth' });
+    replCaretDOMRef.current.scrollIntoView();
 
     function isCaretVisible () {
       const caret = replCaretDOMRef.current.getBoundingClientRect();
