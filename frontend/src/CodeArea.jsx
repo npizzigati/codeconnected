@@ -107,7 +107,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
     insertIntoCmd(ev.key);
     displayReplText();
-    scrolltoReplCaret();
   }
 
   function insertIntoCmd (char) {
@@ -178,7 +177,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       // seconds (instead of only beginning after .1 seconds)
       setTimeout(() => {
         displayReplText();
-        scrolltoReplCaret();
       }, 100);
     };
     return ws;
@@ -213,6 +211,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       afterCaret = textWithCmd.slice(caretIdx + 1);
     }
     setReplTextWithCmd({ beforeCaret, underCaret, afterCaret });
+    scrolltoReplCaret();
   }
 
   function executeContent () {
