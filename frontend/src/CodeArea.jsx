@@ -160,7 +160,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function openReplWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                                         '/api/openreplws');
-
+    let isFirstCharInBatch = true;
     ws.onmessage = function (ev) {
       // If this is the first message since command was sent,
       // reset the command to empty
@@ -170,14 +170,17 @@ function CodeArea ({ codeContent, setCodeContent }) {
         isReplPendingResponse.current = false;
       }
       replText.current += ev.data;
-      // Use delay so that initial characters returned are
-      // displayed all at once, to reduce effect of characters
-      // appearing 1 by 1
-      // TODO: Make this so it only updates the display every .1
-      // seconds (instead of only beginning after .1 seconds)
-      setTimeout(() => {
-        displayReplText();
-      }, 100);
+      // Display characters in bunches, e.g.  only display repl
+      // text when over 100 milliseconds have passed since first
+      // char was recieved
+      if (isFirstCharInBatch === true) {
+        setTimeout(() => {
+          displayReplText();
+          isFirstCharInBatch = true;
+          console.log('timeout running');
+        }, 100);
+        isFirstCharInBatch = false;
+      }
     };
     return ws;
   }
@@ -194,7 +197,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       return caret.bottom < container.bottom;
     }
   }
-
 
   function displayReplText () {
     const textWithCmd = replText.current + replCmd.current;
