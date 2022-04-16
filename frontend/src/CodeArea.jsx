@@ -16,7 +16,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const replCmdStash = useRef('');
   const replText = useRef('');
   const replCmdHistory = useRef([]);
-  const replCmdHistoryOffset = useRef(0);
+  const replCmdHistoryNum = useRef(0);
   // This is the positive offset of the repl cursor from right to
   // left, from the right end cursor position
   const replCaretOffset = useRef(0);
@@ -138,29 +138,29 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function cmdHistoryBack () {
-    if (replCmdHistoryOffset.current >= replCmdHistory.current.length) {
+    if (replCmdHistoryNum.current >= replCmdHistory.current.length) {
       return;
     }
-    if (replCmdHistoryOffset.current === 0) {
+    if (replCmdHistoryNum.current === 0) {
       replCmdStash.current = replCmd.current;
     }
-    replCmdHistoryOffset.current += 1;
-    console.log('history offset: ' + replCmdHistoryOffset.current);
-    const idx = replCmdHistory.current.length - replCmdHistoryOffset.current;
+    replCmdHistoryNum.current += 1;
+    console.log('history offset: ' + replCmdHistoryNum.current);
+    const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
     replCmd.current = replCmdHistory.current[idx];
     displayReplText();
   }
 
   function cmdHistoryFwd () {
-    if (replCmdHistoryOffset.current <= 0) {
+    if (replCmdHistoryNum.current <= 0) {
       return;
     }
-    replCmdHistoryOffset.current -= 1;
-    console.log('history offset: ' + replCmdHistoryOffset.current);
-    if (replCmdHistoryOffset.current === 0) {
+    replCmdHistoryNum.current -= 1;
+    console.log('history offset: ' + replCmdHistoryNum.current);
+    if (replCmdHistoryNum.current === 0) {
       replCmd.current = replCmdStash.current;
     } else {
-      const idx = replCmdHistory.current.length - replCmdHistoryOffset.current;
+      const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
       replCmd.current = replCmdHistory.current[idx];
     }
     displayReplText();
@@ -236,7 +236,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       if (isReplPendingResponse.current === true) {
         replCmdHistory.current.push(replCmd.current);
         replCmd.current = '';
-        replCmdHistoryOffset.current = 0;
+        replCmdHistoryNum.current = 0;
         replCmdStash.current = '';
         isReplPendingResponse.current = false;
       }
