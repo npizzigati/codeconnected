@@ -166,6 +166,17 @@ function CodeArea ({ codeContent, setCodeContent }) {
     displayReplText();
   }
 
+  function deleteChar () {
+    if (replCaretOffset.current === 0) {
+      return;
+    }
+    const deleteIdx = replCmd.current.length - replCaretOffset.current;
+    replCmd.current = replCmd.current.slice(0, deleteIdx) +
+      replCmd.current.slice(deleteIdx + 1);
+    replCaretOffset.current -= 1;
+    displayReplText();
+  }
+
   function moveReplCaretLeft () {
     // if (replCaretPos.current === replTextWithCmd.content.length - replCmd.current.length) {
     if (replCmd.current.length <= replCaretOffset.current) {
