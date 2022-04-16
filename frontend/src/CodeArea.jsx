@@ -13,7 +13,10 @@ import { WebrtcProvider } from 'y-webrtc';
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
   const replCmd = useRef('');
+  const replCmdStash = useRef('');
   const replText = useRef('');
+  const replCmdHistory = useRef([]);
+  const replCmdHistoryOffset = useRef(0);
   // This is the positive offset of the repl cursor from right to
   // left, from the right end cursor position
   const replCaretOffset = useRef(0);
@@ -99,6 +102,15 @@ function CodeArea ({ codeContent, setCodeContent }) {
     case 'ArrowRight':
       moveReplCaretRight();
       return;
+    case 'ArrowUp':
+      cmdHistoryBack();
+      return;
+    case 'ArrowDown':
+      cmdHistoryFwd();
+      return;
+    case 'Delete':
+      deleteChar();
+      return;
     case 'Shift':
     case 'OS':
     case 'Alt':
@@ -106,6 +118,35 @@ function CodeArea ({ codeContent, setCodeContent }) {
     }
 
     insertIntoCmd(ev.key);
+    displayReplText();
+  }
+
+  function cmdHistoryBack () {
+    if (replCmdHistoryOffset.current >= replCmdHistory.current.length) {
+      return;
+    }
+    if (replCmdHistoryOffset.current === 0) {
+      replCmdStash.current = replCmd.current;
+    }
+    replCmdHistoryOffset.current += 1;
+    console.log('history offset: ' + replCmdHistoryOffset.current);
+    const idx = replCmdHistory.current.length - replCmdHistoryOffset.current;
+    replCmd.current = replCmdHistory.current[idx];
+    displayReplText();
+  }
+
+  function cmdHistoryFwd () {
+    if (replCmdHistoryOffset.current <= 0) {
+      return;
+    }
+    replCmdHistoryOffset.current -= 1;
+    console.log('history offset: ' + replCmdHistoryOffset.current);
+    if (replCmdHistoryOffset.current === 0) {
+      replCmd.current = replCmdStash.current;
+    } else {
+      const idx = replCmdHistory.current.length - replCmdHistoryOffset.current;
+      replCmd.current = replCmdHistory.current[idx];
+    }
     displayReplText();
   }
 
@@ -162,11 +203,14 @@ function CodeArea ({ codeContent, setCodeContent }) {
                                         '/api/openreplws');
     let isFirstCharInBatch = true;
     ws.onmessage = function (ev) {
-      // If this is the first message since command was sent,
-      // reset the command to empty
+      // If this is the first message since command was sent, add
+      // the command to repl history and reset the command to
+      // empty
       if (isReplPendingResponse.current === true) {
-        // setReplTextWithCmd({ action: 'remove', command: replCmd.current });
+        replCmdHistory.current.push(replCmd.current);
         replCmd.current = '';
+        replCmdHistoryOffset.current = 0;
+        replCmdStash.current = '';
         isReplPendingResponse.current = false;
       }
       replText.current += ev.data;
