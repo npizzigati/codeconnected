@@ -111,6 +111,12 @@ function CodeArea ({ codeContent, setCodeContent }) {
     case 'Delete':
       deleteChar();
       return;
+    case 'Home':
+      goToStartOfCmd();
+      return;
+    case 'End':
+      goToEndOfCmd();
+      return;
     case 'Shift':
     case 'OS':
     case 'Alt':
@@ -118,6 +124,16 @@ function CodeArea ({ codeContent, setCodeContent }) {
     }
 
     insertIntoCmd(ev.key);
+    displayReplText();
+  }
+
+  function goToStartOfCmd () {
+    replCaretOffset.current = replCmd.current.length;
+    displayReplText();
+  }
+
+  function goToEndOfCmd () {
+    replCaretOffset.current = 0;
     displayReplText();
   }
 
