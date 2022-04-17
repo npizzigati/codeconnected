@@ -85,46 +85,60 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function handleKeyPress (ev) {
     console.log(`key: ${ev.key}`);
     console.log(`keyCode: ${ev.keyCode}`);
+    // Do not handle key if key value is not a single unicode
+    // character or among select other keys
+    if (
+      !/^.$/u.test(ev.key) &&
+
+      !['Enter', 'Backspace', 'ArrowLeft', 'ArrowRight',
+        'ArrowUp', 'ArrowDown', 'Delete',
+        'Home', 'End'].includes(ev.key)
+    ) {
+      return;
+    }
+    // Also do not handle key-combo if ctrl or meta modifier
+    // pressed
+    if (ev.ctrlKey === true || ev.metaKey === true) {
+      return;
+    }
+
     ev.preventDefault();
+    // Do handle the following cases
     switch (ev.key) {
     case 'Enter':
       // Flag so that we remove current command when output is printed
       isReplPendingResponse.current = true;
       replCaretOffset.current = 0;
       runCommand();
-      return;
+      break;
     case 'Backspace':
       backspace();
-      return;
+      break;
     case 'ArrowLeft':
       moveReplCaretLeft();
-      return;
+      break;
     case 'ArrowRight':
       moveReplCaretRight();
-      return;
+      break;
     case 'ArrowUp':
       cmdHistoryBack();
-      return;
+      break;
     case 'ArrowDown':
       cmdHistoryFwd();
-      return;
+      break;
     case 'Delete':
       deleteChar();
-      return;
+      break;
     case 'Home':
       goToStartOfCmd();
-      return;
+      break;
     case 'End':
       goToEndOfCmd();
-      return;
-    case 'Shift':
-    case 'OS':
-    case 'Alt':
-      return;
+      break;
+    default:
+      insertIntoCmd(ev.key);
+      displayReplText();
     }
-
-    insertIntoCmd(ev.key);
-    displayReplText();
   }
 
   function goToStartOfCmd () {
