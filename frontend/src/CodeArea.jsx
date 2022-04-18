@@ -15,7 +15,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const replCmd = useRef('');
   const replCmdStash = useRef('');
   const replText = useRef('');
-  const newReplBytes = useRef([]);
+  // const newReplBytes = useRef([]);
+  const newReplBlobs = useRef([]);
   const replCmdHistory = useRef([]);
   const replCmdHistoryNum = useRef(0);
   // This is the positive offset of the repl cursor from right to
@@ -246,13 +247,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
                                         '/api/openreplws');
     let timeoutID = null;
     ws.onmessage = function (ev) {
-      (async () => {
+      (() => {
         // First assemble blobs in an array and then process them
-        // in order, to make sure the processing doesn't cause misordering
-        const byteBuf = await ev.data.arrayBuffer();
-        const byteView = new DataView(byteBuf);
-        const charByte = byteView.getUint8(0);
-
+        // in order, to make sure the processing doesn't cause
+        // misordering as the blobs arrive
+        newReplBlobs.current.push(ev.data);
         // If this is the first message since command was sent, add
         // the command to repl history and reset the command to
         // empty
@@ -263,22 +262,26 @@ function CodeArea ({ codeContent, setCodeContent }) {
           replCmdStash.current = '';
           isReplPendingResponse.current = false;
         }
-        // replText.current += ev.data;
-        newReplBytes.current.push(charByte);
+        if (timeoutID !== null) {
+          clearTimeout(timeoutID);
+        }
+        // newReplBytes.current.push(charByte);
         // Send bytes to be converted into utf8 and displayed in
         // complete bunches, e.g. only display repl text when
         // over 100 milliseconds have passed since last byte was
         // recieved
-        if (timeoutID !== null) {
-          clearTimeout(timeoutID);
-        }
-        // A timeout value of 400 or above seems to work well
-        // Lower timeouts result in some corruption of utf
-        // conversion or outright conversion failure on Firefox
         timeoutID = setTimeout(() => {
           (async () => {
-            console.log('new Repl bytes: ' + newReplBytes.current);
-            const arrayBuf = new Uint8Array(newReplBytes.current).buffer;
+            // Build byte array
+            const byteArray = [];
+            for (let i = 0; i < newReplBlobs.current.length; i++) {
+              const byteBuf = await newReplBlobs.current[i].arrayBuffer();
+              const byteView = new DataView(byteBuf);
+              const byte = byteView.getUint8(0);
+              byteArray.push(byte);
+            }
+            // convert to utf-8 string
+            const arrayBuf = new Uint8Array(byteArray).buffer;
             const arrayView = new DataView(arrayBuf);
             const decoder = new TextDecoder('utf-8', { fatal: true });
             let newReplText;
@@ -286,12 +289,12 @@ function CodeArea ({ codeContent, setCodeContent }) {
               newReplText = decoder.decode(arrayView);
             } catch (err) {
               console.error(err);
-              newReplBytes.current = [];
+              newReplBlobs.current = [];
               displayReplText();
               return;
             }
             replText.current += newReplText;
-            newReplBytes.current = [];
+            newReplBlobs.current = [];
             displayReplText();
           })();
         }, 100);
