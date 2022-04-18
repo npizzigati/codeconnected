@@ -9,6 +9,7 @@ import 'codemirror/theme/material.css';
 
 import { CodemirrorBinding } from 'y-codemirror';
 import { WebrtcProvider } from 'y-webrtc';
+// import { WebsocketProvider } from 'y-websocket';
 
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
@@ -45,9 +46,9 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const ydoc = new Y.Doc();
     setYdocRef(ydoc);
     const ytextCode = ydoc.getText('codemirror');
-    const provider = new WebrtcProvider('nicks-cm-room', ydoc);
-    provider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
-    const binding = new CodemirrorBinding(ytextCode, cm, provider.awareness);
+    const rtcProvider = new WebrtcProvider('nicks-cm-room', ydoc);
+    rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+    const binding = new CodemirrorBinding(ytextCode, cm, rtcProvider.awareness);
     // Copy a reference to code mirror editor to React state
     setCmRef(cm);
 
