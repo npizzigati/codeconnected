@@ -15,6 +15,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const replCmd = useRef('');
   const replCmdStash = useRef('');
   const replText = useRef('');
+  const newReplBytes = useRef([]);
   const replCmdHistory = useRef([]);
   const replCmdHistoryNum = useRef(0);
   // This is the positive offset of the repl cursor from right to
@@ -83,8 +84,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   );
 
   function handleKeyPress (ev) {
-    console.log(`key: ${ev.key}`);
-    console.log(`keyCode: ${ev.keyCode}`);
+    // console.log(`key: ${ev.key}`);
+    // console.log(`keyCode: ${ev.keyCode}`);
     // Do not handle key if key value is not a single unicode
     // character or among select other keys
     if (
@@ -236,36 +237,65 @@ function CodeArea ({ codeContent, setCodeContent }) {
       };
       return;
     }
+
     ws.send(replCmd.current);
   }
 
   function openReplWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                                         '/api/openreplws');
-    let isFirstCharInBatch = true;
+    let timeoutID = null;
     ws.onmessage = function (ev) {
-      // If this is the first message since command was sent, add
-      // the command to repl history and reset the command to
-      // empty
-      if (isReplPendingResponse.current === true) {
-        replCmdHistory.current.push(replCmd.current);
-        replCmd.current = '';
-        replCmdHistoryNum.current = 0;
-        replCmdStash.current = '';
-        isReplPendingResponse.current = false;
-      }
-      replText.current += ev.data;
-      // Display characters in bunches, e.g.  only display repl
-      // text when over 100 milliseconds have passed since first
-      // char was recieved
-      if (isFirstCharInBatch === true) {
-        setTimeout(() => {
-          displayReplText();
-          isFirstCharInBatch = true;
-          console.log('timeout running');
+      (async () => {
+        // First assemble blobs in an array and then process them
+        // in order, to make sure the processing doesn't cause misordering
+        const byteBuf = await ev.data.arrayBuffer();
+        const byteView = new DataView(byteBuf);
+        const charByte = byteView.getUint8(0);
+
+        // If this is the first message since command was sent, add
+        // the command to repl history and reset the command to
+        // empty
+        if (isReplPendingResponse.current === true) {
+          replCmdHistory.current.push(replCmd.current);
+          replCmd.current = '';
+          replCmdHistoryNum.current = 0;
+          replCmdStash.current = '';
+          isReplPendingResponse.current = false;
+        }
+        // replText.current += ev.data;
+        newReplBytes.current.push(charByte);
+        // Send bytes to be converted into utf8 and displayed in
+        // complete bunches, e.g. only display repl text when
+        // over 100 milliseconds have passed since last byte was
+        // recieved
+        if (timeoutID !== null) {
+          clearTimeout(timeoutID);
+        }
+        // A timeout value of 400 or above seems to work well
+        // Lower timeouts result in some corruption of utf
+        // conversion or outright conversion failure on Firefox
+        timeoutID = setTimeout(() => {
+          (async () => {
+            console.log('new Repl bytes: ' + newReplBytes.current);
+            const arrayBuf = new Uint8Array(newReplBytes.current).buffer;
+            const arrayView = new DataView(arrayBuf);
+            const decoder = new TextDecoder('utf-8', { fatal: true });
+            let newReplText;
+            try {
+              newReplText = decoder.decode(arrayView);
+            } catch (err) {
+              console.error(err);
+              newReplBytes.current = [];
+              displayReplText();
+              return;
+            }
+            replText.current += newReplText;
+            newReplBytes.current = [];
+            displayReplText();
+          })();
         }, 100);
-        isFirstCharInBatch = false;
-      }
+      })();
     };
     return ws;
   }
@@ -319,20 +349,79 @@ function CodeArea ({ codeContent, setCodeContent }) {
         });
       });
   }
-
-  // function removeCommandFromDisplay (command, currentDisplay) {
-  //   // Remove last command entered, since runner output will echo it
-  //   // Remove letter by letter starting from end
-  //   let newReplDisplay = currentDisplay;
-  //   for (let i = 1; i <= command.length; i++) {
-  //     if (command[command.length - i] === currentDisplay[currentDisplay.length - i]) {
-  //       newReplDisplay = newReplDisplay.slice(0, currentDisplay.length - i);
-  //     } else {
-  //       break;
-  //     }
-  //   }
-  //   return newReplDisplay;
-  // }
 }
+
+// async function bytesToString (data) {
+//   let tries = 0;
+//   while (true) {
+//     const result = utf8ArrayToStr(data);
+//     if (result !== null) {
+//       return result;
+//     }
+//     // Sleep
+//     if (tries > 100) {
+//       return null;
+//     }
+//     await new Promise(r => setTimeout(r, 50));
+//     tries += 1;
+//   }
+// }
+
+// function utf8ArrayToStr (data) {
+//   const extraByteMap = [1, 1, 1, 1, 2, 2, 3, 0];
+//   var count = data.length;
+//   var str = "";
+//   for (var index = 0; index < count;)
+//   {
+//     var ch = data[index++];
+//     if (ch & 0x80)
+//     {
+//       var extra = extraByteMap[(ch >> 3) & 0x07];
+//       if (!(ch & 0x40) || !extra || ((index + extra) > count))
+//         return null;
+//       ch = ch & (0x3F >> extra);
+//       for (;extra > 0; extra -= 1)
+//       {
+//         var chx = data[index++];
+//         if ((chx & 0xC0) != 0x80)
+//           return null;
+//         ch = (ch << 6) | (chx & 0x3F);
+//       }
+//     }
+//     str += String.fromCharCode(ch);
+//   }
+//   return str;
+// }
+// function utf8ArrayToStr (array) {
+//   var out, i, len, c;
+//   var char2, char3;
+
+//   out = "";
+//   len = array.length;
+//   i = 0;
+//   while (i < len) {
+//     c = array[i++];
+//     switch (c >> 4) {
+//     case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+//       // 0xxxxxxx
+//       out += String.fromCharCode(c);
+//       break;
+//     case 12: case 13:
+//       // 110x xxxx   10xx xxxx
+//       char2 = array[i++];
+//       out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+//       break;
+//     case 14:
+//       // 1110 xxxx  10xx xxxx  10xx xxxx
+//       char2 = array[i++];
+//       char3 = array[i++];
+//       out += String.fromCharCode(((c & 0x0F) << 12) |
+//                                  ((char2 & 0x3F) << 6) |
+//                                  ((char3 & 0x3F) << 0));
+//       break;
+//     }
+//   }
+//   return out;
+// }
 
 export { CodeArea as default };

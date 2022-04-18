@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	// "encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
@@ -77,13 +78,14 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 			if err != nil {
 				// Runner not connected
-				fmt.Println(err)
+				fmt.Println("runner read error: ", err)
 				break
 			}
-			// Send chunk to browser
-			err = ws.WriteMessage(websocket.TextMessage, chunk)
+
+			// payload := binary.LittleEndian.Uint16(chunk)
+			err = ws.WriteMessage(websocket.BinaryMessage, chunk)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
 				break
 			}
 		}
@@ -92,8 +94,11 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Websocket receive loop
 	for {
 		// Receive command
-		_, message, err := ws.ReadMessage()
+		mtype, message, err := ws.ReadMessage()
+		fmt.Println("mtype: ", mtype)
+		fmt.Println("message: ", message)
 		if err != nil {
+			fmt.Println("error receiving message: ", err)
 			break
 		}
 
