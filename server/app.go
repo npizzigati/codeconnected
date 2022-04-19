@@ -160,6 +160,7 @@ func executeContent(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	execOpts := types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
+		Tty:          true,
 		Cmd:          cmd,
 	}
 
