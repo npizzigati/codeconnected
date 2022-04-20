@@ -16,3 +16,6 @@ services:
     depends_on:
       - "server"
     restart: always
+  y_websocket_provider:
+    container_name: y_websocket_provider
+    build: ./y_websocket_provider

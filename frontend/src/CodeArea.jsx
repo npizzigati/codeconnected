@@ -9,7 +9,7 @@ import 'codemirror/theme/material.css';
 
 import { CodemirrorBinding } from 'y-codemirror';
 import { WebrtcProvider } from 'y-webrtc';
-// import { WebsocketProvider } from 'y-websocket';
+import { WebsocketProvider } from 'y-websocket';
 
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
@@ -46,9 +46,16 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const ydoc = new Y.Doc();
     setYdocRef(ydoc);
     const ytextCode = ydoc.getText('codemirror');
+
+    // y.js connection providers
     const rtcProvider = new WebrtcProvider('nicks-cm-room', ydoc);
-    rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
-    const binding = new CodemirrorBinding(ytextCode, cm, rtcProvider.awareness);
+    // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+    const wsProvider = new WebsocketProvider(
+      window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'myroom', ydoc
+    );
+    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+
+    const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
     // Copy a reference to code mirror editor to React state
     setCmRef(cm);
 
@@ -162,7 +169,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       replCmdStash.current = replCmd.current;
     }
     replCmdHistoryNum.current += 1;
-    console.log('history offset: ' + replCmdHistoryNum.current);
     const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
     replCmd.current = replCmdHistory.current[idx];
     displayReplText();
@@ -173,7 +179,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       return;
     }
     replCmdHistoryNum.current -= 1;
-    console.log('history offset: ' + replCmdHistoryNum.current);
     if (replCmdHistoryNum.current === 0) {
       replCmd.current = replCmdStash.current;
     } else {
@@ -247,6 +252,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                                         '/api/openreplws');
     let timeoutID = null;
+    // TODO: set connection.binaryType to 'arraybuffer' to see if
+    // we can remove the conversion happening below
     ws.onmessage = function (ev) {
       (() => {
         // First assemble blobs in an array and then process them

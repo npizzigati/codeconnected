@@ -6,3 +6,6 @@ services:
   frontend:
     volumes:
       - ./frontend/public:/usr/share/nginx/html
+  y_websocket_provider:
+    volumes:
+      - ./y_websocket_provider:/y_websocket_provider

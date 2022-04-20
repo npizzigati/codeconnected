@@ -1,0 +1,21 @@
+{
+  "name": "y_websocket_provider",
+  "version": "1.0.0",
+  "description": "",
+  "main": "callback.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "http": "^0.0.1-security",
+    "lib0": "^0.2.51",
+    "lodash.debounce": "^4.0.8",
+    "ws": "^8.5.0",
+    "y-protocols": "^1.0.5",
+    "yjs": "~13.5.34"
+  }
+}
