@@ -13,22 +13,15 @@ import { WebsocketProvider } from 'y-websocket';
 
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
-  const replCmd = useRef('');
-  const replCmdStash = useRef('');
-  const replText = useRef('');
-  // const newReplBytes = useRef([]);
   const newReplBlobs = useRef([]);
-  const replCmdHistory = useRef([]);
-  const replCmdHistoryNum = useRef(0);
   // This is the positive offset of the repl cursor from right to
   // left, from the right end cursor position
-  const replCaretOffset = useRef(0);
   const codeAreaDOMRef = useRef(null);
   const replAreaDOMRef = useRef(null);
   const replCaretDOMRef = useRef(null);
   const [sharedOutputRef, setSharedOutputRef] = useState('');
-  const [sharedReplDisplayRef, setSharedReplDisplayRef] = useState('');
-  const [sharedReplDataRef, setSharedReplDataRef] = useState('');
+  const [replDisplay, setReplDisplay] = useState('');
+  const [replData, setReplData] = useState('');
   const [outputDisplay, setOutputDisplay] = useState('');
   const [replTextWithCmd, setReplTextWithCmd] = useState({});
   const [ws, setWs] = useState(null);
@@ -79,18 +72,17 @@ function CodeArea ({ codeContent, setCodeContent }) {
     yReplData.set('text', '');
     yReplData.set('caretOffset', 0);
     yReplData.set('cmd', '');
-    setSharedReplDataRef(yReplData);
-
-    yReplData.observe(ev => {
-      replText.current = ev.target.get('text');
-      replCmd.current = ev.target.get('cmd');
-      replCaretOffset.current = ev.target.get('caretOffset');
-    });
+    yReplData.set('cmdStash', '');
+    yReplData.set('cmdHistory', []);
+    yReplData.set('cmdHistoryNum', 0);
+    // yReplData.set('displayText', {});
+    // Set reference for use in React
+    setReplData(yReplData);
 
     // Shared repl display state
     const yReplDisplay = ydoc.getMap('repl display');
     yReplDisplay.set('text', {});
-    setSharedReplDisplayRef(yReplDisplay);
+    setReplDisplay(yReplDisplay);
 
     yReplDisplay.observe(ev => {
       const beforeCaret = ev.target.get('text').beforeCaret;
@@ -98,6 +90,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       const underCaret = ev.target.get('text').underCaret;
 
       setReplTextWithCmd({ beforeCaret, afterCaret, underCaret });
+      scrolltoReplCaret();
     });
   }, []);
 
@@ -148,8 +141,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     case 'Enter':
       // Flag so that we remove current command when output is printed
       isReplPendingResponse.current = true;
-      // replCaretOffset.current = 0;
-      sharedReplDataRef.set('caretOffset', 0);
+      replData.set('caretOffset', 0);
       runCommand();
       break;
     case 'Backspace':
@@ -183,97 +175,82 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function goToStartOfCmd () {
-    // replCaretOffset.current = replCmd.current.length;
-    // sharedReplDataRef.set('caretOffset', replCmd.current.length);
-    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('cmd').length);
+    replData.set('caretOffset', replData.get('cmd').length);
     displayReplText();
   }
 
   function goToEndOfCmd () {
-    // replCaretOffset.current = 0;
-    sharedReplDataRef.set('caretOffset', 0);
+    replData.set('caretOffset', 0);
     displayReplText();
   }
 
   function cmdHistoryBack () {
-    if (replCmdHistoryNum.current >= replCmdHistory.current.length) {
+    if (replData.get('cmdHistoryNum') >= replData.get('cmdHistory').length) {
       return;
     }
-    if (replCmdHistoryNum.current === 0) {
-      // replCmdStash.current = replCmd.current;
-      replCmdStash.current = sharedReplDataRef.get('cmd');
+    if (replData.get('cmdHistoryNum') === 0) {
+      replData.set('cmdStash', replData.get('cmd'));
     }
-    replCmdHistoryNum.current += 1;
-    const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
-    // replCmd.current = replCmdHistory.current[idx];
-    sharedReplDataRef.set('cmd', replCmdHistory.current[idx]);
+    replData.set('cmdHistoryNum', replData.get('cmdHistoryNum') + 1);
+    const idx = replData.get('cmdHistory').length - replData.get('cmdHistoryNum');
+    replData.set('cmd', replData.get('cmdHistory')[idx]);
     displayReplText();
   }
 
   function cmdHistoryFwd () {
-    if (replCmdHistoryNum.current <= 0) {
+    if (replData.get('cmdHistoryNum') <= 0) {
       return;
     }
-    replCmdHistoryNum.current -= 1;
-    if (replCmdHistoryNum.current === 0) {
-      // replCmd.current = replCmdStash.current;
-      sharedReplDataRef.set('cmd', replCmdStash.current);
+    replData.set('cmdHistoryNum', replData.get('cmdHistoryNum') - 1);
+    if (replData.get('cmdHistoryNum') === 0) {
+      replData.set('cmd', replData.get('cmdStash'));
     } else {
-      const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
-      // replCmd.current = replCmdHistory.current[idx];
-      sharedReplDataRef.set('cmd', replCmdHistory.current[idx]);
+      const idx = replData.get('cmdHistory').length - replData.get('cmdHistoryNum');
+      replData.set('cmd', replData.get('cmdHistory')[idx]);
     }
     displayReplText();
   }
 
   function insertIntoCmd (char) {
-    const insertIdx = replCmd.current.length - replCaretOffset.current;
-    // replCmd.current = replCmd.current.slice(0, insertIdx) +
-    sharedReplDataRef.set('cmd', replCmd.current.slice(0, insertIdx) +
-                          char + replCmd.current.slice(insertIdx));
+    const insertIdx = replData.get('cmd').length - replData.get('caretOffset');
+    replData.set('cmd', replData.get('cmd').slice(0, insertIdx) +
+                          char + replData.get('cmd').slice(insertIdx));
   }
 
   function backspace () {
-    if (replCmd.current.length === replCaretOffset.current) {
+    if (replData.get('cmd').length === replData.get('caretOffset')) {
       return;
     }
-    const deleteIdx = (replCmd.current.length - replCaretOffset.current) - 1;
-    // replCmd.current = replCmd.current.slice(0, deleteIdx) +
-    //   replCmd.current.slice(deleteIdx + 1);
-    sharedReplDataRef.set('cmd', replCmd.current.slice(0, deleteIdx) +
-                          replCmd.current.slice(deleteIdx + 1));
+    const deleteIdx = (replData.get('cmd').length - replData.get('caretOffset')) - 1;
+    replData.set('cmd', replData.get('cmd').slice(0, deleteIdx) +
+                          replData.get('cmd').slice(deleteIdx + 1));
     displayReplText();
   }
 
   function deleteChar () {
-    if (replCaretOffset.current === 0) {
+    if (replData.get('caretOffset') === 0) {
       return;
     }
-    const deleteIdx = replCmd.current.length - replCaretOffset.current;
-    // replCmd.current = replCmd.current.slice(0, deleteIdx) +
-    //   replCmd.current.slice(deleteIdx + 1);
-    sharedReplDataRef.set('cmd', replCmd.current.slice(0, deleteIdx) +
-                          replCmd.current.slice(deleteIdx + 1));
-    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('caretOffset') - 1);
+    const deleteIdx = replData.get('cmd').length - replData.get('caretOffset');
+    replData.set('cmd', replData.get('cmd').slice(0, deleteIdx) +
+                          replData.get('cmd').slice(deleteIdx + 1));
+    replData.set('caretOffset', replData.get('caretOffset') - 1);
     displayReplText();
   }
 
   function moveReplCaretLeft () {
-    // if (replCaretPos.current === replTextWithCmd.content.length - replCmd.current.length) {
-    if (replCmd.current.length <= replCaretOffset.current) {
+    if (replData.get('cmd').length <= replData.get('caretOffset')) {
       return;
     }
-    // replCaretOffset.current += 1;
-    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('caretOffset') + 1);
+    replData.set('caretOffset', replData.get('caretOffset') + 1);
     displayReplText();
   }
 
   function moveReplCaretRight () {
-    if (replCaretOffset.current === 0) {
+    if (replData.get('caretOffset') === 0) {
       return;
     }
-    // replCaretOffset.current -= 1;
-    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('caretOffset') - 1);
+    replData.set('caretOffset', replData.get('caretOffset') - 1);
     displayReplText();
   }
 
@@ -284,13 +261,13 @@ function CodeArea ({ codeContent, setCodeContent }) {
       const ws = openReplWs();
       ws.onopen = function () {
         console.log('Web socket is open');
-        ws.send(replCmd.current);
+        ws.send(replData.get('cmd'));
         setWs(ws);
       };
       return;
     }
 
-    ws.send(replCmd.current);
+    ws.send(replData.get('cmd'));
   }
 
   function openReplWs () {
@@ -309,10 +286,10 @@ function CodeArea ({ codeContent, setCodeContent }) {
         // the command to repl history and reset the command to
         // empty
         if (isReplPendingResponse.current === true) {
-          replCmdHistory.current.push(replCmd.current);
-          sharedReplDataRef.set('cmd', '');
-          replCmdHistoryNum.current = 0;
-          replCmdStash.current = '';
+          replData.get('cmdHistory').push(replData.get('cmd'));
+          replData.set('cmd', '');
+          replData.set('cmdHistoryNum', 0);
+          replData.set('cmdStash', '');
           isReplPendingResponse.current = false;
         }
         if (timeoutID !== null) {
@@ -346,10 +323,9 @@ function CodeArea ({ codeContent, setCodeContent }) {
               displayReplText();
               return;
             }
-            // replText.current += newReplText;
             console.log('newReplText: ' + newReplText);
-            console.log('shared text: ' + sharedReplDataRef.get('text'));
-            sharedReplDataRef.set('text', sharedReplDataRef.get('text') + newReplText);
+            console.log('shared text: ' + replData.get('text'));
+            replData.set('text', replData.get('text') + newReplText);
             newReplBlobs.current = [];
             displayReplText();
           })();
@@ -373,23 +349,21 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function displayReplText () {
-    // const textWithCmd = replText.current + replCmd.current;
-    const textWithCmd = sharedReplDataRef.get('text') + replCmd.current;
+    const textWithCmd = replData.get('text') + replData.get('cmd');
     // Caret positioning
     let beforeCaret, underCaret, afterCaret;
-    if (replCaretOffset.current === 0) {
+    if (replData.get('caretOffset') === 0) {
       beforeCaret = textWithCmd;
       underCaret = ' ';
       afterCaret = '';
     } else {
-      const caretIdx = textWithCmd.length - replCaretOffset.current;
+      const caretIdx = textWithCmd.length - replData.get('caretOffset');
       beforeCaret = textWithCmd.slice(0, caretIdx);
       underCaret = textWithCmd[caretIdx];
       afterCaret = textWithCmd.slice(caretIdx + 1);
     }
-    sharedReplDisplayRef.set('text', { beforeCaret, underCaret, afterCaret });
-    // setReplTextWithCmd({ beforeCaret, underCaret, afterCaret });
-    scrolltoReplCaret();
+    replDisplay.set('text', { beforeCaret, underCaret, afterCaret });
+    // scrolltoReplCaret();
   }
 
   function executeContent () {
