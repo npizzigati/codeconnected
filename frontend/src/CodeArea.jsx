@@ -27,6 +27,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const replAreaDOMRef = useRef(null);
   const replCaretDOMRef = useRef(null);
   const [sharedOutputRef, setSharedOutputRef] = useState('');
+  const [sharedReplDisplayRef, setSharedReplDisplayRef] = useState('');
+  const [sharedReplDataRef, setSharedReplDataRef] = useState('');
   const [outputDisplay, setOutputDisplay] = useState('');
   const [replTextWithCmd, setReplTextWithCmd] = useState({});
   const [ws, setWs] = useState(null);
@@ -62,12 +64,40 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // Shared output text
     const ytextOutput = ydoc.getText('output text');
     // Copy a reference to the shared output to React state
+    // TODO: Change these refs to use useRef instead of useState
+    // and maybe drop the Ref suffix on the identifier
     setSharedOutputRef(ytextOutput);
 
     // Set listener to update output display on change in ytext
     // output variable
     ytextOutput.observe(ev => {
       setOutputDisplay(ev.target.toString());
+    });
+
+    // Shared repl data
+    const yReplData = ydoc.getMap('repl data');
+    yReplData.set('text', '');
+    yReplData.set('caretOffset', 0);
+    yReplData.set('cmd', '');
+    setSharedReplDataRef(yReplData);
+
+    yReplData.observe(ev => {
+      replText.current = ev.target.get('text');
+      replCmd.current = ev.target.get('cmd');
+      replCaretOffset.current = ev.target.get('caretOffset');
+    });
+
+    // Shared repl display state
+    const yReplDisplay = ydoc.getMap('repl display');
+    yReplDisplay.set('text', {});
+    setSharedReplDisplayRef(yReplDisplay);
+
+    yReplDisplay.observe(ev => {
+      const beforeCaret = ev.target.get('text').beforeCaret;
+      const afterCaret = ev.target.get('text').afterCaret;
+      const underCaret = ev.target.get('text').underCaret;
+
+      setReplTextWithCmd({ beforeCaret, afterCaret, underCaret });
     });
   }, []);
 
@@ -118,7 +148,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
     case 'Enter':
       // Flag so that we remove current command when output is printed
       isReplPendingResponse.current = true;
-      replCaretOffset.current = 0;
+      // replCaretOffset.current = 0;
+      sharedReplDataRef.set('caretOffset', 0);
       runCommand();
       break;
     case 'Backspace':
@@ -152,12 +183,15 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function goToStartOfCmd () {
-    replCaretOffset.current = replCmd.current.length;
+    // replCaretOffset.current = replCmd.current.length;
+    // sharedReplDataRef.set('caretOffset', replCmd.current.length);
+    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('cmd').length);
     displayReplText();
   }
 
   function goToEndOfCmd () {
-    replCaretOffset.current = 0;
+    // replCaretOffset.current = 0;
+    sharedReplDataRef.set('caretOffset', 0);
     displayReplText();
   }
 
@@ -166,11 +200,13 @@ function CodeArea ({ codeContent, setCodeContent }) {
       return;
     }
     if (replCmdHistoryNum.current === 0) {
-      replCmdStash.current = replCmd.current;
+      // replCmdStash.current = replCmd.current;
+      replCmdStash.current = sharedReplDataRef.get('cmd');
     }
     replCmdHistoryNum.current += 1;
     const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
-    replCmd.current = replCmdHistory.current[idx];
+    // replCmd.current = replCmdHistory.current[idx];
+    sharedReplDataRef.set('cmd', replCmdHistory.current[idx]);
     displayReplText();
   }
 
@@ -180,18 +216,21 @@ function CodeArea ({ codeContent, setCodeContent }) {
     }
     replCmdHistoryNum.current -= 1;
     if (replCmdHistoryNum.current === 0) {
-      replCmd.current = replCmdStash.current;
+      // replCmd.current = replCmdStash.current;
+      sharedReplDataRef.set('cmd', replCmdStash.current);
     } else {
       const idx = replCmdHistory.current.length - replCmdHistoryNum.current;
-      replCmd.current = replCmdHistory.current[idx];
+      // replCmd.current = replCmdHistory.current[idx];
+      sharedReplDataRef.set('cmd', replCmdHistory.current[idx]);
     }
     displayReplText();
   }
 
   function insertIntoCmd (char) {
     const insertIdx = replCmd.current.length - replCaretOffset.current;
-    replCmd.current = replCmd.current.slice(0, insertIdx) +
-      char + replCmd.current.slice(insertIdx);
+    // replCmd.current = replCmd.current.slice(0, insertIdx) +
+    sharedReplDataRef.set('cmd', replCmd.current.slice(0, insertIdx) +
+                          char + replCmd.current.slice(insertIdx));
   }
 
   function backspace () {
@@ -199,8 +238,10 @@ function CodeArea ({ codeContent, setCodeContent }) {
       return;
     }
     const deleteIdx = (replCmd.current.length - replCaretOffset.current) - 1;
-    replCmd.current = replCmd.current.slice(0, deleteIdx) +
-      replCmd.current.slice(deleteIdx + 1);
+    // replCmd.current = replCmd.current.slice(0, deleteIdx) +
+    //   replCmd.current.slice(deleteIdx + 1);
+    sharedReplDataRef.set('cmd', replCmd.current.slice(0, deleteIdx) +
+                          replCmd.current.slice(deleteIdx + 1));
     displayReplText();
   }
 
@@ -209,9 +250,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
       return;
     }
     const deleteIdx = replCmd.current.length - replCaretOffset.current;
-    replCmd.current = replCmd.current.slice(0, deleteIdx) +
-      replCmd.current.slice(deleteIdx + 1);
-    replCaretOffset.current -= 1;
+    // replCmd.current = replCmd.current.slice(0, deleteIdx) +
+    //   replCmd.current.slice(deleteIdx + 1);
+    sharedReplDataRef.set('cmd', replCmd.current.slice(0, deleteIdx) +
+                          replCmd.current.slice(deleteIdx + 1));
+    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('caretOffset') - 1);
     displayReplText();
   }
 
@@ -220,7 +263,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
     if (replCmd.current.length <= replCaretOffset.current) {
       return;
     }
-    replCaretOffset.current += 1;
+    // replCaretOffset.current += 1;
+    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('caretOffset') + 1);
     displayReplText();
   }
 
@@ -228,7 +272,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
     if (replCaretOffset.current === 0) {
       return;
     }
-    replCaretOffset.current -= 1;
+    // replCaretOffset.current -= 1;
+    sharedReplDataRef.set('caretOffset', sharedReplDataRef.get('caretOffset') - 1);
     displayReplText();
   }
 
@@ -265,7 +310,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
         // empty
         if (isReplPendingResponse.current === true) {
           replCmdHistory.current.push(replCmd.current);
-          replCmd.current = '';
+          sharedReplDataRef.set('cmd', '');
           replCmdHistoryNum.current = 0;
           replCmdStash.current = '';
           isReplPendingResponse.current = false;
@@ -301,7 +346,10 @@ function CodeArea ({ codeContent, setCodeContent }) {
               displayReplText();
               return;
             }
-            replText.current += newReplText;
+            // replText.current += newReplText;
+            console.log('newReplText: ' + newReplText);
+            console.log('shared text: ' + sharedReplDataRef.get('text'));
+            sharedReplDataRef.set('text', sharedReplDataRef.get('text') + newReplText);
             newReplBlobs.current = [];
             displayReplText();
           })();
@@ -325,7 +373,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function displayReplText () {
-    const textWithCmd = replText.current + replCmd.current;
+    // const textWithCmd = replText.current + replCmd.current;
+    const textWithCmd = sharedReplDataRef.get('text') + replCmd.current;
     // Caret positioning
     let beforeCaret, underCaret, afterCaret;
     if (replCaretOffset.current === 0) {
@@ -338,7 +387,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
       underCaret = textWithCmd[caretIdx];
       afterCaret = textWithCmd.slice(caretIdx + 1);
     }
-    setReplTextWithCmd({ beforeCaret, underCaret, afterCaret });
+    sharedReplDisplayRef.set('text', { beforeCaret, underCaret, afterCaret });
+    // setReplTextWithCmd({ beforeCaret, underCaret, afterCaret });
     scrolltoReplCaret();
   }
 
