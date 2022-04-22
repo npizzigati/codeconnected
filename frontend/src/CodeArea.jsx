@@ -20,7 +20,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const replAreaDOMRef = useRef(null);
   const replCaretDOMRef = useRef(null);
   const [sharedOutputRef, setSharedOutputRef] = useState('');
-  const [replDisplay, setReplDisplay] = useState('');
+  const [replDisplayData, setReplDisplayData] = useState('');
   const [replData, setReplData] = useState('');
   const [outputDisplay, setOutputDisplay] = useState('');
   const [replTextWithCmd, setReplTextWithCmd] = useState({});
@@ -80,11 +80,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
     setReplData(yReplData);
 
     // Shared repl display state
-    const yReplDisplay = ydoc.getMap('repl display');
-    yReplDisplay.set('text', {});
-    setReplDisplay(yReplDisplay);
+    const yReplDisplayData = ydoc.getMap('repl display');
+    yReplDisplayData.set('text', {});
+    setReplDisplayData(yReplDisplayData);
 
-    yReplDisplay.observe(ev => {
+    yReplDisplayData.observe(ev => {
       const beforeCaret = ev.target.get('text').beforeCaret;
       const afterCaret = ev.target.get('text').afterCaret;
       const underCaret = ev.target.get('text').underCaret;
@@ -194,6 +194,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     replData.set('cmdHistoryNum', replData.get('cmdHistoryNum') + 1);
     const idx = replData.get('cmdHistory').length - replData.get('cmdHistoryNum');
     replData.set('cmd', replData.get('cmdHistory')[idx]);
+    replData.set('caretOffset', 0);
     displayReplText();
   }
 
@@ -208,6 +209,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       const idx = replData.get('cmdHistory').length - replData.get('cmdHistoryNum');
       replData.set('cmd', replData.get('cmdHistory')[idx]);
     }
+    replData.set('caretOffset', 0);
     displayReplText();
   }
 
@@ -255,6 +257,12 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function runCommand () {
+    console.log('running command: ' + replData.get('cmd'));
+
+    replData.set('cmdHistory', replData.get('cmdHistory').concat(replData.get('cmd')));
+    replData.set('cmdHistoryNum', 0);
+    replData.set('cmdStash', '');
+
     // If ws is closed/closing, open it again before sending command
     if (ws === null || ws.readyState === WebSocket.CLOSED ||
         ws.readyState === WebSocket.CLOSING) {
@@ -273,6 +281,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function openReplWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                                         '/api/openreplws');
+
     let timeoutID = null;
     // TODO: set connection.binaryType to 'arraybuffer' to see if
     // we can remove the conversion happening below
@@ -282,14 +291,10 @@ function CodeArea ({ codeContent, setCodeContent }) {
         // in order, to make sure the processing doesn't cause
         // misordering as the blobs arrive
         newReplBlobs.current.push(ev.data);
-        // If this is the first message since command was sent, add
-        // the command to repl history and reset the command to
-        // empty
+        // If this is the first message since command was sent,
+        // reset command to empty.
         if (isReplPendingResponse.current === true) {
-          replData.get('cmdHistory').push(replData.get('cmd'));
           replData.set('cmd', '');
-          replData.set('cmdHistoryNum', 0);
-          replData.set('cmdStash', '');
           isReplPendingResponse.current = false;
         }
         if (timeoutID !== null) {
@@ -316,18 +321,17 @@ function CodeArea ({ codeContent, setCodeContent }) {
             const decoder = new TextDecoder('utf-8', { fatal: true });
             let newReplText;
             try {
+              // decoder may throw an error
               newReplText = decoder.decode(arrayView);
+              replData.set('text', replData.get('text') + newReplText);
+              console.log('newReplText: ' + newReplText);
             } catch (err) {
               console.error(err);
+              return;
+            } finally {
               newReplBlobs.current = [];
               displayReplText();
-              return;
             }
-            console.log('newReplText: ' + newReplText);
-            console.log('shared text: ' + replData.get('text'));
-            replData.set('text', replData.get('text') + newReplText);
-            newReplBlobs.current = [];
-            displayReplText();
           })();
         }, 100);
       })();
@@ -349,6 +353,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function displayReplText () {
+    console.log('displaying repl text');
     const textWithCmd = replData.get('text') + replData.get('cmd');
     // Caret positioning
     let beforeCaret, underCaret, afterCaret;
@@ -362,8 +367,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       underCaret = textWithCmd[caretIdx];
       afterCaret = textWithCmd.slice(caretIdx + 1);
     }
-    replDisplay.set('text', { beforeCaret, underCaret, afterCaret });
-    // scrolltoReplCaret();
+    replDisplayData.set('text', { beforeCaret, underCaret, afterCaret });
   }
 
   function executeContent () {
