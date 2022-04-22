@@ -269,7 +269,9 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function runCommand () {
     console.log('running command: ' + replData.get('cmd'));
 
-    replData.set('cmdHistory', replData.get('cmdHistory').concat(replData.get('cmd')));
+    if (replData.get('cmd') !== '') {
+      replData.set('cmdHistory', replData.get('cmdHistory').concat(replData.get('cmd')));
+    }
     replData.set('cmdHistoryNum', 0);
     replData.set('cmdStash', '');
 
