@@ -102,6 +102,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       <textarea ref={codeAreaDOMRef} />
       <button onClick={executeContent}>Run</button>
       <button onClick={openReplWs}>Open My Repl</button>
+      <button onClick={clearRepl}>Clear Repl</button>
       <div id='repl' ref={replAreaDOMRef} tabIndex='0' onKeyDown={handleKeyPress}>
         {replTextWithCmd.beforeCaret}
         <span id='repl-caret' ref={replCaretDOMRef}>{replTextWithCmd.underCaret}</span>
@@ -254,6 +255,15 @@ function CodeArea ({ codeContent, setCodeContent }) {
     }
     replData.set('caretOffset', replData.get('caretOffset') - 1);
     displayReplText();
+  }
+
+  function clearRepl () {
+    replData.set('text', '');
+    replData.set('cmd', '');
+    runCommand();
+    replData.set('text', replData.get('text').replace('\n', ''));
+    displayReplText();
+    document.getElementById('repl').focus();
   }
 
   function runCommand () {
