@@ -20,11 +20,13 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		// Server is only exposed on internal docker network, so we
-		// don't need to protect against XSS
+		// We are accepting ws connections from everybody.
+		// TODO: Is this a security risk?
 		return true
 	},
 }
+
+var ws *websocket.Conn
 
 var cli *client.Client
 
@@ -37,6 +39,14 @@ func connectRunner() {
 }
 
 func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// Close existing websocket connection; there can only be one
+	// repl websocket connection to one browser at a time for the
+	// repl; otherwise messages are received by all the connected
+	// browsers resulting in repetition of the repl text
+	if ws != nil {
+		ws.Close()
+	}
+
 	ctx := context.Background()
 	connectRunner()
 	containerID := "myshell"
@@ -53,7 +63,7 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	runner := connection.Conn
 	defer connection.Close()
 
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err = upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +78,7 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// Set up read listener on runner output
 	go func() {
-		fmt.Println("Now reading from runner")
+		fmt.Println("Reading from runner\n")
 		for {
 			chunk := make([]byte, int(1))
 			_, err := runner.Read(chunk)
@@ -232,7 +242,7 @@ func main() {
 	router.GET("/api/openreplws", serveReplWs)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
-	fmt.Printf("Starting server on port %d", port)
+	fmt.Printf("Starting server on port %d\n", port)
 
 	handler := cors.Default().Handler(router)
 	err := http.ListenAndServe(portString, handler)
