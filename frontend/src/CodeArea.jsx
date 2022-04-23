@@ -101,7 +101,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     <>
       <textarea ref={codeAreaDOMRef} />
       <button onClick={executeContent}>Run</button>
-      <button onClick={openReplWs}>Open My Repl</button>
       <button onClick={clearRepl}>Clear Repl</button>
       <div id='repl' ref={replAreaDOMRef} tabIndex='0' onKeyDown={handleKeyPress}>
         {replTextWithCmd.beforeCaret}
@@ -266,11 +265,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
     document.getElementById('repl').focus();
   }
 
-  function runCommand () {
-    console.log('running command: ' + replData.get('cmd'));
-
-    if (replData.get('cmd') !== '') {
-      replData.set('cmdHistory', replData.get('cmdHistory').concat(replData.get('cmd')));
+  function runCommand (options = {}) {
+    const cmd = options.cmd || replData.get('cmd');
+    console.log('running command: ' + cmd);
+    if (cmd !== '' && options.history !== false) {
+      replData.set('cmdHistory', replData.get('cmdHistory').concat(cmd));
     }
     replData.set('cmdHistoryNum', 0);
     replData.set('cmdStash', '');
@@ -281,13 +280,13 @@ function CodeArea ({ codeContent, setCodeContent }) {
       const ws = openReplWs();
       ws.onopen = function () {
         console.log('Web socket is open');
-        ws.send(replData.get('cmd'));
+        ws.send(cmd);
         setWs(ws);
       };
       return;
     }
 
-    ws.send(replData.get('cmd'));
+    ws.send(cmd);
   }
 
   function openReplWs () {
@@ -398,6 +397,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
           sharedOutputRef.delete(0, sharedOutputRef.length);
           sharedOutputRef.insert(0, data.output);
         });
+        const cmd = 'node program.js';
+        runCommand({ cmd, history: false });
       });
   }
 }
