@@ -31,7 +31,7 @@ var ws *websocket.Conn
 
 var cli *client.Client
 
-func connectRunner() {
+func createClient() {
 	var err error
 	cli, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -44,12 +44,12 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// repl websocket connection to one browser at a time for the
 	// repl; otherwise messages are received by all the connected
 	// browsers resulting in repetition of the repl text
-	if ws != nil {
-		ws.Close()
-	}
+	// if ws != nil {
+	// 	ws.Close()
+	// }
 
-	ctx := context.Background()
-	connectRunner()
+	createClient()
+
 	containerID := "myshell"
 	attachOpts := types.ContainerAttachOptions{
 		Stream: true, // This apparently needs to be true for Conn.Write to work
@@ -57,7 +57,8 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		Stdout: true,
 		Stderr: false,
 	}
-	connection, err := cli.ContainerAttach(ctx, containerID, attachOpts)
+
+	connection, err := cli.ContainerAttach(context.Background(), containerID, attachOpts)
 	if err != nil {
 		panic(err)
 	}
@@ -69,13 +70,6 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		panic(err)
 	}
 	defer ws.Close()
-
-	// This probably isn't necessary
-	// Write initial bytes
-	// _, err = runner.Write([]byte("console.log('hello')\n"))
-	// if err != nil {
-	// 	panic(err)
-	// }
 
 	// Set up read listener on runner output
 	go func() {

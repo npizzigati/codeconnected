@@ -2,6 +2,8 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import * as Y from 'yjs';
+import { Terminal } from 'xterm';
+import { AttachAddon } from 'xterm-addon-attach';
 import CodeMirror from 'codemirror/lib/codemirror.js';
 import 'codemirror/addon/edit/closebrackets.js';
 import 'codemirror/mode/ruby/ruby.js';
@@ -16,25 +18,44 @@ import { WebsocketProvider } from 'y-websocket';
 const defaultLanguage = 'ruby';
 
 function CodeArea ({ codeContent, setCodeContent }) {
-  const isReplPendingResponse = useRef(false);
-  const newReplBlobs = useRef([]);
+  // const isReplPendingResponse = useRef(false);
+  // const newReplBlobs = useRef([]);
   // This is the positive offset of the repl cursor from right to
   // left, from the right end cursor position
   const codeAreaDOMRef = useRef(null);
-  const replAreaDOMRef = useRef(null);
-  const replCaretDOMRef = useRef(null);
-  // const [sharedOutputRef, setSharedOutputRef] = useState('');
-  // const [outputDisplay, setOutputDisplay] = useState('');
-  const [replDisplayData, setReplDisplayData] = useState('');
+  const terminalDOMRef = useRef(null);
+  const ws = useRef(null);
+  // const replAreaDOMRef = useRef(null);
+  // const replCaretDOMRef = useRef(null);
+  // // const [sharedOutputRef, setSharedOutputRef] = useState('');
+  // // const [outputDisplay, setOutputDisplay] = useState('');
+  // const [replDisplayData, setReplDisplayData] = useState('');
   const [replData, setReplData] = useState('');
   const [replTextWithCmd, setReplTextWithCmd] = useState({});
   const [language, setLanguage] = useState(defaultLanguage);
   const [codeOptions, setCodeOptions] = useState(null);
-  const [ws, setWs] = useState(null);
   /* const [replFocused, setReplFocused] = useState(false); */
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
+
+  function openWs () {
+    const socket = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
+                                        '/api/openreplws');
+    socket.onClose = ev => {
+      openWs();
+    };
+
+    ws.current = socket;
+  }
+
   useEffect(() => {
+    const term = new Terminal();
+    openWs();
+    const attachAddon = new AttachAddon(ws.current);
+    term.loadAddon(attachAddon);
+    term.open(terminalDOMRef.current);
+    term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ');
+
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
       mode: defaultLanguage,
       value: '',
@@ -98,7 +119,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // Shared repl display state
     const yReplDisplayData = ydoc.getMap('repl display');
     yReplDisplayData.set('text', {});
-    setReplDisplayData(yReplDisplayData);
+    // setReplDisplayData(yReplDisplayData);
 
     yReplDisplayData.observe(ev => {
       const beforeCaret = ev.target.get('text').beforeCaret;
@@ -126,11 +147,14 @@ function CodeArea ({ codeContent, setCodeContent }) {
         <div id='codemirror-wrapper'>
           <textarea ref={codeAreaDOMRef} />
         </div>
+        <div id='terminal' ref={terminalDOMRef} />
+        {/*
         <div id='repl' ref={replAreaDOMRef} tabIndex='0' onKeyDown={handleKeyPress}>
           {replTextWithCmd.beforeCaret}
           <span id='repl-caret' ref={replCaretDOMRef}>{replTextWithCmd.underCaret}</span>
           {replTextWithCmd.afterCaret}
         </div>
+        */}
       </div>
       {/* <textarea
         style={{ whiteSpace: 'pre-wrap' }}
@@ -306,187 +330,129 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function runCommand (options = {}) {
-    const cmd = options.cmd || replData.get('cmd');
-    if (cmd !== '' && options.history !== false) {
-      replData.set('cmdHistory', replData.get('cmdHistory').concat(cmd));
-    }
-    replData.set('cmdHistoryNum', 0);
-    replData.set('cmdStash', '');
+    // const cmd = options.cmd || replData.get('cmd');
+    // if (cmd !== '' && options.history !== false) {
+    //   replData.set('cmdHistory', replData.get('cmdHistory').concat(cmd));
+    // }
+    // replData.set('cmdHistoryNum', 0);
+    // replData.set('cmdStash', '');
 
-    // If ws is closed/closing, open it again before sending command
-    if (ws === null || ws.readyState === WebSocket.CLOSED ||
-        ws.readyState === WebSocket.CLOSING) {
-      const ws = openReplWs();
-      ws.onopen = function () {
-        console.log('Web socket is open');
-        ws.send(cmd);
-        setWs(ws);
-      };
-      return;
-    }
-
-    ws.send(cmd);
-  }
-
-  function openReplWs () {
-    const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
-                                        '/api/openreplws');
-    ws.binaryType = 'arraybuffer';
-    let extraBytesToRead = 0;
-    let extraBytesRead = 0;
-    let totalBytesRead = 0;
-    let fullBuffer, fullView;
-    ws.onmessage = function (ev) {
-      (() => {
-        const peek = new DataView(ev.data);
-        const byte = peek.getUint8(0);
-        console.log('byte: ' + byte);
-        totalBytesRead++;
-        if (extraBytesToRead === 0) {
-          fullBuffer = new ArrayBuffer(4);
-          fullView = new Uint8Array(fullBuffer);
-          fullView[0] = byte;
-          // Multi-byte unicode data is being sent if the first
-          // byte starts with a "1"
-          // use bitmask with 10000000 to find out if this is the case
-          if ((128 & byte) === 128) {
-            // bytesLeftToRead = 1;
-            extraBytesToRead = 1;
-            // populate(fullView, firstByte);
-            // The next three digits in binary will tell us how
-            // many bytes the character is
-            if ((240 & byte) === 240) {
-              // bytesLeftToRead = 3;
-              extraBytesToRead = 3;
-            } else if ((224 & byte) === 224) {
-              // bytesLeftToRead = 2;
-              extraBytesToRead = 2;
-            }
-          }
-        } else {
-          // Read next byte into array
-          extraBytesRead++;
-          console.log(`Inserting ${byte} at position ${extraBytesRead}`);
-          fullView[extraBytesRead] = byte;
-          if (extraBytesRead === extraBytesToRead) {
-            extraBytesToRead = 0;
-            extraBytesRead = 0;
-          }
-        }
-
-        if (extraBytesToRead !== 0) {
-          return;
-        }
-
-        const finalView = new Uint8Array(fullBuffer, 0, totalBytesRead);
-        console.log('finalView: ' + finalView);
-        totalBytesRead = 0;
-
-        // Decoding and sending to terminal
-
-        const decoder = new TextDecoder('utf-8', { fatal: true });
-        let newReplText;
-        try {
-          // decoder may throw an error
-          newReplText = decoder.decode(finalView);
-          replData.set('text', replData.get('text') + newReplText);
-        } catch (err) {
-          console.error(err);
-          return;
-        } finally {
-          displayReplText();
-        }
-      })();
-    };
-
-    // function populate (fullView, firstByte) {
-    //   for (let i = 0; i < firstByte.length; i++) {
-         
-    //   }
+    // // If ws is closed/closing, open it again before sending command
+    // if (ws === null || ws.readyState === WebSocket.CLOSED ||
+    //     ws.readyState === WebSocket.CLOSING) {
+    //   const ws = openReplWs();
+    //   ws.onopen = function () {
+    //     console.log('Web socket is open');
+    //     // ws.send(cmd);
+    //     setWs(ws);
+    //   };
+    //   return;
     // }
 
-    // ws.onmessage = function (ev) {
-    //   (() => {
-    //     // First assemble blobs in an array and then process them
-    //     // in order, to make sure the processing doesn't cause
-    //     // misordering as the blobs arrive
-    //     newReplBlobs.current.push(ev.data);
-    //     // If this is the first message since command was sent,
-    //     // reset command to empty.
-    //     if (isReplPendingResponse.current === true) {
-    //       replData.set('cmd', '');
-    //       isReplPendingResponse.current = false;
-    //     }
-    //     if (timeoutID !== null) {
-    //       clearTimeout(timeoutID);
-    //     }
-    //     // newReplBytes.current.push(charByte);
-    //     // Send bytes to be converted into utf8 and displayed in
-    //     // complete bunches, e.g. only display repl text when
-    //     // over 100 milliseconds have passed since last byte was
-    //     // recieved
-    //     timeoutID = setTimeout(() => {
-    //       (async () => {
-    //         // Build byte array
-    //         const byteArray = [];
-    //         for (let i = 0; i < newReplBlobs.current.length; i++) {
-    //           const byteBuf = await newReplBlobs.current[i].arrayBuffer();
-    //           const byteView = new DataView(byteBuf);
-    //           const byte = byteView.getUint8(0);
-    //           byteArray.push(byte);
-    //         }
-    //         // convert to utf-8 string
-    //         const arrayBuf = new Uint8Array(byteArray).buffer;
-    //         const arrayView = new DataView(arrayBuf);
-    //         const decoder = new TextDecoder('utf-8', { fatal: true });
-    //         let newReplText;
-    //         try {
-    //           // decoder may throw an error
-    //           newReplText = decoder.decode(arrayView);
-    //           replData.set('text', replData.get('text') + newReplText);
-    //           console.log('newReplText: ' + newReplText);
-    //         } catch (err) {
-    //           console.error(err);
-    //           return;
-    //         } finally {
-    //           newReplBlobs.current = [];
-    //           displayReplText();
-    //         }
-    //       })();
-    //     }, 100);
-    //   })();
-    // };
-    return ws;
+    // // ws.send(cmd);
   }
 
-  function scrolltoReplCaret () {
-    if (isCaretVisible()) {
-      return;
-    }
-    replCaretDOMRef.current.scrollIntoView();
+  // function openReplWs () {
+  //   const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
+  //                                       '/api/openreplws');
+  //   ws.binaryType = 'arraybuffer';
+  //   let extraBytesToRead = 0;
+  //   let extraBytesRead = 0;
+  //   let totalBytesRead = 0;
+  //   let fullBuffer, fullView;
+  //   ws.onmessage = function (ev) {
+  //     (() => {
+  //       const peek = new DataView(ev.data);
+  //       const byte = peek.getUint8(0);
+  //       console.log('byte: ' + byte);
+  //       totalBytesRead++;
+  //       if (extraBytesToRead === 0) {
+  //         fullBuffer = new ArrayBuffer(4);
+  //         fullView = new Uint8Array(fullBuffer);
+  //         fullView[0] = byte;
+  //         // Multi-byte unicode data is being sent if the first
+  //         // byte starts with a "1"
+  //         // use bitmask with 10000000 to find out if this is the case
+  //         if ((128 & byte) === 128) {
+  //           // bytesLeftToRead = 1;
+  //           extraBytesToRead = 1;
+  //           // populate(fullView, firstByte);
+  //           // The next three digits in binary will tell us how
+  //           // many bytes the character is
+  //           if ((240 & byte) === 240) {
+  //             // bytesLeftToRead = 3;
+  //             extraBytesToRead = 3;
+  //           } else if ((224 & byte) === 224) {
+  //             // bytesLeftToRead = 2;
+  //             extraBytesToRead = 2;
+  //           }
+  //         }
+  //       } else {
+  //         // Read next byte into array
+  //         extraBytesRead++;
+  //         console.log(`Inserting ${byte} at position ${extraBytesRead}`);
+  //         fullView[extraBytesRead] = byte;
+  //         if (extraBytesRead === extraBytesToRead) {
+  //           extraBytesToRead = 0;
+  //           extraBytesRead = 0;
+  //         }
+  //       }
 
-    function isCaretVisible () {
-      const caret = replCaretDOMRef.current.getBoundingClientRect();
-      const container = replAreaDOMRef.current.getBoundingClientRect();
-      return caret.bottom < container.bottom;
-    }
+  //       if (extraBytesToRead !== 0) {
+  //         return;
+  //       }
+
+  //       const finalView = new Uint8Array(fullBuffer, 0, totalBytesRead);
+  //       console.log('finalView: ' + finalView);
+  //       totalBytesRead = 0;
+
+  //       // Decoding and sending to terminal
+
+  //       const decoder = new TextDecoder('utf-8', { fatal: true });
+  //       let newReplText;
+  //       try {
+  //         // decoder may throw an error
+  //         newReplText = decoder.decode(finalView);
+  //         replData.set('text', replData.get('text') + newReplText);
+  //       } catch (err) {
+  //         console.error(err);
+  //         return;
+  //       } finally {
+  //       }
+  //     })();
+  //   };
+
+  //   return ws;
+  // }
+
+  function scrolltoReplCaret () {
+    // if (isCaretVisible()) {
+    //   return;
+    // }
+    // replCaretDOMRef.current.scrollIntoView();
+
+    // function isCaretVisible () {
+    //   const caret = replCaretDOMRef.current.getBoundingClientRect();
+    //   const container = replAreaDOMRef.current.getBoundingClientRect();
+    //   return caret.bottom < container.bottom;
+    // }
   }
 
   function displayReplText () {
-    const textWithCmd = replData.get('text') + replData.get('cmd');
-    // Caret positioning
-    let beforeCaret, underCaret, afterCaret;
-    if (replData.get('caretOffset') === 0) {
-      beforeCaret = textWithCmd;
-      underCaret = ' ';
-      afterCaret = '';
-    } else {
-      const caretIdx = textWithCmd.length - replData.get('caretOffset');
-      beforeCaret = textWithCmd.slice(0, caretIdx);
-      underCaret = textWithCmd[caretIdx];
-      afterCaret = textWithCmd.slice(caretIdx + 1);
-    }
-    replDisplayData.set('text', { beforeCaret, underCaret, afterCaret });
+    // const textWithCmd = replData.get('text') + replData.get('cmd');
+    // // Caret positioning
+    // let beforeCaret, underCaret, afterCaret;
+    // if (replData.get('caretOffset') === 0) {
+    //   beforeCaret = textWithCmd;
+    //   underCaret = ' ';
+    //   afterCaret = '';
+    // } else {
+    //   const caretIdx = textWithCmd.length - replData.get('caretOffset');
+    //   beforeCaret = textWithCmd.slice(0, caretIdx);
+    //   underCaret = textWithCmd[caretIdx];
+    //   afterCaret = textWithCmd.slice(caretIdx + 1);
+    // }
+    // replDisplayData.set('text', { beforeCaret, underCaret, afterCaret });
   }
 
   function executeContent () {
