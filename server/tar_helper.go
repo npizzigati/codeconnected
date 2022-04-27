@@ -30,7 +30,7 @@ func createTar(contents []byte, buffer io.Writer) error {
 
 func addToTar(tarWriter *tar.Writer, contents []byte) error {
 	header := &tar.Header{
-		Name:       "program.js",
+		Name:       "code",
 		Mode:       0777,
 		Size:       int64(len(contents)),
 		ModTime:    time.Now(),

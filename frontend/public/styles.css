@@ -1,12 +1,27 @@
 #repl {
     font-family: 'Source Code Pro', monospace;
     border: black 1px solid;
-    width: 400px;
-    height: 400px;
     white-space: pre-wrap;
     overflow: scroll;
+    width: 35%;
+    margin: 0 10px 0 0;
+}
+
+#language-chooser {
+    margin-left: 5px;
 }
 
 #repl-caret {
     background-color: lightgray;
+}
+
+#main-container {
+    display: flex;
+    height: 90vh;
+    margin-top: 5px
+}
+
+#codemirror-wrapper {
+    width: 65%;
+    margin: 0 10px 0 10px;
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	// "encoding/binary"
 	"encoding/json"
@@ -92,7 +93,6 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 				break
 			}
 
-			// payload := binary.LittleEndian.Uint16(chunk)
 			err = ws.WriteMessage(websocket.BinaryMessage, chunk)
 			if err != nil {
 				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
@@ -119,13 +119,20 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func executeCommand(runner net.Conn, command []byte) {
 	fmt.Println("Executing command\n")
-	newline := byte(0x0a)
-	payload := append(command, newline)
+	// newline := byte(0x0a)
+	// payload := append(command, newline)
+
+	payload := make([]byte, 1)
+	if bytes.Equal(command, []byte("Enter")) {
+		fmt.Println("Command is Enter")
+		payload[0] = byte(0x0a)
+	} else {
+		payload = []byte(command)
+	}
 	_, err := runner.Write([]byte(payload))
 	// TODO: An error here occurs after connection has been idle
 	// for a long time (broken pipe), but connection is restored if
-	// user sends command again. We should try to make that retry
-	// automatic somehow
+	// user sends command again.
 	if err != nil {
 		fmt.Println(err)
 		return

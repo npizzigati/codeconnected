@@ -1,15 +1,19 @@
 'use strict';
 
-import React, { useRef, useEffect, useState, useReducer } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import CodeMirror from 'codemirror/lib/codemirror.js';
 import 'codemirror/addon/edit/closebrackets.js';
+import 'codemirror/mode/ruby/ruby.js';
 import 'codemirror/mode/javascript/javascript.js';
+import 'codemirror/mode/sql/sql.js';
 import 'codemirror/theme/material.css';
 
 import { CodemirrorBinding } from 'y-codemirror';
 import { WebrtcProvider } from 'y-webrtc';
 import { WebsocketProvider } from 'y-websocket';
+
+const defaultLanguage = 'ruby';
 
 function CodeArea ({ codeContent, setCodeContent }) {
   const isReplPendingResponse = useRef(false);
@@ -19,53 +23,65 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const codeAreaDOMRef = useRef(null);
   const replAreaDOMRef = useRef(null);
   const replCaretDOMRef = useRef(null);
-  const [sharedOutputRef, setSharedOutputRef] = useState('');
+  // const [sharedOutputRef, setSharedOutputRef] = useState('');
+  // const [outputDisplay, setOutputDisplay] = useState('');
   const [replDisplayData, setReplDisplayData] = useState('');
   const [replData, setReplData] = useState('');
-  const [outputDisplay, setOutputDisplay] = useState('');
   const [replTextWithCmd, setReplTextWithCmd] = useState({});
+  const [language, setLanguage] = useState(defaultLanguage);
+  const [codeOptions, setCodeOptions] = useState(null);
   const [ws, setWs] = useState(null);
   /* const [replFocused, setReplFocused] = useState(false); */
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
   useEffect(() => {
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      mode: 'javascript',
-      value: 'function myScript(){return 100;}\n',
+      mode: defaultLanguage,
+      value: '',
       lineNumbers: true,
       autoCloseBrackets: true
     });
+
+    cm.setSize('100%', '100%');
 
     // Collaborative editing
     // Code editor
     const ydoc = new Y.Doc();
     setYdocRef(ydoc);
+
     const ytextCode = ydoc.getText('codemirror');
 
     // y.js connection providers
-    const rtcProvider = new WebrtcProvider('nicks-cm-room', ydoc);
+    const rtcProvider = new WebrtcProvider('nicks-cm-room-' + language, ydoc);
     // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
     const wsProvider = new WebsocketProvider(
-      window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'myroom', ydoc
+      window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + language, ydoc
     );
-    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
 
     const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
     // Copy a reference to code mirror editor to React state
     setCmRef(cm);
 
     // Shared output text
-    const ytextOutput = ydoc.getText('output text');
-    // Copy a reference to the shared output to React state
-    // TODO: Change these refs to use useRef instead of useState
-    // and maybe drop the Ref suffix on the identifier
-    setSharedOutputRef(ytextOutput);
+    // setSharedOutputRef(ytextOutput);
 
     // Set listener to update output display on change in ytext
     // output variable
-    ytextOutput.observe(ev => {
-      setOutputDisplay(ev.target.toString());
+    // ytextOutput.observe(ev => {
+    //   setOutputDisplay(ev.target.toString());
+    // });
+
+    const yCodeOptions = ydoc.getMap('code options');
+    yCodeOptions.set('language', defaultLanguage);
+    yCodeOptions.observe(ev => {
+      const lang = ev.target.get('language');
+      setLanguage(lang);
+      cm.setOption('mode', lang);
+      console.log('language is now: ' + lang);
     });
+
+    setCodeOptions(yCodeOptions);
 
     // Shared repl data
     const yReplData = ydoc.getMap('repl data');
@@ -99,51 +115,70 @@ function CodeArea ({ codeContent, setCodeContent }) {
   // TODO: Sanitize program output pane contents
   return (
     <>
-      <textarea ref={codeAreaDOMRef} />
       <button onClick={executeContent}>Run</button>
-      <button onClick={clearRepl}>Clear Repl</button>
-      <div id='repl' ref={replAreaDOMRef} tabIndex='0' onKeyDown={handleKeyPress}>
-        {replTextWithCmd.beforeCaret}
-        <span id='repl-caret' ref={replCaretDOMRef}>{replTextWithCmd.underCaret}</span>
-        {replTextWithCmd.afterCaret}
+      <select id='language-chooser' value={language} onChange={switchLanguage}>
+        <option value='ruby'>Ruby</option>
+        <option value='javascript'>Node.js</option>
+        <option value='sql'>SQL</option>
+      </select>
+      <button onClick={clearRepl}>Clear Console</button>
+      <div id='main-container'>
+        <div id='codemirror-wrapper'>
+          <textarea ref={codeAreaDOMRef} />
+        </div>
+        <div id='repl' ref={replAreaDOMRef} tabIndex='0' onKeyDown={handleKeyPress}>
+          {replTextWithCmd.beforeCaret}
+          <span id='repl-caret' ref={replCaretDOMRef}>{replTextWithCmd.underCaret}</span>
+          {replTextWithCmd.afterCaret}
+        </div>
       </div>
-      <textarea
+      {/* <textarea
         style={{ whiteSpace: 'pre-wrap' }}
         value={outputDisplay}
         readOnly
       />
+      */}
     </>
   );
+
+  function switchLanguage (ev) {
+    codeOptions.set('language', ev.target.value);
+  }
 
   function handleKeyPress (ev) {
     // console.log(`key: ${ev.key}`);
     // console.log(`keyCode: ${ev.keyCode}`);
     // Do not handle key if key value is not a single unicode
     // character or among select other keys
-    if (
-      !/^.$/u.test(ev.key) &&
+    // if (
+    //   !/^.$/u.test(ev.key) &&
 
-      !['Enter', 'Backspace', 'ArrowLeft', 'ArrowRight',
-        'ArrowUp', 'ArrowDown', 'Delete',
-        'Home', 'End'].includes(ev.key)
-    ) {
-      return;
-    }
+    //   !['Enter', 'Backspace', 'ArrowLeft', 'ArrowRight',
+    //     'ArrowUp', 'ArrowDown', 'Delete',
+    //     'Home', 'End'].includes(ev.key)
+    // ) {
+    //   return;
+    // }
     // Also do not handle key-combo if ctrl or meta modifier
     // pressed
-    if (ev.ctrlKey === true || ev.metaKey === true) {
+    // if (ev.ctrlKey === true || ev.metaKey === true) {
+    //   return;
+    // }
+    // Ignore right alt key, to make it possible to try out
+    //     unicode characters
+    if (ev.key === 'AltGraph') {
       return;
     }
 
     ev.preventDefault();
     // Do handle the following cases
     switch (ev.key) {
-    case 'Enter':
-      // Flag so that we remove current command when output is printed
-      isReplPendingResponse.current = true;
-      replData.set('caretOffset', 0);
-      runCommand();
-      break;
+    // case 'Enter':
+    //   // Flag so that we remove current command when output is printed
+    //   isReplPendingResponse.current = true;
+    //   replData.set('caretOffset', 0);
+    //   runCommand();
+    //   break;
     case 'Backspace':
       backspace();
       break;
@@ -169,8 +204,13 @@ function CodeArea ({ codeContent, setCodeContent }) {
       goToEndOfCmd();
       break;
     default:
-      insertIntoCmd(ev.key);
+      // insertIntoCmd(ev.key);
+      // testing this
+      replData.set('cmd', ev.key);
+
       displayReplText();
+      // Testing this to see if single key input works
+      runCommand();
     }
   }
 
@@ -267,7 +307,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
   function runCommand (options = {}) {
     const cmd = options.cmd || replData.get('cmd');
-    console.log('running command: ' + cmd);
     if (cmd !== '' && options.history !== false) {
       replData.set('cmdHistory', replData.get('cmdHistory').concat(cmd));
     }
@@ -292,61 +331,131 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function openReplWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                                         '/api/openreplws');
-
-    let timeoutID = null;
-    // TODO: set connection.binaryType to 'arraybuffer' to see if
-    // we can remove the conversion happening below
+    ws.binaryType = 'arraybuffer';
+    let extraBytesToRead = 0;
+    let extraBytesRead = 0;
+    let totalBytesRead = 0;
+    let fullBuffer, fullView;
     ws.onmessage = function (ev) {
       (() => {
-        // First assemble blobs in an array and then process them
-        // in order, to make sure the processing doesn't cause
-        // misordering as the blobs arrive
-        newReplBlobs.current.push(ev.data);
-        // If this is the first message since command was sent,
-        // reset command to empty.
-        if (isReplPendingResponse.current === true) {
-          replData.set('cmd', '');
-          isReplPendingResponse.current = false;
-        }
-        if (timeoutID !== null) {
-          clearTimeout(timeoutID);
-        }
-        // newReplBytes.current.push(charByte);
-        // Send bytes to be converted into utf8 and displayed in
-        // complete bunches, e.g. only display repl text when
-        // over 100 milliseconds have passed since last byte was
-        // recieved
-        timeoutID = setTimeout(() => {
-          (async () => {
-            // Build byte array
-            const byteArray = [];
-            for (let i = 0; i < newReplBlobs.current.length; i++) {
-              const byteBuf = await newReplBlobs.current[i].arrayBuffer();
-              const byteView = new DataView(byteBuf);
-              const byte = byteView.getUint8(0);
-              byteArray.push(byte);
+        const peek = new DataView(ev.data);
+        const byte = peek.getUint8(0);
+        console.log('byte: ' + byte);
+        totalBytesRead++;
+        if (extraBytesToRead === 0) {
+          fullBuffer = new ArrayBuffer(4);
+          fullView = new Uint8Array(fullBuffer);
+          fullView[0] = byte;
+          // Multi-byte unicode data is being sent if the first
+          // byte starts with a "1"
+          // use bitmask with 10000000 to find out if this is the case
+          if ((128 & byte) === 128) {
+            // bytesLeftToRead = 1;
+            extraBytesToRead = 1;
+            // populate(fullView, firstByte);
+            // The next three digits in binary will tell us how
+            // many bytes the character is
+            if ((240 & byte) === 240) {
+              // bytesLeftToRead = 3;
+              extraBytesToRead = 3;
+            } else if ((224 & byte) === 224) {
+              // bytesLeftToRead = 2;
+              extraBytesToRead = 2;
             }
-            // convert to utf-8 string
-            const arrayBuf = new Uint8Array(byteArray).buffer;
-            const arrayView = new DataView(arrayBuf);
-            const decoder = new TextDecoder('utf-8', { fatal: true });
-            let newReplText;
-            try {
-              // decoder may throw an error
-              newReplText = decoder.decode(arrayView);
-              replData.set('text', replData.get('text') + newReplText);
-              console.log('newReplText: ' + newReplText);
-            } catch (err) {
-              console.error(err);
-              return;
-            } finally {
-              newReplBlobs.current = [];
-              displayReplText();
-            }
-          })();
-        }, 100);
+          }
+        } else {
+          // Read next byte into array
+          extraBytesRead++;
+          console.log(`Inserting ${byte} at position ${extraBytesRead}`);
+          fullView[extraBytesRead] = byte;
+          if (extraBytesRead === extraBytesToRead) {
+            extraBytesToRead = 0;
+            extraBytesRead = 0;
+          }
+        }
+
+        if (extraBytesToRead !== 0) {
+          return;
+        }
+
+        const finalView = new Uint8Array(fullBuffer, 0, totalBytesRead);
+        console.log('finalView: ' + finalView);
+        totalBytesRead = 0;
+
+        // Decoding and sending to terminal
+
+        const decoder = new TextDecoder('utf-8', { fatal: true });
+        let newReplText;
+        try {
+          // decoder may throw an error
+          newReplText = decoder.decode(finalView);
+          replData.set('text', replData.get('text') + newReplText);
+        } catch (err) {
+          console.error(err);
+          return;
+        } finally {
+          displayReplText();
+        }
       })();
     };
+
+    // function populate (fullView, firstByte) {
+    //   for (let i = 0; i < firstByte.length; i++) {
+         
+    //   }
+    // }
+
+    // ws.onmessage = function (ev) {
+    //   (() => {
+    //     // First assemble blobs in an array and then process them
+    //     // in order, to make sure the processing doesn't cause
+    //     // misordering as the blobs arrive
+    //     newReplBlobs.current.push(ev.data);
+    //     // If this is the first message since command was sent,
+    //     // reset command to empty.
+    //     if (isReplPendingResponse.current === true) {
+    //       replData.set('cmd', '');
+    //       isReplPendingResponse.current = false;
+    //     }
+    //     if (timeoutID !== null) {
+    //       clearTimeout(timeoutID);
+    //     }
+    //     // newReplBytes.current.push(charByte);
+    //     // Send bytes to be converted into utf8 and displayed in
+    //     // complete bunches, e.g. only display repl text when
+    //     // over 100 milliseconds have passed since last byte was
+    //     // recieved
+    //     timeoutID = setTimeout(() => {
+    //       (async () => {
+    //         // Build byte array
+    //         const byteArray = [];
+    //         for (let i = 0; i < newReplBlobs.current.length; i++) {
+    //           const byteBuf = await newReplBlobs.current[i].arrayBuffer();
+    //           const byteView = new DataView(byteBuf);
+    //           const byte = byteView.getUint8(0);
+    //           byteArray.push(byte);
+    //         }
+    //         // convert to utf-8 string
+    //         const arrayBuf = new Uint8Array(byteArray).buffer;
+    //         const arrayView = new DataView(arrayBuf);
+    //         const decoder = new TextDecoder('utf-8', { fatal: true });
+    //         let newReplText;
+    //         try {
+    //           // decoder may throw an error
+    //           newReplText = decoder.decode(arrayView);
+    //           replData.set('text', replData.get('text') + newReplText);
+    //           console.log('newReplText: ' + newReplText);
+    //         } catch (err) {
+    //           console.error(err);
+    //           return;
+    //         } finally {
+    //           newReplBlobs.current = [];
+    //           displayReplText();
+    //         }
+    //       })();
+    //     }, 100);
+    //   })();
+    // };
     return ws;
   }
 
@@ -364,7 +473,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function displayReplText () {
-    console.log('displaying repl text');
     const textWithCmd = replData.get('text') + replData.get('cmd');
     // Caret positioning
     let beforeCaret, underCaret, afterCaret;
@@ -393,11 +501,19 @@ function CodeArea ({ codeContent, setCodeContent }) {
     fetch('/api/executecontent', options)
       .then(response => response.json())
       .then(data => {
-        ydocRef.transact(() => {
-          sharedOutputRef.delete(0, sharedOutputRef.length);
-          sharedOutputRef.insert(0, data.output);
-        });
-        const cmd = 'node program.js';
+        // ydocRef.transact(() => {
+        //   sharedOutputRef.delete(0, sharedOutputRef.length);
+        //   sharedOutputRef.insert(0, data.output);
+        // });
+        let cmd;
+        switch (language) {
+        case 'javascript':
+          cmd = 'node code';
+          break;
+        case 'ruby':
+          cmd = 'ruby code';
+          break;
+        }
         runCommand({ cmd, history: false });
       });
   }
