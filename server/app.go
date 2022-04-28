@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	// "bytes"
 	"context"
 	// "encoding/binary"
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 	"io"
 	"net"
 	"net/http"
-	// "time"
+	"time"
 )
 
 var upgrader = websocket.Upgrader{
@@ -48,6 +48,8 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// 	ws.Close()
 	// }
 
+	fmt.Println("Will try to open ws")
+
 	createClient()
 
 	containerID := "myshell"
@@ -74,6 +76,8 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Set up read listener on runner output
 	go func() {
 		fmt.Println("Reading from runner\n")
+		// readTries := 0
+		// writeTries := 0
 		for {
 			chunk := make([]byte, int(1))
 			_, err := runner.Read(chunk)
@@ -83,13 +87,21 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 			if err != nil {
 				// Runner not connected
-				fmt.Println("runner read error: ", err)
+				fmt.Println("runner read error: ", err, time.Now().String())
+				// readTries++
+				// if readTries > 5 {
+				// 	break
+				// }
 				break
 			}
 
 			err = ws.WriteMessage(websocket.BinaryMessage, chunk)
 			if err != nil {
 				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
+				// writeTries++
+				// if writeTries > 5 {
+				// 	break
+				// }
 				break
 			}
 		}
@@ -102,27 +114,29 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Println("mtype: ", mtype)
 		fmt.Println("message: ", message)
 		if err != nil {
-			fmt.Println("error receiving message: ", err)
+			fmt.Println("error receiving message: ", err, " ", time.Now().String())
 			break
 		}
 
 		fmt.Printf("Command received: %s\n", message)
-		executeCommand(runner, message)
+		if string(message) != "KEEPALIVE" {
+			executeCommand(runner, message)
+		}
 	}
 }
 
 func executeCommand(runner net.Conn, command []byte) {
-	fmt.Println("Executing command\n")
+	fmt.Println("Executing command")
 	// newline := byte(0x0a)
 	// payload := append(command, newline)
 
 	payload := make([]byte, 1)
-	if bytes.Equal(command, []byte("Enter")) {
-		fmt.Println("Command is Enter")
-		payload[0] = byte(0x0a)
-	} else {
-		payload = []byte(command)
-	}
+	// if bytes.Equal(command, []byte("Enter")) {
+	// 	fmt.Println("Command is Enter")
+	// 	payload[0] = byte(0x0a)
+	// } else {
+	payload = []byte(command)
+	// }
 	_, err := runner.Write([]byte(payload))
 	// TODO: An error here occurs after connection has been idle
 	// for a long time (broken pipe), but connection is restored if
@@ -131,7 +145,7 @@ func executeCommand(runner net.Conn, command []byte) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Payload bytes: %#v\n", []byte(payload))
+	fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
 }
 
 func executeContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
