@@ -8,24 +8,24 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"io"
 	"net"
 	"net/http"
+	"nhooyr.io/websocket"
 	"time"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		// We are accepting ws connections from everybody.
-		// TODO: Is this a security risk?
-		return true
-	},
-}
+// var upgrader = websocket.Upgrader{
+// 	ReadBufferSize:  1024,
+// 	WriteBufferSize: 1024,
+// 	CheckOrigin: func(r *http.Request) bool {
+// 		// We are accepting ws connections from everybody.
+// 		// TODO: Is this a security risk?
+// 		return true
+// 	},
+// }
 
 var ws *websocket.Conn
 
@@ -67,17 +67,18 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	runner := connection.Conn
 	defer connection.Close()
 
-	ws, err = upgrader.Upgrade(w, r, nil)
+	// ws, err = upgrader.Upgrade(w, r, nil)
+	ws, err = websocket.Accept(w, r, &websocket.AcceptOptions{
+		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
+	})
 	if err != nil {
 		panic(err)
 	}
-	defer ws.Close()
+	defer ws.Close(websocket.StatusInternalError, "deferred close")
 
 	// Set up read listener on runner output
 	go func() {
 		fmt.Println("Reading from runner\n")
-		// readTries := 0
-		// writeTries := 0
 		for {
 			chunk := make([]byte, int(1))
 			_, err := runner.Read(chunk)
@@ -88,20 +89,13 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			if err != nil {
 				// Runner not connected
 				fmt.Println("runner read error: ", err, time.Now().String())
-				// readTries++
-				// if readTries > 5 {
-				// 	break
-				// }
 				break
 			}
 
-			err = ws.WriteMessage(websocket.BinaryMessage, chunk)
+			// err = ws.Write(websocket.BinaryMessage, chunk)
+			err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
 			if err != nil {
 				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
-				// writeTries++
-				// if writeTries > 5 {
-				// 	break
-				// }
 				break
 			}
 		}
@@ -110,7 +104,7 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Websocket receive loop
 	for {
 		// Receive command
-		mtype, message, err := ws.ReadMessage()
+		mtype, message, err := ws.Read(context.Background())
 		fmt.Println("mtype: ", mtype)
 		fmt.Println("message: ", message)
 		if err != nil {
