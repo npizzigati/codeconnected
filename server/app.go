@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var ws *websocket.Conn
+// var ws *websocket.Conn
 
 var cli *client.Client
 
@@ -57,7 +57,7 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	runner := connection.Conn
 	defer connection.Close()
 
-	ws, err = websocket.Accept(w, r, &websocket.AcceptOptions{
+	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
 	if err != nil {
