@@ -17,16 +17,6 @@ import (
 	"time"
 )
 
-// var upgrader = websocket.Upgrader{
-// 	ReadBufferSize:  1024,
-// 	WriteBufferSize: 1024,
-// 	CheckOrigin: func(r *http.Request) bool {
-// 		// We are accepting ws connections from everybody.
-// 		// TODO: Is this a security risk?
-// 		return true
-// 	},
-// }
-
 var ws *websocket.Conn
 
 var cli *client.Client
@@ -67,7 +57,6 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	runner := connection.Conn
 	defer connection.Close()
 
-	// ws, err = upgrader.Upgrade(w, r, nil)
 	ws, err = websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
@@ -92,7 +81,6 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 				break
 			}
 
-			// err = ws.Write(websocket.BinaryMessage, chunk)
 			err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
 			if err != nil {
 				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
