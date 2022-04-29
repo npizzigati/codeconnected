@@ -30,11 +30,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   // // const [sharedOutputRef, setSharedOutputRef] = useState('');
   // // const [outputDisplay, setOutputDisplay] = useState('');
   // const [replDisplayData, setReplDisplayData] = useState('');
-  const [replData, setReplData] = useState('');
-  const [replTextWithCmd, setReplTextWithCmd] = useState({});
   const [language, setLanguage] = useState(defaultLanguage);
   const [codeOptions, setCodeOptions] = useState(null);
-  /* const [replFocused, setReplFocused] = useState(false); */
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
 
@@ -92,32 +89,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     });
 
     setCodeOptions(yCodeOptions);
-
-    // Shared repl data
-    const yReplData = ydoc.getMap('repl data');
-    yReplData.set('text', '');
-    yReplData.set('caretOffset', 0);
-    yReplData.set('cmd', '');
-    yReplData.set('cmdStash', '');
-    yReplData.set('cmdHistory', []);
-    yReplData.set('cmdHistoryNum', 0);
-    // yReplData.set('displayText', {});
-    // Set reference for use in React
-    setReplData(yReplData);
-
-    // Shared repl display state
-    const yReplDisplayData = ydoc.getMap('repl display');
-    yReplDisplayData.set('text', {});
-    // setReplDisplayData(yReplDisplayData);
-
-    yReplDisplayData.observe(ev => {
-      const beforeCaret = ev.target.get('text').beforeCaret;
-      const afterCaret = ev.target.get('text').afterCaret;
-      const underCaret = ev.target.get('text').underCaret;
-
-      setReplTextWithCmd({ beforeCaret, afterCaret, underCaret });
-      scrolltoReplCaret();
-    });
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
