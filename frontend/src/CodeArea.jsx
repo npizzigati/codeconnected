@@ -48,6 +48,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current = new Terminal();
     term.current.open(terminalDOMRef.current);
     term.current.onData((data) => {
+      console.log('Repl text: \n' + getReplText());
       console.log('term data: ' + data.toString());
       ws.current.send(data.toString());
     });
@@ -141,6 +142,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
   function switchLanguage (ev) {
     codeOptions.set('language', ev.target.value);
+  }
+
+  function getReplText () {
+    Terminal.selectAll();
+    const text = Terminal.getSelection();
   }
 
   function runCommand (options = {}) {
