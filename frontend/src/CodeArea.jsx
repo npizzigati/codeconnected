@@ -81,15 +81,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // Copy a reference to code mirror editor to React state
     setCmRef(cm);
 
-    // Shared output text
-    // setSharedOutputRef(ytextOutput);
-
-    // Set listener to update output display on change in ytext
-    // output variable
-    // ytextOutput.observe(ev => {
-    //   setOutputDisplay(ev.target.toString());
-    // });
-
     const yCodeOptions = ydoc.getMap('code options');
     yCodeOptions.set('language', defaultLanguage);
     yCodeOptions.observe(ev => {
@@ -316,15 +307,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     displayReplText();
   }
 
-  // function clearRepl () {
-  //   replData.set('text', '');
-  //   replData.set('cmd', '');
-  //   runCommand();
-  //   replData.set('text', replData.get('text').replace('\n', ''));
-  //   displayReplText();
-  //   document.getElementById('repl').focus();
-  // }
-
   function runCommand (options = {}) {
     const cmd = options.cmd;
     // If ws is closed/closing, open it again before sending command
@@ -411,109 +393,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       return;
     } finally {
     }
-  }
-
-  // function openReplWs () {
-  //   const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
-  //                                       '/api/openreplws');
-  //   ws.binaryType = 'arraybuffer';
-  //   let extraBytesToRead = 0;
-  //   let extraBytesRead = 0;
-  //   let totalBytesRead = 0;
-  //   let fullBuffer, fullView;
-  //   ws.onmessage = function (ev) {
-  //     (() => {
-  //       const peek = new DataView(ev.data);
-  //       const byte = peek.getUint8(0);
-  //       console.log('byte: ' + byte);
-  //       totalBytesRead++;
-  //       if (extraBytesToRead === 0) {
-  //         fullBuffer = new ArrayBuffer(4);
-  //         fullView = new Uint8Array(fullBuffer);
-  //         fullView[0] = byte;
-  //         // Multi-byte unicode data is being sent if the first
-  //         // byte starts with a "1"
-  //         // use bitmask with 10000000 to find out if this is the case
-  //         if ((128 & byte) === 128) {
-  //           // bytesLeftToRead = 1;
-  //           extraBytesToRead = 1;
-  //           // populate(fullView, firstByte);
-  //           // The next three digits in binary will tell us how
-  //           // many bytes the character is
-  //           if ((240 & byte) === 240) {
-  //             // bytesLeftToRead = 3;
-  //             extraBytesToRead = 3;
-  //           } else if ((224 & byte) === 224) {
-  //             // bytesLeftToRead = 2;
-  //             extraBytesToRead = 2;
-  //           }
-  //         }
-  //       } else {
-  //         // Read next byte into array
-  //         extraBytesRead++;
-  //         console.log(`Inserting ${byte} at position ${extraBytesRead}`);
-  //         fullView[extraBytesRead] = byte;
-  //         if (extraBytesRead === extraBytesToRead) {
-  //           extraBytesToRead = 0;
-  //           extraBytesRead = 0;
-  //         }
-  //       }
-
-  //       if (extraBytesToRead !== 0) {
-  //         return;
-  //       }
-
-  //       const finalView = new Uint8Array(fullBuffer, 0, totalBytesRead);
-  //       console.log('finalView: ' + finalView);
-  //       totalBytesRead = 0;
-
-  //       // Decoding and sending to terminal
-
-  //       const decoder = new TextDecoder('utf-8', { fatal: true });
-  //       let newReplText;
-  //       try {
-  //         // decoder may throw an error
-  //         newReplText = decoder.decode(finalView);
-  //         replData.set('text', replData.get('text') + newReplText);
-  //       } catch (err) {
-  //         console.error(err);
-  //         return;
-  //       } finally {
-  //       }
-  //     })();
-  //   };
-
-  //   return ws;
-  // }
-
-  function scrolltoReplCaret () {
-    // if (isCaretVisible()) {
-    //   return;
-    // }
-    // replCaretDOMRef.current.scrollIntoView();
-
-    // function isCaretVisible () {
-    //   const caret = replCaretDOMRef.current.getBoundingClientRect();
-    //   const container = replAreaDOMRef.current.getBoundingClientRect();
-    //   return caret.bottom < container.bottom;
-    // }
-  }
-
-  function displayReplText () {
-    // const textWithCmd = replData.get('text') + replData.get('cmd');
-    // // Caret positioning
-    // let beforeCaret, underCaret, afterCaret;
-    // if (replData.get('caretOffset') === 0) {
-    //   beforeCaret = textWithCmd;
-    //   underCaret = ' ';
-    //   afterCaret = '';
-    // } else {
-    //   const caretIdx = textWithCmd.length - replData.get('caretOffset');
-    //   beforeCaret = textWithCmd.slice(0, caretIdx);
-    //   underCaret = textWithCmd[caretIdx];
-    //   afterCaret = textWithCmd.slice(caretIdx + 1);
-    // }
-    // replDisplayData.set('text', { beforeCaret, underCaret, afterCaret });
   }
 
   function executeContent () {
