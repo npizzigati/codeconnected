@@ -45,8 +45,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current = new Terminal();
     term.current.open(terminalDOMRef.current);
     term.current.onData((data) => {
-      console.log('Repl text: \n' + getReplText());
-      console.log('term data: ' + data.toString());
       ws.current.send(data.toString());
     });
     ws.current = openWs();
@@ -87,13 +85,11 @@ function CodeArea ({ codeContent, setCodeContent }) {
       cm.setOption('mode', lang);
       console.log('language is now: ' + lang);
     });
-
     setCodeOptions(yCodeOptions);
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
   // in the DOM in order to attach to it
-  // TODO: Sanitize program output pane contents
   return (
     <>
       <button onClick={executeContent}>Run</button>
@@ -115,9 +111,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     codeOptions.set('language', ev.target.value);
   }
 
-  function getReplText () {
-    Terminal.selectAll();
-    const text = Terminal.getSelection();
   }
 
   function runCommand (options = {}) {
