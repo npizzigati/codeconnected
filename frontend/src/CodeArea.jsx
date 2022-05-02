@@ -25,6 +25,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const terminalDOMRef = useRef(null);
   const term = useRef(null);
   const ws = useRef(null);
+  const flags = useRef(null);
+  const terminalContent = useRef(null);
   // const replAreaDOMRef = useRef(null);
   // const replCaretDOMRef = useRef(null);
   // // const [sharedOutputRef, setSharedOutputRef] = useState('');
@@ -46,6 +48,13 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current.open(terminalDOMRef.current);
     term.current.onData((data) => {
       ws.current.send(data.toString());
+    });
+    term.current.onLineFeed(() => {
+      setTimeout(() => {
+        // Save terminal content to shared state so that any new
+        // users joining session will see the same content
+        terminalContent.current.set('lines', getTerminalLines());
+      }, 100);
     });
     ws.current = openWs();
 
@@ -85,7 +94,32 @@ function CodeArea ({ codeContent, setCodeContent }) {
       cm.setOption('mode', lang);
       console.log('language is now: ' + lang);
     });
+    // Copy a reference to code mirror editor to React state
     setCodeOptions(yCodeOptions);
+
+    const yFlags = ydoc.getMap('flags');
+    yFlags.observe(ev => {
+      if (ev.target.get('signal') === 'clearTerminal') {
+        clearTerminal();
+      }
+    });
+    // Copy a reference to code mirror editor to React state
+    flags.current = yFlags;
+
+    // Repl content to be passed on to a new coder joining the
+    // session as their initial repl content
+    const yTerminalContent = ydoc.getMap('terminal content');
+    // Copy a reference to code mirror editor to React state
+    terminalContent.current = yTerminalContent;
+    // Initially fill terminal with existing content from shared session
+    // TODO: Should I be using timeout here, or is there a more
+    // reliable way to determine when shared content is available
+    // after loading page
+    setTimeout(() => {
+      if (yTerminalContent.get('lines') !== undefined) {
+        term.current.write(yTerminalContent.get('lines').join('\r\n'));
+      }
+    }, 1000);
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
@@ -93,6 +127,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   return (
     <>
       <button onClick={executeContent}>Run</button>
+      <button onClick={setTerminalClearFlag}>Clear terminal</button>
       <select id='language-chooser' value={language} onChange={switchLanguage}>
         <option value='ruby'>Ruby</option>
         <option value='javascript'>Node.js</option>
@@ -111,6 +146,36 @@ function CodeArea ({ codeContent, setCodeContent }) {
     codeOptions.set('language', ev.target.value);
   }
 
+  function setTerminalClearFlag () {
+    flags.current.set('signal', 'clearTerminal');
+  }
+
+  function clearTerminal () {
+    term.current.clear();
+  }
+
+  function getTerminalLines () {
+    console.log('Getting terminal text');
+    const lines = [];
+    const numRows = term.current.rows;
+    // Build array of lines
+    for (let i = 0; i < numRows; i++) {
+      term.current.selectLines(i, i);
+      const line = term.current.getSelection();
+      lines.push(line);
+      term.current.clearSelection();
+    }
+
+    // Find last line with text before blank lines
+    let lastLineNum;
+    for (let i = numRows - 1; i >= 0; i--) {
+      if (lines[i] !== '') {
+        lastLineNum = i;
+        break;
+      }
+    }
+    const linesWithText = lines.slice(0, lastLineNum + 1);
+    return linesWithText;
   }
 
   function runCommand (options = {}) {
@@ -133,7 +198,9 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                                         '/api/openreplws');
     ws.binaryType = 'arraybuffer';
-    ws.onmessage = handleIncomingBytes;
+    ws.onmessage = ev => {
+      handleIncomingBytes(ev);
+    };
     // Need to ping at least once every 60 seconds, or else nginx
     // proxypass will time out
     const pingInterval = setInterval(() => ws.send('KEEPALIVE'), 50000);
