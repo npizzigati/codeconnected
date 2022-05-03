@@ -52,7 +52,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // Save terminal content to shared state, to be passed to new
     // users when they join
     let setTerminalState;
-    term.current.onCursorMove(() => {
+    term.current.onRender(() => {
       clearTimeout(setTerminalState);
       setTerminalState = setTimeout(() => {
         terminalContent.current.set('lines', getTerminalLines());
@@ -116,9 +116,13 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // Initially fill terminal with existing content from shared session
     // TODO: Should I be using timeout here, or is there a more
     // reliable way to determine when shared content is available
-    // after loading page
+    // after loading page?
     setTimeout(() => {
       if (yTerminalContent.get('lines') !== undefined) {
+        console.log('terminal content: ', yTerminalContent.get('lines').join('\r\n'));
+        // We have to get the lines and join them with a CR and
+        // LF. If we just get the entire text, it will just have
+        // LFs, which won't display properly
         term.current.write(yTerminalContent.get('lines').join('\r\n'));
       }
     }, 1000);
