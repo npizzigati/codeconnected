@@ -30,13 +30,6 @@ func createClient() {
 }
 
 func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// Close existing websocket connection; there can only be one
-	// repl websocket connection to one browser at a time for the
-	// repl; otherwise messages are received by all the connected
-	// browsers resulting in repetition of the repl text
-	// if ws != nil {
-	// 	ws.Close()
-	// }
 
 	fmt.Println("Will try to open ws")
 
