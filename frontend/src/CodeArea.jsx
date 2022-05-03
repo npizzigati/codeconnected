@@ -179,34 +179,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return text;
   }
 
-  // function getTerminalLines () {
-  //   console.log('Getting terminal text');
-  //   const lines = [];
-  //   const numRows = term.current.rows;
-  //   console.log('numRows: ', numRows);
-  //   // Build array of lines
-  //   for (let i = 0; i < numRows; i++) {
-  //     term.current.selectLines(i, i);
-  //     const line = term.current.getSelection();
-  //     lines.push(line);
-  //     term.current.clearSelection();
-  //   }
-
-  //   // Find last line with text before blank lines
-  //   let lastLineNum;
-  //   for (let i = numRows - 1; i >= 0; i--) {
-  //     if (lines[i] !== '') {
-  //       lastLineNum = i;
-  //       break;
-  //     }
-  //   }
-  //   console.log('Last line num: ' + lastLineNum);
-  //   console.log('First line: ' + lines[0]);
-  //   console.log('Last line: ' + lines[lastLineNum]);
-  //   const linesWithText = lines.slice(0, lastLineNum + 1);
-  //   return linesWithText;
-  // }
-
   function runCommand (options = {}) {
     const cmd = options.cmd;
     // If ws is closed/closing, open it again before sending command
