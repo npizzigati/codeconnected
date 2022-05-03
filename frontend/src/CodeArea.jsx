@@ -49,10 +49,12 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current.onData((data) => {
       ws.current.send(data.toString());
     });
-    term.current.onLineFeed(() => {
-      setTimeout(() => {
-        // Save terminal content to shared state so that any new
-        // users joining session will see the same content
+    // Save terminal content to shared state, to be passed to new
+    // users when they join
+    let setTerminalState;
+    term.current.onCursorMove(() => {
+      clearTimeout(setTerminalState);
+      setTerminalState = setTimeout(() => {
         terminalContent.current.set('lines', getTerminalLines());
       }, 100);
     });
