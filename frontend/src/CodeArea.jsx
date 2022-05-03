@@ -55,7 +55,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current.onRender(() => {
       clearTimeout(setTerminalState);
       setTerminalState = setTimeout(() => {
-        terminalContent.current.set('lines', getTerminalLines());
+        terminalContent.current.set('text', getTerminalText());
       }, 100);
     });
     ws.current = openWs();
@@ -118,14 +118,26 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // reliable way to determine when shared content is available
     // after loading page?
     setTimeout(() => {
-      if (yTerminalContent.get('lines') !== undefined) {
-        console.log('terminal content: ', yTerminalContent.get('lines').join('\r\n'));
-        // We have to get the lines and join them with a CR and
-        // LF. If we just get the entire text, it will just have
-        // LFs, which won't display properly
-        term.current.write(yTerminalContent.get('lines').join('\r\n'));
+      if (yTerminalContent.get('text') !== undefined) {
+        const text = yTerminalContent.get('text');
+        // Remove blank lines at end
+        const lines = text.split('\n');
+
+        // Find last line with text before blank lines
+        let lastLineNum;
+        for (let i = lines.length - 1; i >= 0; i--) {
+          if (lines[i] !== '') {
+            lastLineNum = i;
+            break;
+          }
+        }
+        const linesWithText = lines.slice(0, lastLineNum + 1);
+
+        // Join with CRLF for proper display
+        const formattedText = linesWithText.join('\r\n');
+        term.current.write(formattedText);
       }
-    }, 1000);
+    }, 2000);
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
@@ -160,29 +172,40 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current.clear();
   }
 
-  function getTerminalLines () {
-    console.log('Getting terminal text');
-    const lines = [];
-    const numRows = term.current.rows;
-    // Build array of lines
-    for (let i = 0; i < numRows; i++) {
-      term.current.selectLines(i, i);
-      const line = term.current.getSelection();
-      lines.push(line);
-      term.current.clearSelection();
-    }
-
-    // Find last line with text before blank lines
-    let lastLineNum;
-    for (let i = numRows - 1; i >= 0; i--) {
-      if (lines[i] !== '') {
-        lastLineNum = i;
-        break;
-      }
-    }
-    const linesWithText = lines.slice(0, lastLineNum + 1);
-    return linesWithText;
+  function getTerminalText () {
+    term.current.selectAll();
+    const text = term.current.getSelection();
+    term.current.clearSelection();
+    return text;
   }
+
+  // function getTerminalLines () {
+  //   console.log('Getting terminal text');
+  //   const lines = [];
+  //   const numRows = term.current.rows;
+  //   console.log('numRows: ', numRows);
+  //   // Build array of lines
+  //   for (let i = 0; i < numRows; i++) {
+  //     term.current.selectLines(i, i);
+  //     const line = term.current.getSelection();
+  //     lines.push(line);
+  //     term.current.clearSelection();
+  //   }
+
+  //   // Find last line with text before blank lines
+  //   let lastLineNum;
+  //   for (let i = numRows - 1; i >= 0; i--) {
+  //     if (lines[i] !== '') {
+  //       lastLineNum = i;
+  //       break;
+  //     }
+  //   }
+  //   console.log('Last line num: ' + lastLineNum);
+  //   console.log('First line: ' + lines[0]);
+  //   console.log('Last line: ' + lines[lastLineNum]);
+  //   const linesWithText = lines.slice(0, lastLineNum + 1);
+  //   return linesWithText;
+  // }
 
   function runCommand (options = {}) {
     const cmd = options.cmd;
