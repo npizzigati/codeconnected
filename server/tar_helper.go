@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-func makeTarball(contents []byte) (bytes.Buffer, error) {
+func makeTarball(contents []byte, filename string) (bytes.Buffer, error) {
 	var tarBuffer bytes.Buffer
-	err := createTar(contents, &tarBuffer)
+	err := createTar(contents, &tarBuffer, filename)
 	if err != nil {
 		return tarBuffer, err
 	}
@@ -17,20 +17,20 @@ func makeTarball(contents []byte) (bytes.Buffer, error) {
 	return tarBuffer, nil
 }
 
-func createTar(contents []byte, buffer io.Writer) error {
+func createTar(contents []byte, buffer io.Writer, filename string) error {
 	tarWriter := tar.NewWriter(buffer)
 	defer tarWriter.Close()
 
-	err := addToTar(tarWriter, contents)
+	err := addToTar(tarWriter, contents, filename)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func addToTar(tarWriter *tar.Writer, contents []byte) error {
+func addToTar(tarWriter *tar.Writer, contents []byte, filename string) error {
 	header := &tar.Header{
-		Name:       "code",
+		Name:       filename,
 		Mode:       0777,
 		Size:       int64(len(contents)),
 		ModTime:    time.Now(),
