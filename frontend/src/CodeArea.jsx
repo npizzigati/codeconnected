@@ -200,7 +200,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     if (language === 'ruby') {
       // reset repl with exec $0 then wait for prompt
       const reset = 'exec $0';
-      const runFile = `require_relative "${path.replace(/\.rb$/, '')}"`
+      const runFile = `load '${path}'`;
       executeRun(reset)
         .then(() => {
           console.log('execution of reset command completed');
