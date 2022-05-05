@@ -23,27 +23,14 @@ function CodeArea ({ codeContent, setCodeContent }) {
   // This is the positive offset of the repl cursor from right to
   // left, from the right end cursor position
   const codeAreaDOMRef = useRef(null);
-  const termDOMRef = useRef(null);
+  const mainTermDOMRef = useRef(null);
   const altTermDOMRef = useRef(null);
-  const term = useRef(null);
   const altTerm = useRef(null);
+  const mainTerm = useRef(null);
+  // const activeTerm = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
-  const terminalContent = useRef(null);
-  const outputBuffer = useRef({ sink: 'terminal', content: '' });
-  // const cmd = useRef('');
-  // // Send cmd to runner when prompt is ready in the
-  // // context of runCode function
-  // document.addEventListener('promptReady', sendCmd);
-  // function sendCmd () {
-  //   ws.current.send(cmd.current);
-  // }
-
-  // const replAreaDOMRef = useRef(null);
-  // const replCaretDOMRef = useRef(null);
-  // // const [sharedOutputRef, setSharedOutputRef] = useState('');
-  // // const [outputDisplay, setOutputDisplay] = useState('');
-  // const [replDisplayData, setReplDisplayData] = useState('');
+  const terminalData = useRef(null);
   const [language, setLanguage] = useState(defaultLanguage);
   const [codeOptions, setCodeOptions] = useState(null);
   const [cmRef, setCmRef] = useState(null);
@@ -56,20 +43,20 @@ function CodeArea ({ codeContent, setCodeContent }) {
   let fullBuffer, fullView;
 
   useEffect(() => {
-    term.current = new Terminal();
+    mainTerm.current = new Terminal();
+    mainTerm.current.open(mainTermDOMRef.current);
     altTerm.current = new Terminal();
-    term.current.open(termDOMRef.current);
     altTerm.current.open(altTermDOMRef.current);
-    term.current.onData((data) => {
+    mainTerm.current.onData((data) => {
       ws.current.send(data.toString());
     });
     // Save terminal content to shared state, to be passed to new
     // users when they join
     let setTerminalState;
-    term.current.onRender(() => {
+    mainTerm.current.onRender(() => {
       clearTimeout(setTerminalState);
       setTerminalState = setTimeout(() => {
-        terminalContent.current.set('text', getTerminalText(term));
+        terminalData.current.set('text', getTerminalText(mainTerm));
       }, 100);
     });
     ws.current = openWs();
@@ -122,34 +109,27 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // Copy a reference to code mirror editor to React state
     flags.current = yFlags;
 
-    // Repl content to be passed on to a new coder joining the
-    // session as their initial repl content
-    const yTerminalContent = ydoc.getMap('terminal content');
+    const yTerminalData = ydoc.getMap('terminal data');
+    // Whether to redirect terminal echo/output to alternate
+    // terminal (when running commands we don't want the user to see)
+    yTerminalData.set('redirect', false);
+    yTerminalData.observe((ev) => {
+      console.log('redirect: ' + ev.target.get('redirect'));
+    });
     // Copy a reference to code mirror editor to React state
-    terminalContent.current = yTerminalContent;
+    terminalData.current = yTerminalData;
     // Initially fill terminal with existing content from shared session
     // TODO: Should I be using timeout here, or is there a more
     // reliable way to determine when shared content is available
     // after loading page?
     setTimeout(() => {
-      if (yTerminalContent.get('text') !== undefined) {
-        const text = yTerminalContent.get('text');
-        const lines = text.split('\n');
-
-        // Remove blank lines at end
-        // Find last line with text before blank lines
-        let lastLineNum;
-        for (let i = lines.length - 1; i >= 0; i--) {
-          if (lines[i] !== '') {
-            lastLineNum = i;
-            break;
-          }
-        }
-        const linesWithText = lines.slice(0, lastLineNum + 1);
+      if (yTerminalData.get('text') !== undefined) {
+        const text = yTerminalData.get('text');
+        const lines = terminalLines(text);
 
         // Join with CRLF for proper display
-        const formattedText = linesWithText.join('\r\n');
-        term.current.write(formattedText);
+        const formattedText = lines.join('\r\n');
+        mainTerm.current.write(formattedText);
       }
     }, 2000);
   }, []);
@@ -169,7 +149,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
         <div id='codemirror-wrapper'>
           <textarea ref={codeAreaDOMRef} />
         </div>
-        <div id='terminal' ref={termDOMRef} />
+        <div id='terminal' ref={mainTermDOMRef} />
         <div id='alt-terminal' ref={altTermDOMRef} />
       </div>
     </>
@@ -184,7 +164,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function clearTerminal () {
-    term.current.clear();
+    mainTerm.current.clear();
   }
 
   function getTerminalText (terminal) {
@@ -194,27 +174,55 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return text;
   }
 
-  function runCode (path) {
-    console.log('Going to run code from codemirror');
-    outputBuffer.current.sink = 'execution';
+  function terminalLines (text) {
+    const lines = text.split('\n');
+
+    // Remove blank lines at end
+    // Find last line with text before blank lines
+    let lastLineNum;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i] !== '') {
+        lastLineNum = i;
+        break;
+      }
+    }
+    return lines.slice(0, lastLineNum + 1);
+  }
+
+  async function runCode (path) {
+    altTerm.current.clear();
     if (language === 'ruby') {
       // reset repl with exec $0 then wait for prompt
       const reset = 'exec $0';
-      const runFile = `load '${path}'`;
-      executeRun(reset)
-        .then(() => {
-          console.log('execution of reset command completed');
-          executeRun(runFile);
-        })
-        .then(() => {
-          console.log('result: ', getTerminalText(altTerm));
-          outputBuffer.current.sink = 'terminal';
-        });
-        // .catch(err => console.log(err));
+      const runCmd = `load '${path}'`;
+      terminalData.current.set('redirect', true);
+      let timeoutID;
+      try {
+        timeoutID = await executeRun(reset);
+        clearTimeout(timeoutID);
+        console.log('Successfully executed reset');
+        timeoutID = await executeRun(runCmd);
+        clearTimeout(timeoutID);
+        console.log('Successfully executed command to run');
+      } catch (error) {
+        console.log('An error occurred: ' + error);
+      } finally {
+        terminalData.current.set('redirect', false);
+      }
     }
-    // TODO: When all done with running code, set outputBuffer
-    // back to terminal
-    // outputBuffer.current.sink = 'terminal';
+
+    const lines = terminalLines(getTerminalText(altTerm));
+    // Omit first line (command) and second to last line (throwaway
+    // return value)
+    const output = lines.slice(2, -2).join('\r\n');
+    const prompt = lines[lines.length - 1];
+    // Add padding before and after output and add prompt
+    const padding = '\r\n'.repeat(2);
+    const text = padding + output + padding + prompt;
+    // Write to real terminal
+    mainTerm.current.write(text);
+    // Sync terminals
+    
 
     // If ws is closed/closing, open it again before sending command
     // if (ws.current === null || ws.current.readyState === WebSocket.CLOSED ||
@@ -223,13 +231,20 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function executeRun (cmd) {
+    const timeoutSeconds = 3;
     console.log('Going to execute: ' + cmd);
-    return new Promise(function (resolve, reject) {
+    let timeoutID;
+    const timeout = new Promise(function (resolve, reject) {
+      timeoutID = setTimeout(reject, timeoutSeconds * 1000,
+                             new Error('Code execution timed out'));
+    });
+    const runPromise = new Promise(function (resolve, reject) {
       ws.current.send(cmd + '\n');
       document.addEventListener('promptReady', () => {
-        resolve();
+        resolve(timeoutID);
       });
     });
+    return Promise.race([runPromise, timeout]);
   }
 
   function openWs () {
@@ -301,36 +316,25 @@ function CodeArea ({ codeContent, setCodeContent }) {
       newText = decoder.decode(finalView);
       // Send the output to the correct buffer, depending on
       // whether input came from terminal or from cmd execution
-      if (outputBuffer.current.sink === 'terminal') {
-        term.current.write(newText);
-      } else if (outputBuffer.current.sink === 'execution') {
-        console.log('adding: ' + newText + ' to alt term');
+      // if (activeTerm.current === mainTerm.current) {
+      if (terminalData.current.get('redirect') === false) {
+        mainTerm.current.write(newText);
+      } else {
         // TODO: Need to make the terminal choice shared, or else
         // other users will see alt terminal output on their
         // regular terminals
         altTerm.current.write(newText, checkPrompt);
 
         function checkPrompt () {
-          // TODO: extract into method
-          const altTermText = getTerminalText(altTerm);
-          console.log('altTermText: ' + altTermText);
-          const lines = altTermText.split('\n');
-          // Remove blank lines at end
-          // Find last line with text before blank lines
-          let lastLineNum;
-          for (let i = lines.length - 1; i >= 0; i--) {
-            if (lines[i] !== '') {
-              lastLineNum = i;
-              break;
-            }
-          }
-          // const linesWithText = lines.slice(0, lastLineNum + 1);
-          // const formattedText = linesWithText.join('\r\n');
-          // TODO: end of section to extract into method
+          const text = getTerminalText(altTerm);
+          const lines = terminalLines(text);
+          const lastLine = lines[lines.length - 1];
 
-          const lastLine = lines[lastLineNum];
-          console.log('lastLine in altTerm: ' + lastLine);
+          // const lastLine = lines[lastLineNum];
           const termination = '> ';
+          // Check whether prompt is ready by checking that at
+          // least x milliseconds pass from when the indicated
+          // termination appears in the terminal output
           clearTimeout(checkPromptTimeout);
           checkPromptTimeout = setTimeout(() => {
             if (lastLine.slice(lastLine.length - 2) === termination) {
