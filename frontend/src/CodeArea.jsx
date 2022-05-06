@@ -42,6 +42,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   let totalBytesRead = 0;
   let fullBuffer, fullView;
 
+  const promptReadyEvent = new Event('promptReady');
+
   useEffect(() => {
     mainTerm.current = new Terminal();
     mainTerm.current.open(mainTermDOMRef.current);
@@ -189,40 +191,49 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return lines.slice(0, lastLineNum + 1);
   }
 
-  async function runCode (path) {
+  async function runCode (filename) {
     altTerm.current.clear();
     if (language === 'ruby') {
+      // TODO: Need to make sure we're exiting from any nested
+      // pry instances
+      const exitPryCmd = 'exit';
       // reset repl with exec $0 then wait for prompt
-      const reset = 'exec $0';
-      const runCmd = `load '${path}'`;
+      // const resetCmd = 'exec $0';
+      const echoOffCmd = 'stty -echo';
+      const runCmd = '`stty echo`;' + `pry -r './${filename}';`;
       terminalData.current.set('redirect', true);
       let timeoutID;
       try {
-        timeoutID = await executeRun(reset);
+        // exit Pry to shell
+        timeoutID = await executeAndWait(exitPryCmd);
         clearTimeout(timeoutID);
-        console.log('Successfully executed reset');
-        timeoutID = await executeRun(runCmd);
+        console.log('Successfully exited Pry');
+        // timeoutID = await executeAndWait(resetCmd);
+        // clearTimeout(timeoutID);
+        // console.log('Successfully executed reset');
+        timeoutID = await executeAndWait(echoOffCmd);
         clearTimeout(timeoutID);
-        console.log('Successfully executed command to run');
+        console.log('Successfully executed echo off');
       } catch (error) {
         console.log('An error occurred: ' + error);
       } finally {
         terminalData.current.set('redirect', false);
       }
+      executeRun(runCmd);
     }
 
-    const lines = terminalLines(getTerminalText(altTerm));
-    // Omit first line (command) and second to last line (throwaway
-    // return value)
-    const output = lines.slice(2, -2).join('\r\n');
-    const prompt = lines[lines.length - 1];
-    // Add padding before and after output and add prompt
-    const padding = '\r\n'.repeat(2);
-    const text = padding + output + padding + prompt;
-    // Write to real terminal
-    mainTerm.current.write(text);
-    // Sync terminals
-    
+    // const lines = terminalLines(getTerminalText(altTerm));
+    // // Omit first line (command) and second to last line (throwaway
+    // // return value)
+    // const output = lines.slice(2, -2).join('\r\n');
+    // const prompt = lines[lines.length - 1];
+    // // Add padding before and after output and add prompt
+    // const padding = '\r\n'.repeat(2);
+    // const text = padding + output + padding + prompt;
+    // // Write to real terminal
+    // mainTerm.current.write(text);
+    // // Sync terminals
+
 
     // If ws is closed/closing, open it again before sending command
     // if (ws.current === null || ws.current.readyState === WebSocket.CLOSED ||
@@ -230,7 +241,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // }
   }
 
-  function executeRun (cmd) {
+  function executeAndWait (cmd) {
     const timeoutSeconds = 3;
     console.log('Going to execute: ' + cmd);
     let timeoutID;
@@ -241,10 +252,18 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const runPromise = new Promise(function (resolve, reject) {
       ws.current.send(cmd + '\n');
       document.addEventListener('promptReady', () => {
+        console.log('promptReady event heard');
         resolve(timeoutID);
-      });
+      }, { once: true });
     });
     return Promise.race([runPromise, timeout]);
+  }
+
+  function executeRun (cmd) {
+    console.log('Going to execute: ' + cmd);
+    const newline = '\n';
+    const fullCmd = cmd + newline;
+    ws.current.send(fullCmd);
   }
 
   function openWs () {
@@ -311,6 +330,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const decoder = new TextDecoder('utf-8', { fatal: true });
     let newText;
     let checkPromptTimeout;
+    // const pryTermination = '> ';
+    const shellTermination = '$ ';
     try {
       // decoder may throw an error
       newText = decoder.decode(finalView);
@@ -318,28 +339,32 @@ function CodeArea ({ codeContent, setCodeContent }) {
       // whether input came from terminal or from cmd execution
       // if (activeTerm.current === mainTerm.current) {
       if (terminalData.current.get('redirect') === false) {
+        // console.log('newText to main: ' + newText);
         mainTerm.current.write(newText);
       } else {
-        // TODO: Need to make the terminal choice shared, or else
-        // other users will see alt terminal output on their
-        // regular terminals
-        altTerm.current.write(newText, checkPrompt);
+        // console.log('newText to alt: ' + newText);
+        altTerm.current.write(newText, () => {
+          // Only check prompt when new char is possible prompt char
+          const terminationChars = shellTermination.split('');
+          if (terminationChars.includes(newText)) {
+            checkPrompt();
+          }
+        });
 
         function checkPrompt () {
           const text = getTerminalText(altTerm);
           const lines = terminalLines(text);
           const lastLine = lines[lines.length - 1];
 
-          // const lastLine = lines[lastLineNum];
-          const termination = '> ';
           // Check whether prompt is ready by checking that at
           // least x milliseconds pass from when the indicated
           // termination appears in the terminal output
           clearTimeout(checkPromptTimeout);
           checkPromptTimeout = setTimeout(() => {
-            if (lastLine.slice(lastLine.length - 2) === termination) {
-              console.log('Dispatching event');
-              document.dispatchEvent(new Event('promptReady'));
+            const terminationSlice = lastLine.slice(lastLine.length - 2);
+            if (terminationSlice === shellTermination) {
+              console.log('Dispatching prompt ready event');
+              document.dispatchEvent(promptReadyEvent);
             }
           }, 100);
         }
@@ -372,6 +397,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: body
     };
+
     fetch('/api/savecontent', options)
       .then(response => {
         console.log(response);
