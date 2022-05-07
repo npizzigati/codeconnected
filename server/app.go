@@ -115,20 +115,13 @@ func startRunnerReader() {
 
 func executeCommand(command []byte) {
 	fmt.Println("Executing command")
-	// newline := byte(0x0a)
-	// payload := append(command, newline)
 
 	tries := 0
 	for tries < 5 {
 		// Back off on each failed connection attempt
 		time.Sleep(time.Duration(tries/2) * time.Second)
 		payload := make([]byte, 1)
-		// if bytes.Equal(command, []byte("Enter")) {
-		// 	fmt.Println("Command is Enter")
-		// 	payload[0] = byte(0x0a)
-		// } else {
 		payload = []byte(command)
-		// }
 		_, err := runner.Write([]byte(payload))
 		if err == nil {
 			fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
@@ -184,76 +177,6 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Successfully wrote code to container"))
-
-	// // Execute user program in container.
-	// cmd := []string{"node", "/home/codeuser/program.js"}
-	// execOpts := types.ExecConfig{
-	// 	AttachStdout: true,
-	// 	AttachStderr: true,
-	// 	Tty:          true,
-	// 	Cmd:          cmd,
-	// }
-
-	// resp, err := cli.ContainerExecCreate(ctx, containerID, execOpts)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// connection, err := cli.ContainerExecAttach(context.Background(),
-	// 	resp.ID, types.ExecStartCheck{})
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer connection.Close()
-
-	// // Probably should use StdCopy here:
-	// // https://pkg.go.dev/github.com/docker/docker/pkg/stdcopy
-	// output := make([]byte, 0, 512)
-	// // Get 8-byte header of multiplexed stdout/stderr stream
-	// // and then read data, and repeat until EOF
-	// for {
-	// 	h := make([]byte, 8)
-	// 	_, err := connection.Reader.Read(h)
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	// First byte indicates stdout or stderr
-	// 	// var streamType string
-	// 	// if h[0] == 2 {
-	// 	// 	streamType = "stderr"
-	// 	// } else {
-	// 	// 	streamType = "stdout"
-	// 	// }
-
-	// 	// Last 4 bytes represent uint32 size
-	// 	size := h[4] + h[5] + h[6] + h[7]
-	// 	b := make([]byte, size)
-	// 	_, err = connection.Reader.Read(b)
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	output = append(output, b...)
-	// }
-
-	// fmt.Printf("output: %s", output)
-	// w.Header().Set("Content-Type", "application/json")
-	// w.WriteHeader(http.StatusCreated)
-	// resp2 := map[string]string{
-	// 	"output": string(output),
-	// }
-	// jsonResp, err := json.Marshal(resp2)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// w.Write(jsonResp)
 }
 
 func main() {
