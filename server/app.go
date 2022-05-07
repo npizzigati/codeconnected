@@ -1,11 +1,9 @@
 package main
 
 import (
-	"errors"
-	// "bytes"
 	"context"
-	// "encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
