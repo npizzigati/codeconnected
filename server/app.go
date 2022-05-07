@@ -19,9 +19,22 @@ import (
 
 // var ws *websocket.Conn
 
+// TODO: Can there variables/constants be passed around in a
+// context object instead?
 var cli *client.Client
+var connection types.HijackedResponse
+var runner net.Conn
+var ws *websocket.Conn
 
-func createClient() {
+var containerID = "myshell"
+var attachOpts = types.ContainerAttachOptions{
+	Stream: true, // This apparently needs to be true for Conn.Write to work
+	Stdin:  true,
+	Stdout: true,
+	Stderr: false,
+}
+
+func initClient() {
 	var err error
 	cli, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -29,27 +42,25 @@ func createClient() {
 	}
 }
 
+func openRunnerConn() {
+	var err error
+	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
+	if err != nil {
+		fmt.Println("error in getting new connection: ", err)
+		panic(err)
+	}
+
+	runner = connection.Conn
+	if err != nil {
+		fmt.Println("error in setting deadline: ", err)
+	}
+}
+
 func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	fmt.Println("Will try to open ws")
 
-	createClient()
-
-	containerID := "myshell"
-	attachOpts := types.ContainerAttachOptions{
-		Stream: true, // This apparently needs to be true for Conn.Write to work
-		Stdin:  true,
-		Stdout: true,
-		Stderr: false,
-	}
-
-	connection, err := cli.ContainerAttach(context.Background(), containerID, attachOpts)
-	if err != nil {
-		panic(err)
-	}
-	runner := connection.Conn
-	defer connection.Close()
-
-	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+	var err error
+	ws, err = websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
 	if err != nil {
@@ -58,6 +69,27 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	defer ws.Close(websocket.StatusInternalError, "deferred close")
 
 	// Set up read listener on runner output
+	startRunnerReader()
+
+	// Websocket receive loop
+	for {
+		// Receive command
+		mtype, message, err := ws.Read(context.Background())
+		fmt.Println("mtype: ", mtype)
+		fmt.Println("message: ", message)
+		if err != nil {
+			fmt.Println("error receiving message: ", err, " ", time.Now().String())
+			break
+		}
+
+		fmt.Printf("Command received: %s\n", message)
+		if string(message) != "KEEPALIVE" {
+			executeCommand(message)
+		}
+	}
+}
+
+func startRunnerReader() {
 	go func() {
 		fmt.Println("Reading from runner\n")
 		for {
@@ -80,46 +112,37 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 		}
 	}()
-
-	// Websocket receive loop
-	for {
-		// Receive command
-		mtype, message, err := ws.Read(context.Background())
-		fmt.Println("mtype: ", mtype)
-		fmt.Println("message: ", message)
-		if err != nil {
-			fmt.Println("error receiving message: ", err, " ", time.Now().String())
-			break
-		}
-
-		fmt.Printf("Command received: %s\n", message)
-		if string(message) != "KEEPALIVE" {
-			executeCommand(runner, message)
-		}
-	}
 }
 
-func executeCommand(runner net.Conn, command []byte) {
+func executeCommand(command []byte) {
 	fmt.Println("Executing command")
 	// newline := byte(0x0a)
 	// payload := append(command, newline)
 
-	payload := make([]byte, 1)
-	// if bytes.Equal(command, []byte("Enter")) {
-	// 	fmt.Println("Command is Enter")
-	// 	payload[0] = byte(0x0a)
-	// } else {
-	payload = []byte(command)
-	// }
-	_, err := runner.Write([]byte(payload))
-	// TODO: An error here occurs after connection has been idle
-	// for a long time (broken pipe), but connection is restored if
-	// user sends command again.
-	if err != nil {
-		fmt.Println(err)
-		return
+	for {
+		fmt.Println("looping")
+		payload := make([]byte, 1)
+		// if bytes.Equal(command, []byte("Enter")) {
+		// 	fmt.Println("Command is Enter")
+		// 	payload[0] = byte(0x0a)
+		// } else {
+		payload = []byte(command)
+		// }
+		fmt.Println("payload created")
+		_, err := runner.Write([]byte(payload))
+		// TODO: An error here occurs after connection has been idle
+		// for a long time (broken pipe), but connection is restored if
+		// user sends command again.
+		if err == nil {
+			fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
+			break
+		}
+		fmt.Println("runner write error: ", err)
+		// Reestablish connection
+		fmt.Println("trying to reestablish connection")
+		openRunnerConn()
+		startRunnerReader()
 	}
-	fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
 }
 
 func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -231,6 +254,9 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func main() {
+	initClient()
+	openRunnerConn()
+	defer connection.Close()
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
 	router.GET("/api/openreplws", serveReplWs)

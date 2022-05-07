@@ -24,9 +24,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   // left, from the right end cursor position
   const codeAreaDOMRef = useRef(null);
   const mainTermDOMRef = useRef(null);
-  const altTermDOMRef = useRef(null);
-  const altTerm = useRef(null);
-  const mainTerm = useRef(null);
+  const term = useRef(null);
   // const activeTerm = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
@@ -45,20 +43,18 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
-    mainTerm.current = new Terminal();
-    mainTerm.current.open(mainTermDOMRef.current);
-    altTerm.current = new Terminal();
-    altTerm.current.open(altTermDOMRef.current);
-    mainTerm.current.onData((data) => {
+    term.current = new Terminal();
+    term.current.open(mainTermDOMRef.current);
+    term.current.onData((data) => {
       ws.current.send(data.toString());
     });
     // Save terminal content to shared state, to be passed to new
     // users when they join
     let setTerminalState;
-    mainTerm.current.onRender(() => {
+    term.current.onRender(() => {
       clearTimeout(setTerminalState);
       setTerminalState = setTimeout(() => {
-        terminalData.current.set('text', getTerminalText(mainTerm));
+        terminalData.current.set('text', getTerminalText(term));
       }, 100);
     });
     ws.current = openWs();
@@ -112,12 +108,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     flags.current = yFlags;
 
     const yTerminalData = ydoc.getMap('terminal data');
-    // Whether to redirect terminal echo/output to alternate
-    // terminal (when running commands we don't want the user to see)
-    yTerminalData.set('redirect', false);
-    yTerminalData.observe((ev) => {
-      console.log('redirect: ' + ev.target.get('redirect'));
-    });
     // Copy a reference to code mirror editor to React state
     terminalData.current = yTerminalData;
     // Initially fill terminal with existing content from shared session
@@ -131,7 +121,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
         // Join with CRLF for proper display
         const formattedText = lines.join('\r\n');
-        mainTerm.current.write(formattedText);
+        term.current.write(formattedText);
       }
     }, 2000);
   }, []);
@@ -152,7 +142,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
           <textarea ref={codeAreaDOMRef} />
         </div>
         <div id='terminal' ref={mainTermDOMRef} />
-        <div id='alt-terminal' ref={altTermDOMRef} />
       </div>
     </>
   );
@@ -166,7 +155,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   function clearTerminal () {
-    mainTerm.current.clear();
+    term.current.clear();
   }
 
   function getTerminalText (terminal) {
@@ -192,37 +181,25 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   async function runCode (filename) {
-    altTerm.current.clear();
     if (language === 'ruby') {
       // TODO: Need to make sure we're exiting from any nested
       // pry instances
-      const exitPryCmd = 'exit';
       // reset repl with exec $0 then wait for prompt
-      // const resetCmd = 'exec $0';
-      const echoOffCmd = 'stty -echo';
-      const runCmd = '`stty echo`;' + `pry -r './${filename}';`;
-      terminalData.current.set('redirect', true);
+      const resetCmd = 'exec $0 #--> Resetting REPL';
+      const runCmd = `load '${filename}' #--> Running code;`;
       let timeoutID;
       try {
         // exit Pry to shell
-        timeoutID = await executeAndWait(exitPryCmd);
+        timeoutID = await executeAndWait(resetCmd);
         clearTimeout(timeoutID);
-        console.log('Successfully exited Pry');
-        // timeoutID = await executeAndWait(resetCmd);
-        // clearTimeout(timeoutID);
-        // console.log('Successfully executed reset');
-        timeoutID = await executeAndWait(echoOffCmd);
-        clearTimeout(timeoutID);
-        console.log('Successfully executed echo off');
+        console.log('Successfully reset');
       } catch (error) {
         console.log('An error occurred: ' + error);
       } finally {
-        terminalData.current.set('redirect', false);
       }
       executeRun(runCmd);
     }
 
-    // const lines = terminalLines(getTerminalText(altTerm));
     // // Omit first line (command) and second to last line (throwaway
     // // return value)
     // const output = lines.slice(2, -2).join('\r\n');
@@ -231,7 +208,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // const padding = '\r\n'.repeat(2);
     // const text = padding + output + padding + prompt;
     // // Write to real terminal
-    // mainTerm.current.write(text);
+    // term.current.write(text);
     // // Sync terminals
 
 
@@ -331,43 +308,36 @@ function CodeArea ({ codeContent, setCodeContent }) {
     let newText;
     let checkPromptTimeout;
     // const pryTermination = '> ';
-    const shellTermination = '$ ';
+    const termination = '> ';
     try {
       // decoder may throw an error
       newText = decoder.decode(finalView);
       // Send the output to the correct buffer, depending on
       // whether input came from terminal or from cmd execution
-      // if (activeTerm.current === mainTerm.current) {
-      if (terminalData.current.get('redirect') === false) {
-        // console.log('newText to main: ' + newText);
-        mainTerm.current.write(newText);
-      } else {
-        // console.log('newText to alt: ' + newText);
-        altTerm.current.write(newText, () => {
-          // Only check prompt when new char is possible prompt char
-          const terminationChars = shellTermination.split('');
-          if (terminationChars.includes(newText)) {
-            checkPrompt();
-          }
-        });
-
-        function checkPrompt () {
-          const text = getTerminalText(altTerm);
-          const lines = terminalLines(text);
-          const lastLine = lines[lines.length - 1];
-
-          // Check whether prompt is ready by checking that at
-          // least x milliseconds pass from when the indicated
-          // termination appears in the terminal output
-          clearTimeout(checkPromptTimeout);
-          checkPromptTimeout = setTimeout(() => {
-            const terminationSlice = lastLine.slice(lastLine.length - 2);
-            if (terminationSlice === shellTermination) {
-              console.log('Dispatching prompt ready event');
-              document.dispatchEvent(promptReadyEvent);
-            }
-          }, 100);
+      // if (activeTerm.current === term.current) {
+      term.current.write(newText, () => {
+        // Only check prompt when new char is possible prompt char
+        if (termination.split('').includes(newText)) {
+          checkPrompt();
         }
+      });
+
+      function checkPrompt () {
+        const text = getTerminalText(term);
+        const lines = terminalLines(text);
+        const lastLine = lines[lines.length - 1];
+
+        // Check whether prompt is ready by checking that at
+        // least x milliseconds pass from when the indicated
+        // termination appears in the terminal output
+        clearTimeout(checkPromptTimeout);
+        checkPromptTimeout = setTimeout(() => {
+          const terminationSlice = lastLine.slice(lastLine.length - 2);
+          if (terminationSlice === termination) {
+            console.log('Dispatching prompt ready event');
+            document.dispatchEvent(promptReadyEvent);
+          }
+        }, 100);
       }
     } catch (err) {
       console.error(err);
