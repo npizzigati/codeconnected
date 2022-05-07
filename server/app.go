@@ -130,9 +130,6 @@ func executeCommand(command []byte) {
 		// }
 		fmt.Println("payload created")
 		_, err := runner.Write([]byte(payload))
-		// TODO: An error here occurs after connection has been idle
-		// for a long time (broken pipe), but connection is restored if
-		// user sends command again.
 		if err == nil {
 			fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
 			break
