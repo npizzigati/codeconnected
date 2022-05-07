@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	// "bytes"
 	"context"
 	// "encoding/binary"
@@ -119,8 +120,10 @@ func executeCommand(command []byte) {
 	// newline := byte(0x0a)
 	// payload := append(command, newline)
 
-	for {
-		fmt.Println("looping")
+	tries := 0
+	for tries < 5 {
+		// Back off on each failed connection attempt
+		time.Sleep(time.Duration(tries/2) * time.Second)
 		payload := make([]byte, 1)
 		// if bytes.Equal(command, []byte("Enter")) {
 		// 	fmt.Println("Command is Enter")
@@ -128,7 +131,6 @@ func executeCommand(command []byte) {
 		// } else {
 		payload = []byte(command)
 		// }
-		fmt.Println("payload created")
 		_, err := runner.Write([]byte(payload))
 		if err == nil {
 			fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
@@ -139,6 +141,12 @@ func executeCommand(command []byte) {
 		fmt.Println("trying to reestablish connection")
 		openRunnerConn()
 		startRunnerReader()
+		tries++
+	}
+
+	// If unable to connect
+	if tries == 5 {
+		panic(errors.New("unable to reconnect to runner"))
 	}
 }
 
