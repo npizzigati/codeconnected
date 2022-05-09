@@ -147,7 +147,12 @@ function CodeArea ({ codeContent, setCodeContent }) {
   );
 
   function switchLanguage (ev) {
-    codeOptions.set('language', ev.target.value);
+    const lang = ev.target.value;
+    codeOptions.set('language', lang);
+    fetch(`/api/switchlanguage/${lang}`)
+      .then(response => {
+        console.log(response);
+      });
   }
 
   function setTerminalClearFlag () {
@@ -181,13 +186,29 @@ function CodeArea ({ codeContent, setCodeContent }) {
   }
 
   async function runCode (filename) {
-    if (language === 'ruby') {
-      // TODO: Need to make sure we're exiting from any nested
-      // pry instances
-      // reset repl with exec $0 then wait for prompt
-      const resetCmd = 'exec $0 #--> Resetting REPL';
-      const runCmd = `load '${filename}' #--> Running code;`;
-      let timeoutID;
+    // TODO: For Ruby, maybe need to make sure we're exiting from
+    // any nested pry instances
+    // reset repl with exec $0 then wait for prompt
+    let resetCmd, runCmd;
+    switch (language) {
+    case 'ruby':
+      resetCmd = 'exec $0 #--> Resetting REPL';
+      runCmd = `load '${filename}' #--> Running code;`;
+      break;
+    case 'javascript':
+      // resetCmd = 'exec $0 #--> Resetting REPL';
+      console.log('executing javascript code');
+      resetCmd = '.clear //--> Resetting REPL';
+      runCmd = `.load ${filename}`;
+      break;
+    case 'sql':
+      console.log('executing javascript code');
+      resetCmd = null;
+      runCmd = `\\i ./${filename}`;
+      break;
+    }
+    let timeoutID;
+    if (resetCmd !== null) {
       try {
         // exit Pry to shell
         timeoutID = await executeAndWait(resetCmd);
@@ -197,9 +218,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
         console.log('An error occurred: ' + error);
       } finally {
       }
-      executeRun(runCmd);
     }
-
+    executeRun(runCmd);
     // // Omit first line (command) and second to last line (throwaway
     // // return value)
     // const output = lines.slice(2, -2).join('\r\n');

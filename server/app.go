@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
@@ -43,16 +44,13 @@ func initClient() {
 
 func openRunnerConn() {
 	var err error
+	fmt.Println("connecting to container id: ", containerID)
 	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
 	if err != nil {
 		fmt.Println("error in getting new connection: ", err)
 		panic(err)
 	}
-
 	runner = connection.Conn
-	if err != nil {
-		fmt.Println("error in setting deadline: ", err)
-	}
 }
 
 func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -166,8 +164,6 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		panic(err)
 	}
 
-	containerID := "myshell"
-
 	// Copy contents of user program to container.
 	err = cli.CopyToContainer(ctx, containerID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
 	if err != nil {
@@ -179,6 +175,61 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write([]byte("Successfully wrote code to container"))
 }
 
+func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	ctx := context.Background()
+
+	// TODO: Reuse existing containers (resume? restart?)
+	fmt.Print("Stopping container ", containerID, "... ")
+	if err := cli.ContainerStop(ctx, containerID, nil); err != nil {
+		fmt.Println("Unable to stop container")
+		panic(err)
+	}
+	fmt.Println("Successfully stopped container")
+
+	// TODO: need to provide options i and t, or else container
+	// will exit immediately
+	var cmd []string
+	lang := p.ByName("lang")
+	switch lang {
+	case ("javascript"):
+		cmd = []string{"custom-node-launcher"}
+	case ("ruby"):
+		cmd = []string{"pry"}
+	case ("sql"):
+		cmd = []string{"psql"}
+	}
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image:        "myrunner",
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: false,
+		Tty:          true,
+		OpenStdin:    true,
+		Cmd:          cmd,
+	}, nil, nil, nil, "")
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		panic(err)
+	}
+
+	// statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	// select {
+	// case err := <-errCh:
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// case <-statusCh:
+	// }
+
+	fmt.Println("Setting new container id to: ", resp.ID)
+	containerID = resp.ID
+	openRunnerConn()
+	startRunnerReader()
+}
+
 func main() {
 	initClient()
 	openRunnerConn()
@@ -186,6 +237,7 @@ func main() {
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
 	router.GET("/api/openreplws", serveReplWs)
+	router.GET("/api/switchlanguage/:lang", switchLanguage)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	fmt.Printf("Starting server on port %d\n", port)
