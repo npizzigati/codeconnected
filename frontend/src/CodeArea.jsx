@@ -337,15 +337,14 @@ function CodeArea ({ codeContent, setCodeContent }) {
       });
 
       function checkPrompt () {
-        const text = getTerminalText(term);
-        const lines = terminalLines(text);
-        const lastLine = lines[lines.length - 1];
-
         // Check whether prompt is ready by checking that at
         // least x milliseconds pass from when the indicated
         // termination appears in the terminal output
         clearTimeout(checkPromptTimeout);
         checkPromptTimeout = setTimeout(() => {
+          const text = getTerminalText(term);
+          const lines = terminalLines(text);
+          const lastLine = lines[lines.length - 1];
           const terminationSlice = lastLine.slice(lastLine.length - 2);
           if (terminationSlice === termination) {
             console.log('Dispatching prompt ready event');
