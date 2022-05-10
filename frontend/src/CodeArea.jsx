@@ -220,17 +220,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
       }
     }
     executeRun(runCmd);
-    // // Omit first line (command) and second to last line (throwaway
-    // // return value)
-    // const output = lines.slice(2, -2).join('\r\n');
-    // const prompt = lines[lines.length - 1];
-    // // Add padding before and after output and add prompt
-    // const padding = '\r\n'.repeat(2);
-    // const text = padding + output + padding + prompt;
-    // // Write to real terminal
-    // term.current.write(text);
-    // // Sync terminals
-
 
     // If ws is closed/closing, open it again before sending command
     // if (ws.current === null || ws.current.readyState === WebSocket.CLOSED ||
@@ -325,11 +314,9 @@ function CodeArea ({ codeContent, setCodeContent }) {
     totalBytesRead = 0;
 
     // Decoding and sending to terminal
-
     const decoder = new TextDecoder('utf-8', { fatal: true });
     let newText;
     let checkPromptTimeout;
-    // const pryTermination = '> ';
     const termination = '> ';
     try {
       // decoder may throw an error
