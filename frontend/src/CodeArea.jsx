@@ -248,6 +248,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     });
     const runPromise = new Promise(function (resolve, reject) {
       ws.current.send(cmd + '\n');
+
       document.addEventListener('promptReady', () => {
         console.log('promptReady event heard');
         resolve(timeoutID);
@@ -262,6 +263,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     const fullCmd = cmd + newline;
     ws.current.send(fullCmd);
   }
+
 
   function openWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
