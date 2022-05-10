@@ -332,14 +332,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
     try {
       // decoder may throw an error
       newText = decoder.decode(finalView);
-      // Send the output to the correct buffer, depending on
-      // whether input came from terminal or from cmd execution
-      // if (activeTerm.current === term.current) {
       term.current.write(newText, () => {
-        // Only check prompt when new char is possible prompt char
-        if (termination.split('').includes(newText)) {
-          checkPrompt();
-        }
+        checkPrompt();
       });
 
       function checkPrompt () {
