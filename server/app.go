@@ -24,7 +24,7 @@ import (
 var cli *client.Client
 var connection types.HijackedResponse
 var runner net.Conn
-var ws *websocket.Conn
+var wsockets []*websocket.Conn
 
 var containerID = "myshell"
 var attachOpts = types.ContainerAttachOptions{
@@ -56,17 +56,14 @@ func openRunnerConn() {
 func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	fmt.Println("Will try to open ws")
 
-	var err error
-	ws, err = websocket.Accept(w, r, &websocket.AcceptOptions{
+	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
 	if err != nil {
 		panic(err)
 	}
 	defer ws.Close(websocket.StatusInternalError, "deferred close")
-
-	// Set up read listener on runner output
-	startRunnerReader()
+	wsockets = append(wsockets, ws)
 
 	// Websocket receive loop
 	for {
@@ -102,14 +99,55 @@ func startRunnerReader() {
 				break
 			}
 
-			err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
-			if err != nil {
-				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
+			// Loop over all websocket connections and send chunk
+			for i, ws := range wsockets {
+				err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
+				if err != nil {
+					fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
+					wsockets[i] = nil
+				}
+			}
+			// Remove dead (nil) websockets
+			oldsockets := wsockets
+			wsockets := []*websocket.Conn{}
+			for _, oldsocket := range oldsockets {
+				if oldsocket == nil {
+					continue
+				}
+				wsockets = append(wsockets, oldsocket)
+			}
+			// Break (and terminate goroutine) if there are no wsockets
+			if len(wsockets) == 0 {
 				break
 			}
 		}
 	}()
 }
+
+// func startRunnerReader() {
+// 	go func() {
+// 		fmt.Println("Reading from runner\n")
+// 		for {
+// 			chunk := make([]byte, int(1))
+// 			_, err := runner.Read(chunk)
+// 			if err == io.EOF {
+// 				fmt.Println("EOF hit in runner output")
+// 				break
+// 			}
+// 			if err != nil {
+// 				// Runner not connected
+// 				fmt.Println("runner read error: ", err, time.Now().String())
+// 				break
+// 			}
+
+// 			err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
+// 			if err != nil {
+// 				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
+// 				break
+// 			}
+// 		}
+// 	}()
+// }
 
 func executeCommand(command []byte) {
 	fmt.Println("Executing command")
@@ -233,6 +271,7 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 func main() {
 	initClient()
 	openRunnerConn()
+	startRunnerReader()
 	defer connection.Close()
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
