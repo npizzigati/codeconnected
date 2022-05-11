@@ -49,8 +49,9 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current.onRender(() => {
       clearTimeout(setTerminalState);
       setTerminalState = setTimeout(() => {
+        console.log('saving terminal state');
         terminalData.current.set('text', getTerminalText(term));
-      }, 100);
+      }, 400);
     });
     ws.current = openWs();
 
@@ -111,6 +112,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     // after loading page?
     setTimeout(() => {
       if (yTerminalData.get('text') !== undefined) {
+        console.log('loading terminal state');
         const text = yTerminalData.get('text');
         const lines = terminalLines(text);
 
@@ -118,7 +120,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
         const formattedText = lines.join('\r\n');
         term.current.write(formattedText);
       }
-    }, 3000);
+    }, 200);
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
