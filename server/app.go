@@ -17,8 +17,6 @@ import (
 	"time"
 )
 
-// var ws *websocket.Conn
-
 // TODO: Can there variables/constants be passed around in a
 // context object instead?
 var cli *client.Client
