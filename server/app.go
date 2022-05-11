@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"nhooyr.io/websocket"
+	"regexp"
 	"time"
 )
 
@@ -90,9 +91,20 @@ func startRunnerReader() {
 	if runnerReaderActive {
 		return
 	}
+	promptWait := 200 // in ms
 	runnerReaderActive = true
+	fakeTermBuffer := []byte{}
+	ansiEscapes, err := regexp.Compile("\x1B(?:[@-Z\\-_]|[[0-?]*[ -/]*[@-~])")
+	if err != nil {
+		fmt.Println("Regexp compilation error: ", err)
+	}
+	promptTermination, err := regexp.Compile("> $")
+	if err != nil {
+		fmt.Println("Regexp compilation error: ", err)
+	}
 	go func() {
 		fmt.Println("Reading from runner\n")
+		var timer *time.Timer
 		for {
 			ru, _, err := connection.Reader.ReadRune()
 			byteSlice := []byte(string(ru))
@@ -107,6 +119,33 @@ func startRunnerReader() {
 				fmt.Println("runner read error: ", err, time.Now().String())
 				break
 			}
+
+			// Add char to fake terminal buffer
+			fakeTermBuffer = append(fakeTermBuffer, byteSlice...)
+
+			// If there is a break in data being sent (e.g., if a
+			// command has finished executing), check for prompt
+			if timer != nil {
+				_ = timer.Stop()
+			}
+			timer = time.NewTimer(time.Duration(promptWait) * time.Millisecond)
+			go func() {
+				select {
+				case <-timer.C:
+					fmt.Println("************checking prompt**********")
+					// Remove ansi escape codes from fakeTermBuffer
+					fakeTermBuffer = ansiEscapes.ReplaceAll(fakeTermBuffer, []byte(""))
+					// Check whether fakeTermBuffer ends with prompt termination
+					fmt.Println("fakeTermBuffer: ", string(fakeTermBuffer))
+					fmt.Println("fakeTermBufferBytes: ", fakeTermBuffer)
+					if promptTermination.Match(fakeTermBuffer) {
+						fmt.Println("Matched prompt termination")
+						fakeTermBuffer = []byte{}
+					}
+				case <-time.After(time.Duration(promptWait+50) * time.Millisecond):
+					return
+				}
+			}()
 
 			// Loop over all websocket connections and send chunk
 			var newList []*websocket.Conn
