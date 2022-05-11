@@ -18,14 +18,9 @@ const defaultLanguage = 'ruby';
 
 
 function CodeArea ({ codeContent, setCodeContent }) {
-  // const isReplPendingResponse = useRef(false);
-  // const newReplBlobs = useRef([]);
-  // This is the positive offset of the repl cursor from right to
-  // left, from the right end cursor position
   const codeAreaDOMRef = useRef(null);
   const mainTermDOMRef = useRef(null);
   const term = useRef(null);
-  // const activeTerm = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
   const terminalData = useRef(null);
@@ -123,7 +118,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
         const formattedText = lines.join('\r\n');
         term.current.write(formattedText);
       }
-    }, 2000);
+    }, 3000);
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
