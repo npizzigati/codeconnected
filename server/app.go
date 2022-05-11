@@ -94,11 +94,8 @@ func startRunnerReader() {
 	go func() {
 		fmt.Println("Reading from runner\n")
 		for {
-			// chunk := make([]byte, int(1))
-			// _, err := runner.Read(chunk)
 			ru, _, err := connection.Reader.ReadRune()
 			byteSlice := []byte(string(ru))
-			// fmt.Println("chunk: ", chunk)
 			fmt.Println("char: ", string(ru))
 			fmt.Println("byte slice: ", byteSlice)
 			if err == io.EOF {
