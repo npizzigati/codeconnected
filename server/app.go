@@ -25,8 +25,10 @@ var cli *client.Client
 var connection types.HijackedResponse
 var runner net.Conn
 var wsockets []*websocket.Conn
+var runnerReaderActive bool
+var defaultLang = "ruby"
 
-var containerID = "myshell"
+var containerID string
 var attachOpts = types.ContainerAttachOptions{
 	Stream: true, // This apparently needs to be true for Conn.Write to work
 	Stdin:  true,
@@ -84,6 +86,10 @@ func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func startRunnerReader() {
+	if runnerReaderActive {
+		return
+	}
+	runnerReaderActive = true
 	go func() {
 		fmt.Println("Reading from runner\n")
 		for {
@@ -99,29 +105,29 @@ func startRunnerReader() {
 				break
 			}
 
+			// TODO: This isn't reflecting the active websockets. Try
+			// logging all active sockets to figure it out
 			// Loop over all websocket connections and send chunk
-			for i, ws := range wsockets {
+			var newList []*websocket.Conn
+			for _, ws := range wsockets {
 				err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
 				if err != nil {
 					fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
-					wsockets[i] = nil
-				}
-			}
-			// Remove dead (nil) websockets
-			oldsockets := wsockets
-			wsockets := []*websocket.Conn{}
-			for _, oldsocket := range oldsockets {
-				if oldsocket == nil {
+					ws.Close(websocket.StatusInternalError, "deferred close")
 					continue
 				}
-				wsockets = append(wsockets, oldsocket)
+				newList = append(newList, ws)
 			}
-			// Break (and terminate goroutine) if there are no wsockets
-			if len(wsockets) == 0 {
-				break
-			}
+			wsockets = newList
+			fmt.Println("number of active websockets: ", len(wsockets))
+			// // Break (and terminate goroutine) if there are no wsockets
+			// if len(wsockets) == 0 {
+			// 	break
+			// }
 		}
 	}()
+	fmt.Println("closing runner reader")
+	runnerReaderActive = false
 }
 
 // func startRunnerReader() {
@@ -213,21 +219,9 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write([]byte("Successfully wrote code to container"))
 }
 
-func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func startContainer(lang string) {
 	ctx := context.Background()
-
-	// TODO: Reuse existing containers (resume? restart?)
-	fmt.Print("Stopping container ", containerID, "... ")
-	if err := cli.ContainerStop(ctx, containerID, nil); err != nil {
-		fmt.Println("Unable to stop container")
-		panic(err)
-	}
-	fmt.Println("Successfully stopped container")
-
-	// TODO: need to provide options i and t, or else container
-	// will exit immediately
 	var cmd []string
-	lang := p.ByName("lang")
 	switch lang {
 	case ("javascript"):
 		cmd = []string{"custom-node-launcher"}
@@ -248,30 +242,32 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	if err != nil {
 		panic(err)
 	}
-
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		panic(err)
 	}
-
-	// statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	// select {
-	// case err := <-errCh:
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// case <-statusCh:
-	// }
-
 	fmt.Println("Setting new container id to: ", resp.ID)
 	containerID = resp.ID
 	openRunnerConn()
 	startRunnerReader()
 }
 
+func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// TODO: Reuse existing containers (resume? restart?)
+	ctx := context.Background()
+	fmt.Print("Stopping container ", containerID, "... ")
+	if err := cli.ContainerStop(ctx, containerID, nil); err != nil {
+		fmt.Println("Unable to stop container")
+		panic(err)
+	}
+	fmt.Println("Successfully stopped container")
+
+	lang := p.ByName("lang")
+	startContainer(lang)
+}
+
 func main() {
 	initClient()
-	openRunnerConn()
-	startRunnerReader()
+	startContainer(defaultLang)
 	defer connection.Close()
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
