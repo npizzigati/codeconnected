@@ -56,8 +56,6 @@ func openRunnerConn() {
 }
 
 func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	fmt.Println("Will try to open ws")
-
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
