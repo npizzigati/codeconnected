@@ -29,12 +29,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
 
-  // Used in conversion of binary data from websocket to utf-8
-  let extraBytesToRead = 0;
-  let extraBytesRead = 0;
-  let totalBytesRead = 0;
-  let fullBuffer, fullView;
-
   const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
