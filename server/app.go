@@ -132,12 +132,9 @@ func startRunnerReader() {
 			go func() {
 				select {
 				case <-timer.C:
-					fmt.Println("************checking prompt**********")
 					// Remove ansi escape codes from fakeTermBuffer
 					fakeTermBuffer = ansiEscapes.ReplaceAll(fakeTermBuffer, []byte(""))
 					// Check whether fakeTermBuffer ends with prompt termination
-					fmt.Println("fakeTermBuffer: ", string(fakeTermBuffer))
-					fmt.Println("fakeTermBufferBytes: ", fakeTermBuffer)
 					if promptTermination.Match(fakeTermBuffer) {
 						fmt.Println("Matched prompt termination")
 						fakeTermBuffer = []byte{}
