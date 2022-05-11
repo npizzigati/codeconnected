@@ -254,9 +254,8 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function openWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                              `/api/openreplws?lang=${language}`);
-    ws.binaryType = 'arraybuffer';
     ws.onmessage = ev => {
-      handleIncomingBytes(ev);
+      handleIncomingChar(ev.data);
     };
     // Need to ping at least once every 60 seconds, or else nginx
     // proxypass will time out
@@ -268,80 +267,28 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return ws;
   }
 
-  function handleIncomingBytes (ev) {
-    const peek = new DataView(ev.data);
-    const byte = peek.getUint8(0);
-    totalBytesRead++;
-    if (extraBytesToRead === 0) {
-      fullBuffer = new ArrayBuffer(4);
-      fullView = new Uint8Array(fullBuffer);
-      fullView[0] = byte;
-      // Multi-byte unicode data is being sent if the first
-      // byte starts with a "1"
-      // use bitmask with 10000000 to find out if this is the case
-      if ((128 & byte) === 128) {
-        // bytesLeftToRead = 1;
-        extraBytesToRead = 1;
-        // populate(fullView, firstByte);
-        // The next three digits in binary will tell us how
-        // many bytes the character is
-        if ((240 & byte) === 240) {
-          // bytesLeftToRead = 3;
-          extraBytesToRead = 3;
-        } else if ((224 & byte) === 224) {
-          // bytesLeftToRead = 2;
-          extraBytesToRead = 2;
-        }
-      }
-    } else {
-      // Read next byte into array
-      extraBytesRead++;
-      fullView[extraBytesRead] = byte;
-      if (extraBytesRead === extraBytesToRead) {
-        extraBytesToRead = 0;
-        extraBytesRead = 0;
-      }
-    }
-
-    if (extraBytesToRead !== 0) {
-      return;
-    }
-
-    const finalView = new Uint8Array(fullBuffer, 0, totalBytesRead);
-    totalBytesRead = 0;
-
-    // Decoding and sending to terminal
-    const decoder = new TextDecoder('utf-8', { fatal: true });
-    let newText;
+  function handleIncomingChar (char) {
     let checkPromptTimeout;
     const termination = '> ';
-    try {
-      // decoder may throw an error
-      newText = decoder.decode(finalView);
-      term.current.write(newText, () => {
-        checkPrompt();
-      });
+    term.current.write(char, () => {
+      checkPrompt();
+    });
 
-      function checkPrompt () {
-        // Check whether prompt is ready by checking that at
-        // least x milliseconds pass from when the indicated
-        // termination appears in the terminal output
-        clearTimeout(checkPromptTimeout);
-        checkPromptTimeout = setTimeout(() => {
-          const text = getTerminalText(term);
-          const lines = terminalLines(text);
-          const lastLine = lines[lines.length - 1];
-          const terminationSlice = lastLine.slice(lastLine.length - 2);
-          if (terminationSlice === termination) {
-            console.log('Dispatching prompt ready event');
-            document.dispatchEvent(promptReadyEvent);
-          }
-        }, 100);
-      }
-    } catch (err) {
-      console.error(err);
-      return;
-    } finally {
+    function checkPrompt () {
+      // Check whether prompt is ready by checking that at
+      // least x milliseconds pass from when the indicated
+      // termination appears in the terminal output
+      clearTimeout(checkPromptTimeout);
+      checkPromptTimeout = setTimeout(() => {
+        const text = getTerminalText(term);
+        const lines = terminalLines(text);
+        const lastLine = lines[lines.length - 1];
+        const terminationSlice = lastLine.slice(lastLine.length - 2);
+        if (terminationSlice === termination) {
+          console.log('Dispatching prompt ready event');
+          document.dispatchEvent(promptReadyEvent);
+        }
+      }, 200);
     }
   }
 

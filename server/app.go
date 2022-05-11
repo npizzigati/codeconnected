@@ -94,8 +94,13 @@ func startRunnerReader() {
 	go func() {
 		fmt.Println("Reading from runner\n")
 		for {
-			chunk := make([]byte, int(1))
-			_, err := runner.Read(chunk)
+			// chunk := make([]byte, int(1))
+			// _, err := runner.Read(chunk)
+			ru, _, err := connection.Reader.ReadRune()
+			byteSlice := []byte(string(ru))
+			// fmt.Println("chunk: ", chunk)
+			fmt.Println("char: ", string(ru))
+			fmt.Println("byte slice: ", byteSlice)
 			if err == io.EOF {
 				fmt.Println("EOF hit in runner output")
 				break
@@ -109,9 +114,9 @@ func startRunnerReader() {
 			// Loop over all websocket connections and send chunk
 			var newList []*websocket.Conn
 			for _, ws := range wsockets {
-				err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
+				err = ws.Write(context.Background(), websocket.MessageText, byteSlice)
 				if err != nil {
-					fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
+					fmt.Println("ws write err: ", "byteSlice", byteSlice, "; err: ", err)
 					ws.Close(websocket.StatusInternalError, "deferred close")
 					continue
 				}
