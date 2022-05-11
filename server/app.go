@@ -26,7 +26,6 @@ var connection types.HijackedResponse
 var runner net.Conn
 var wsockets []*websocket.Conn
 var runnerReaderActive bool
-var defaultLang = "ruby"
 
 var containerID string
 var attachOpts = types.ContainerAttachOptions{
@@ -56,6 +55,12 @@ func openRunnerConn() {
 }
 
 func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	queryValues := r.URL.Query()
+	language := queryValues.Get("lang")
+	// Start initial container if this is the first connection
+	if len(wsockets) == 0 {
+		startContainer(language)
+	}
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
@@ -234,7 +239,6 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 func main() {
 	initClient()
-	startContainer(defaultLang)
 	defer connection.Close()
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)

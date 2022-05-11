@@ -256,7 +256,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
   function openWs () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
-                                        '/api/openreplws');
+                             `/api/openreplws?lang=${language}`);
     ws.binaryType = 'arraybuffer';
     ws.onmessage = ev => {
       handleIncomingBytes(ev);
