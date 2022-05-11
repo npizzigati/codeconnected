@@ -55,7 +55,7 @@ func openRunnerConn() {
 	runner = connection.Conn
 }
 
-func serveReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	fmt.Println("Will try to open ws")
 
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
@@ -240,7 +240,7 @@ func main() {
 	defer connection.Close()
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
-	router.GET("/api/openreplws", serveReplWs)
+	router.GET("/api/openreplws", openReplWs)
 	router.GET("/api/switchlanguage/:lang", switchLanguage)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
