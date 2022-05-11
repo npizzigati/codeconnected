@@ -105,8 +105,6 @@ func startRunnerReader() {
 				break
 			}
 
-			// TODO: This isn't reflecting the active websockets. Try
-			// logging all active sockets to figure it out
 			// Loop over all websocket connections and send chunk
 			var newList []*websocket.Conn
 			for _, ws := range wsockets {
@@ -120,40 +118,11 @@ func startRunnerReader() {
 			}
 			wsockets = newList
 			fmt.Println("number of active websockets: ", len(wsockets))
-			// // Break (and terminate goroutine) if there are no wsockets
-			// if len(wsockets) == 0 {
-			// 	break
-			// }
 		}
 	}()
 	fmt.Println("closing runner reader")
 	runnerReaderActive = false
 }
-
-// func startRunnerReader() {
-// 	go func() {
-// 		fmt.Println("Reading from runner\n")
-// 		for {
-// 			chunk := make([]byte, int(1))
-// 			_, err := runner.Read(chunk)
-// 			if err == io.EOF {
-// 				fmt.Println("EOF hit in runner output")
-// 				break
-// 			}
-// 			if err != nil {
-// 				// Runner not connected
-// 				fmt.Println("runner read error: ", err, time.Now().String())
-// 				break
-// 			}
-
-// 			err = ws.Write(context.Background(), websocket.MessageBinary, chunk)
-// 			if err != nil {
-// 				fmt.Println("ws write err: ", "chunk", chunk, "; err: ", err)
-// 				break
-// 			}
-// 		}
-// 	}()
-// }
 
 func executeCommand(command []byte) {
 	fmt.Println("Executing command")
