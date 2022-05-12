@@ -54,11 +54,14 @@ func openRunnerConn() {
 }
 
 func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	queryValues := r.URL.Query()
-	language := queryValues.Get("lang")
+	// queryValues := r.URL.Query()
+	// language := queryValues.Get("lang")
 	// Start initial container if this is the first connection
+	fmt.Println("number of websocket conns: ", len(wsockets))
 	if len(wsockets) == 0 {
-		startContainer(language)
+		// fmt.Sprintf("Starting initial container (%s)\n", language)
+		fmt.Println("Starting initial container")
+		startContainer("javascript")
 	}
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
@@ -229,15 +232,16 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func startContainer(lang string) {
 	ctx := context.Background()
-	var cmd []string
-	switch lang {
-	case ("javascript"):
-		cmd = []string{"custom-node-launcher"}
-	case ("ruby"):
-		cmd = []string{"pry"}
-	case ("sql"):
-		cmd = []string{"psql"}
-	}
+	cmd := []string{"bash"}
+	// var cmd []string
+	// switch lang {
+	// case ("javascript"):
+	// 	cmd = []string{"custom-node-launcher"}
+	// case ("ruby"):
+	// 	cmd = []string{"pry"}
+	// case ("sql"):
+	// 	cmd = []string{"psql"}
+	// }
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image:        "myrunner",
 		AttachStdin:  true,
@@ -273,6 +277,14 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	startContainer(lang)
 }
 
+func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	queryValues := r.URL.Query()
+	lang := queryValues.Get("lang")
+	if lang == "ruby" {
+
+	}
+}
+
 func main() {
 	initClient()
 	defer connection.Close()
@@ -280,6 +292,7 @@ func main() {
 	router.POST("/api/savecontent", saveContent)
 	router.GET("/api/openreplws", openReplWs)
 	router.GET("/api/switchlanguage/:lang", switchLanguage)
+	router.GET("/api/runfile", runFile)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	fmt.Printf("Starting server on port %d\n", port)

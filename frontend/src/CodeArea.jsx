@@ -29,7 +29,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
 
-  const promptReadyEvent = new Event('promptReady');
+  // const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
     term.current = new Terminal();
@@ -176,80 +176,106 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return lines.slice(0, lastLineNum + 1);
   }
 
-  async function runCode (filename) {
-    // TODO: For Ruby, maybe need to make sure we're exiting from
-    // any nested pry instances
-    // reset repl with exec $0 then wait for prompt
-    let resetCmd, runCmd;
-    switch (language) {
-    case 'ruby':
-      resetCmd = 'exec $0 #--> Resetting REPL';
-      runCmd = `load '${filename}' #--> Running code;`;
-      break;
-    case 'javascript':
-      // resetCmd = 'exec $0 #--> Resetting REPL';
-      console.log('executing javascript code');
-      resetCmd = '.clear //--> Resetting REPL';
-      runCmd = `.load ${filename}`;
-      break;
-    case 'sql':
-      console.log('executing javascript code');
-      resetCmd = null;
-      runCmd = `\\i ./${filename}`;
-      break;
-    }
-    let timeoutID;
-    if (resetCmd !== null) {
-      try {
-        // exit Pry to shell
-        timeoutID = await executeAndWait(resetCmd);
-        clearTimeout(timeoutID);
-        console.log('Successfully reset');
-      } catch (error) {
-        console.log('An error occurred: ' + error);
-      } finally {
-      }
-    }
-    executeRun(runCmd);
-
-    // If ws is closed/closing, open it again before sending command
-    // if (ws.current === null || ws.current.readyState === WebSocket.CLOSED ||
-    //     ws.current.readyState === WebSocket.CLOSING) {
+  function runCode (filename) {
+    // switch (language) {
+    // case 'ruby':
+    //   resetCmd = 'exec $0';
+    //   runCmd = `load '${filename}';`;
+    //   break;
+    // case 'javascript':
+    //   // resetCmd = 'exec $0 #--> Resetting REPL';
+    //   console.log('executing javascript code');
+    //   resetCmd = '.clear //--> Resetting REPL';
+    //   runCmd = `.load ${filename}`;
+    //   break;
+    // case 'sql':
+    //   console.log('executing javascript code');
+    //   resetCmd = null;
+    //   runCmd = `\\i ./${filename}`;
+    //   break;
     // }
+    fetch(`/api/runfile?lang=${language}`)
+      .then(response => {
+        console.log(response);
+      });
   }
 
-  function executeAndWait (cmd) {
-    const timeoutSeconds = 3;
-    console.log('Going to execute: ' + cmd);
-    let timeoutID;
-    const timeout = new Promise(function (resolve, reject) {
-      timeoutID = setTimeout(reject, timeoutSeconds * 1000,
-                             new Error('Code execution timed out'));
-    });
-    const runPromise = new Promise(function (resolve, reject) {
-      ws.current.send(cmd + '\n');
+  // async function runCode (filename) {
+  //   // TODO: For Ruby, maybe need to make sure we're exiting from
+  //   // any nested pry instances
+  //   // reset repl with exec $0 then wait for prompt
+  //   let resetCmd, runCmd;
+  //   switch (language) {
+  //   case 'ruby':
+  //     resetCmd = 'exec $0 #--> Resetting REPL';
+  //     runCmd = `load '${filename}' #--> Running code;`;
+  //     break;
+  //   case 'javascript':
+  //     // resetCmd = 'exec $0 #--> Resetting REPL';
+  //     console.log('executing javascript code');
+  //     resetCmd = '.clear //--> Resetting REPL';
+  //     runCmd = `.load ${filename}`;
+  //     break;
+  //   case 'sql':
+  //     console.log('executing javascript code');
+  //     resetCmd = null;
+  //     runCmd = `\\i ./${filename}`;
+  //     break;
+  //   }
+  //   let timeoutID;
+  //   if (resetCmd !== null) {
+  //     try {
+  //       // exit Pry to shell
+  //       timeoutID = await executeAndWait(resetCmd);
+  //       clearTimeout(timeoutID);
+  //       console.log('Successfully reset');
+  //     } catch (error) {
+  //       console.log('An error occurred: ' + error);
+  //     } finally {
+  //     }
+  //   }
+  //   executeRun(runCmd);
 
-      document.addEventListener('promptReady', () => {
-        console.log('promptReady event heard');
-        resolve(timeoutID);
-      }, { once: true });
-    });
-    return Promise.race([runPromise, timeout]);
-  }
+  //   // If ws is closed/closing, open it again before sending command
+  //   // if (ws.current === null || ws.current.readyState === WebSocket.CLOSED ||
+  //   //     ws.current.readyState === WebSocket.CLOSING) {
+  //   // }
+  // }
 
-  function executeRun (cmd) {
-    console.log('Going to execute: ' + cmd);
-    const newline = '\n';
-    const fullCmd = cmd + newline;
-    ws.current.send(fullCmd);
-  }
+  // function executeAndWait (cmd) {
+  //   const timeoutSeconds = 3;
+  //   console.log('Going to execute: ' + cmd);
+  //   let timeoutID;
+  //   const timeout = new Promise(function (resolve, reject) {
+  //     timeoutID = setTimeout(reject, timeoutSeconds * 1000,
+  //                            new Error('Code execution timed out'));
+  //   });
+  //   const runPromise = new Promise(function (resolve, reject) {
+  //     ws.current.send(cmd + '\n');
+
+  //     document.addEventListener('promptReady', () => {
+  //       console.log('promptReady event heard');
+  //       resolve(timeoutID);
+  //     }, { once: true });
+  //   });
+  //   return Promise.race([runPromise, timeout]);
+  // }
+
+  // function executeRun (cmd) {
+  //   console.log('Going to execute: ' + cmd);
+  //   const newline = '\n';
+  //   const fullCmd = cmd + newline;
+  //   ws.current.send(fullCmd);
+  // }
 
 
   function openWs () {
+    // const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
+    //                          `/api/openreplws?lang=${language}`);
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
-                             `/api/openreplws?lang=${language}`);
+                             '/api/openreplws');
     ws.onmessage = ev => {
-      handleIncomingChar(ev.data);
+      term.current.write(ev.data);
     };
     // Need to ping at least once every 60 seconds, or else nginx
     // proxypass will time out
@@ -261,30 +287,29 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return ws;
   }
 
-  function handleIncomingChar (char) {
-    let checkPromptTimeout;
-    const termination = '> ';
-    term.current.write(char, () => {
-      checkPrompt();
-    });
-
-    function checkPrompt () {
-      // Check whether prompt is ready by checking that at
-      // least x milliseconds pass from when the indicated
-      // termination appears in the terminal output
-      clearTimeout(checkPromptTimeout);
-      checkPromptTimeout = setTimeout(() => {
-        const text = getTerminalText(term);
-        const lines = terminalLines(text);
-        const lastLine = lines[lines.length - 1];
-        const terminationSlice = lastLine.slice(lastLine.length - 2);
-        if (terminationSlice === termination) {
-          console.log('Dispatching prompt ready event');
-          document.dispatchEvent(promptReadyEvent);
-        }
-      }, 200);
-    }
-  }
+  // function handleIncomingChar (char) {
+    // let checkPromptTimeout;
+    // const termination = '> ';
+    // term.current.write(char, () => {
+    //   checkPrompt();
+    // });
+    // function checkPrompt () {
+    //   // Check whether prompt is ready by checking that at
+    //   // least x milliseconds pass from when the indicated
+    //   // termination appears in the terminal output
+    //   clearTimeout(checkPromptTimeout);
+    //   checkPromptTimeout = setTimeout(() => {
+    //     const text = getTerminalText(term);
+    //     const lines = terminalLines(text);
+    //     const lastLine = lines[lines.length - 1];
+    //     const terminationSlice = lastLine.slice(lastLine.length - 2);
+    //     if (terminationSlice === termination) {
+    //       console.log('Dispatching prompt ready event');
+    //       document.dispatchEvent(promptReadyEvent);
+    //     }
+    //   }, 200);
+    // }
+  // }
 
   function executeContent () {
     const content = cmRef.getValue();
