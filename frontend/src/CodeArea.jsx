@@ -37,16 +37,6 @@ function CodeArea ({ codeContent, setCodeContent }) {
     term.current.onData((data) => {
       ws.current.send(data.toString());
     });
-    // Save terminal content to shared state, to be passed to new
-    // users when they join
-    let setTerminalState;
-    term.current.onRender(() => {
-      clearTimeout(setTerminalState);
-      setTerminalState = setTimeout(() => {
-        console.log('saving terminal state');
-        terminalData.current.set('text', getTerminalText(term));
-      }, 400);
-    });
     ws.current = openWs();
 
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
@@ -114,7 +104,17 @@ function CodeArea ({ codeContent, setCodeContent }) {
         const formattedText = lines.join('\r\n');
         term.current.write(formattedText);
       }
-    }, 200);
+    }, 300);
+    // Save terminal content to shared state, to be passed to new
+    // users when they join
+    let setTerminalState;
+    term.current.onRender(() => {
+      clearTimeout(setTerminalState);
+      setTerminalState = setTimeout(() => {
+        console.log('saving terminal state');
+        terminalData.current.set('text', getTerminalText(term));
+      }, 500);
+    });
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
