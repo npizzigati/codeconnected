@@ -298,12 +298,6 @@ func startContainer(lang string) {
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// fmt.Print("Stopping container ", containerID, "... ")
-	// if err := cli.ContainerStop(ctx, containerID, nil); err != nil {
-	// 	fmt.Println("Unable to stop container")
-	// 	panic(err)
-	// }
-	// fmt.Println("Successfully stopped container")
 
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
