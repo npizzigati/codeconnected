@@ -140,7 +140,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
   function switchLanguage (ev) {
     const lang = ev.target.value;
     codeOptions.set('language', lang);
-    fetch(`/api/switchlanguage/${lang}`)
+    fetch(`/api/switchlanguage?lang=${lang}`)
       .then(response => {
         console.log(response);
       });
@@ -176,7 +176,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     return lines.slice(0, lastLineNum + 1);
   }
 
-  function runCode (filename) {
+  function runCode (filename, lines) {
     // switch (language) {
     // case 'ruby':
     //   resetCmd = 'exec $0';
@@ -194,7 +194,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     //   runCmd = `\\i ./${filename}`;
     //   break;
     // }
-    fetch(`/api/runfile?lang=${language}`)
+    fetch(`/api/runfile?lang=${language}&lines=${lines}`)
       .then(response => {
         console.log(response);
       });
@@ -313,6 +313,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
 
   function executeContent () {
     const content = cmRef.getValue();
+    const lines = cmRef.lineCount();
     let filename;
     switch (language) {
     case ('ruby'):
@@ -336,7 +337,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     fetch('/api/savecontent', options)
       .then(response => {
         console.log(response);
-        runCode(filename);
+        runCode(filename, lines);
       });
   }
 }

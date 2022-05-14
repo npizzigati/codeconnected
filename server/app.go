@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"nhooyr.io/websocket"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -25,13 +27,18 @@ var connection types.HijackedResponse
 var runner net.Conn
 var wsockets []*websocket.Conn
 var runnerReaderActive bool
-
+var echo = true
+var eventSubscribers = make(map[string]func(eventConfig))
 var containerID string
 var attachOpts = types.ContainerAttachOptions{
 	Stream: true, // This apparently needs to be true for Conn.Write to work
 	Stdin:  true,
 	Stdout: true,
 	Stderr: false,
+}
+
+type eventConfig struct {
+	count int
 }
 
 func initClient() {
@@ -97,6 +104,8 @@ func startRunnerReader() {
 	promptWait := 200 // in ms
 	runnerReaderActive = true
 	fakeTermBuffer := []byte{}
+	// number of newlines (\n) after a prompt
+	newlineCount := 0
 	ansiEscapes, err := regexp.Compile("\x1B(?:[@-Z\\-_]|[[0-?]*[ -/]*[@-~])")
 	if err != nil {
 		fmt.Println("Regexp compilation error: ", err)
@@ -123,8 +132,24 @@ func startRunnerReader() {
 				break
 			}
 
+			if string(ru) == "\n" {
+				fmt.Println("*********newline in output*********")
+				newlineCount++
+				emit("newline", eventConfig{count: newlineCount})
+				fmt.Println("newlineCount: ", newlineCount)
+			}
+
 			// Add char to fake terminal buffer
 			fakeTermBuffer = append(fakeTermBuffer, byteSlice...)
+
+			if bytes.HasSuffix(fakeTermBuffer, []byte("START")) {
+				emit("startOutput", eventConfig{})
+				// Skip over current character, with is that last
+				// character in start sequence
+				continue
+			}
+			fmt.Println("fakeTermBuffer: ", string(fakeTermBuffer))
+			fmt.Println("fakeTermBuffer: ", fakeTermBuffer)
 
 			// If there is a break in data being sent (e.g., if a
 			// command has finished executing), check for prompt
@@ -139,31 +164,38 @@ func startRunnerReader() {
 					fakeTermBuffer = ansiEscapes.ReplaceAll(fakeTermBuffer, []byte(""))
 					// Check whether fakeTermBuffer ends with prompt termination
 					if promptTermination.Match(fakeTermBuffer) {
+						emit("promptReady", eventConfig{})
 						fmt.Println("Matched prompt termination")
 						fakeTermBuffer = []byte{}
+						newlineCount = 0
 					}
 				case <-time.After(time.Duration(promptWait+50) * time.Millisecond):
 					return
 				}
 			}()
 
-			// Loop over all websocket connections and send chunk
-			var newList []*websocket.Conn
-			for _, ws := range wsockets {
-				err = ws.Write(context.Background(), websocket.MessageText, byteSlice)
-				if err != nil {
-					fmt.Println("ws write err: ", "byteSlice", byteSlice, "; err: ", err)
-					ws.Close(websocket.StatusInternalError, "deferred close")
-					continue
-				}
-				newList = append(newList, ws)
+			if echo == true {
+				writeToWebsockets(byteSlice)
 			}
-			wsockets = newList
-			fmt.Println("number of active websockets: ", len(wsockets))
 		}
 	}()
 	fmt.Println("closing runner reader")
 	runnerReaderActive = false
+}
+
+func writeToWebsockets(byteSlice []byte) {
+	var newList []*websocket.Conn
+	for _, ws := range wsockets {
+		err := ws.Write(context.Background(), websocket.MessageText, byteSlice)
+		if err != nil {
+			fmt.Println("ws write err: ", "byteSlice", byteSlice, "; err: ", err)
+			ws.Close(websocket.StatusInternalError, "deferred close")
+			continue
+		}
+		newList = append(newList, ws)
+	}
+	wsockets = newList
+	fmt.Println("number of active websockets: ", len(wsockets))
 }
 
 func executeCommand(command []byte) {
@@ -173,6 +205,8 @@ func executeCommand(command []byte) {
 	for tries < 5 {
 		// Back off on each failed connection attempt
 		time.Sleep(time.Duration(tries/2) * time.Second)
+		// FIXME: Why do I make before I assign? Can I just delete
+		// the make?
 		payload := make([]byte, 1)
 		payload = []byte(command)
 		_, err := runner.Write([]byte(payload))
@@ -264,25 +298,142 @@ func startContainer(lang string) {
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// TODO: Reuse existing containers (resume? restart?)
-	ctx := context.Background()
-	fmt.Print("Stopping container ", containerID, "... ")
-	if err := cli.ContainerStop(ctx, containerID, nil); err != nil {
-		fmt.Println("Unable to stop container")
-		panic(err)
-	}
-	fmt.Println("Successfully stopped container")
+	// fmt.Print("Stopping container ", containerID, "... ")
+	// if err := cli.ContainerStop(ctx, containerID, nil); err != nil {
+	// 	fmt.Println("Unable to stop container")
+	// 	panic(err)
+	// }
+	// fmt.Println("Successfully stopped container")
 
-	lang := p.ByName("lang")
-	startContainer(lang)
+	queryValues := r.URL.Query()
+	lang := queryValues.Get("lang")
+
+	ctx := context.Background()
+	cmd := []string{"screen", "-S", "test", "-X", "select", lang}
+	execOpts := types.ExecConfig{
+		User:         "codeuser",
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          true,
+		Cmd:          cmd,
+	}
+
+	resp, err := cli.ContainerExecCreate(ctx, containerID, execOpts)
+	if err != nil {
+		fmt.Println("unable to create exec process: ", err)
+	}
+
+	connection, err := cli.ContainerExecAttach(ctx,
+		resp.ID, types.ExecStartCheck{})
+	if err != nil {
+		fmt.Println("unable to start/attach to exec process: ", err)
+	}
+	defer connection.Close()
+
+	output := make([]byte, 0, 512)
+	// Get 8-byte header of multiplexed stdout/stderr stream
+	// and then read data, and repeat until EOF
+	for {
+		h := make([]byte, 8)
+		_, err := connection.Reader.Read(h)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("error in reading header: ", err)
+		}
+
+		// First byte indicates stdout or stderr
+		// var streamType string
+		// if h[0] == 2 {
+		// 	streamType = "stderr"
+		// } else {
+		// 	streamType = "stdout"
+		// }
+
+		// Last 4 bytes represent uint32 size
+		size := h[4] + h[5] + h[6] + h[7]
+		b := make([]byte, size)
+		_, err = connection.Reader.Read(b)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("error in reading output body: ", err)
+		}
+
+		output = append(output, b...)
+	}
+
+	fmt.Println("output from direct command: ", output)
 }
 
+// TODO: Make sure repl is at prompt before running code
+// TODO: Make sure prompt is in correct repl before running code
+// (maybe by running a certain command and examining the output)
+// TODO: No.2: If repl is not at prompt, get is there (by exiting
+// and re-entering?)
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
-	if lang == "ruby" {
+	linesOfCode := queryValues.Get("lines")
+	writeToWebsockets([]byte("Running your code...\r\n"))
+	echo = false
+	// ansiS := map[string]string{
+	// 	"saveP":    "\x1B[s",
+	// 	"restoreP": "\x1B[u",
+	// 	"up1":      "\x1B[1A",
+	// 	"down1":    "\x1B[1B",
+	// 	"dLine:":   "\x1B[2K",
+	// }
+	switch lang {
+	case "ruby":
+		runner.Write([]byte("exec $0\n")) // reset repl
+		setEventListener("promptReady", func(config eventConfig) {
+			removeEventListener("promptReady")
+			runner.Write([]byte("puts 'ST' + 'ART'; " + "load 'code.rb';\n"))
+		})
+		setEventListener("startOutput", func(config eventConfig) {
+			removeEventListener("startOutput")
+			echo = true
+		})
+	case "javascript":
+		runner.Write([]byte(".clear\n"))
+		setEventListener("promptReady", func(config eventConfig) {
+			removeEventListener("promptReady")
+			// Delete two previous lines from remote terminal
+			runner.Write([]byte(".load code.js\n"))
 
+			// Turn echo back on right before output begins
+			// Set this event listener after the promptReady event
+			// fires to ensure that only newlines after the prompt are
+			// counted
+			setEventListener("newline", func(config eventConfig) {
+				lines, err := strconv.Atoi(linesOfCode)
+				if err != nil {
+					fmt.Println("strconv error: ", err)
+				}
+				if config.count == lines+1 {
+					echo = true
+					removeEventListener("newline")
+				}
+			})
+		})
 	}
+}
+
+func emit(event string, config eventConfig) {
+	if callback, ok := eventSubscribers[event]; ok {
+		callback(config)
+	}
+}
+
+func setEventListener(event string, callback func(config eventConfig)) {
+	eventSubscribers[event] = callback
+}
+
+func removeEventListener(event string) {
+	delete(eventSubscribers, event)
 }
 
 func main() {
@@ -291,7 +442,7 @@ func main() {
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
 	router.GET("/api/openreplws", openReplWs)
-	router.GET("/api/switchlanguage/:lang", switchLanguage)
+	router.GET("/api/switchlanguage", switchLanguage)
 	router.GET("/api/runfile", runFile)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
