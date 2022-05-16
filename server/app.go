@@ -30,6 +30,7 @@ var runnerReaderActive bool
 var echo = true
 var eventSubscribers = make(map[string]func(eventConfig))
 var containerID string
+var lang string
 var attachOpts = types.ContainerAttachOptions{
 	Stream: true, // This apparently needs to be true for Conn.Write to work
 	Stdin:  true,
@@ -49,26 +50,30 @@ func initClient() {
 	}
 }
 
-func openRunnerConn() {
-	var err error
-	fmt.Println("connecting to container id: ", containerID)
-	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
-	if err != nil {
-		fmt.Println("error in getting new connection: ", err)
-		panic(err)
-	}
-	runner = connection.Conn
-}
+// TODO -- Do I even need this now that I have
+// openLanguageConnection and execInContainer?
+// func openRunnerConn() {
+// 	var err error
+// 	fmt.Println("connecting to container id: ", containerID)
+// 	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
+// 	if err != nil {
+// 		fmt.Println("error in getting new connection: ", err)
+// 		panic(err)
+// 	}
+// 	runner = connection.Conn
+// 	lang = "bash"
+// }
 
 func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// queryValues := r.URL.Query()
-	// language := queryValues.Get("lang")
+	// lang = queryValues.Get("lang")
 	// Start initial container if this is the first connection
 	fmt.Println("number of websocket conns: ", len(wsockets))
 	if len(wsockets) == 0 {
 		// fmt.Sprintf("Starting initial container (%s)\n", language)
 		fmt.Println("Starting initial container")
-		startContainer("javascript")
+		lang = "ruby"
+		startContainer()
 	}
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
@@ -82,8 +87,7 @@ func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Websocket receive loop
 	for {
 		// Receive command
-		mtype, message, err := ws.Read(context.Background())
-		fmt.Println("mtype: ", mtype)
+		_, message, err := ws.Read(context.Background())
 		fmt.Println("message: ", message)
 		if err != nil {
 			fmt.Println("error receiving message: ", err, " ", time.Now().String())
@@ -92,7 +96,7 @@ func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 		fmt.Printf("Command received: %s\n", message)
 		if string(message) != "KEEPALIVE" {
-			executeCommand(message)
+			sendToContainer(message)
 		}
 	}
 }
@@ -115,13 +119,11 @@ func startRunnerReader() {
 		fmt.Println("Regexp compilation error: ", err)
 	}
 	go func() {
-		fmt.Println("Reading from runner\n")
+		fmt.Println("Reading from connection\n")
 		var timer *time.Timer
 		for {
 			ru, _, err := connection.Reader.ReadRune()
 			byteSlice := []byte(string(ru))
-			fmt.Println("char: ", string(ru))
-			fmt.Println("byte slice: ", byteSlice)
 			if err == io.EOF {
 				fmt.Println("EOF hit in runner output")
 				break
@@ -148,8 +150,6 @@ func startRunnerReader() {
 				// character in start sequence
 				continue
 			}
-			fmt.Println("fakeTermBuffer: ", string(fakeTermBuffer))
-			fmt.Println("fakeTermBuffer: ", fakeTermBuffer)
 
 			// If there is a break in data being sent (e.g., if a
 			// command has finished executing), check for prompt
@@ -195,30 +195,26 @@ func writeToWebsockets(byteSlice []byte) {
 		newList = append(newList, ws)
 	}
 	wsockets = newList
-	fmt.Println("number of active websockets: ", len(wsockets))
 }
 
-func executeCommand(command []byte) {
-	fmt.Println("Executing command")
+func sendToContainer(message []byte) {
+	fmt.Println("Sending message to container")
 
 	tries := 0
 	for tries < 5 {
 		// Back off on each failed connection attempt
 		time.Sleep(time.Duration(tries/2) * time.Second)
-		// FIXME: Why do I make before I assign? Can I just delete
-		// the make?
-		payload := make([]byte, 1)
-		payload = []byte(command)
-		_, err := runner.Write([]byte(payload))
+		_, err := runner.Write(message)
 		if err == nil {
-			fmt.Printf("Payload bytes: %#v\n\n", []byte(payload))
+			fmt.Printf("Payload bytes: %#v\n\n", message)
 			break
 		}
 		fmt.Println("runner write error: ", err)
 		// Reestablish connection
 		fmt.Println("trying to reestablish connection")
-		openRunnerConn()
-		startRunnerReader()
+		// TODO: Do I have to find out the status of connection and
+		// (if active) close it before opening it again?
+		openLanguageConnection()
 		tries++
 	}
 
@@ -264,18 +260,9 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write([]byte("Successfully wrote code to container"))
 }
 
-func startContainer(lang string) {
+func startContainer() {
 	ctx := context.Background()
 	cmd := []string{"bash"}
-	// var cmd []string
-	// switch lang {
-	// case ("javascript"):
-	// 	cmd = []string{"custom-node-launcher"}
-	// case ("ruby"):
-	// 	cmd = []string{"pry"}
-	// case ("sql"):
-	// 	cmd = []string{"psql"}
-	// }
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image:        "myrunner",
 		AttachStdin:  true,
@@ -293,22 +280,43 @@ func startContainer(lang string) {
 	}
 	fmt.Println("Setting new container id to: ", resp.ID)
 	containerID = resp.ID
-	openRunnerConn()
-	startRunnerReader()
+	openLanguageConnection()
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
+	connection.Close()
 	queryValues := r.URL.Query()
-	lang := queryValues.Get("lang")
+	lang = queryValues.Get("lang")
 
+	openLanguageConnection()
+}
+
+func openLanguageConnection() {
+	var cmd []string
+	switch lang {
+	case "javascript":
+		cmd = []string{"custom-node-launcher"}
+	case "ruby":
+		cmd = []string{"pry"}
+	case "sql":
+		cmd = []string{"psql"}
+	case "bash":
+		cmd = []string{"bash"}
+	}
+
+	execInContainer(cmd)
+}
+
+func execInContainer(cmd []string) {
 	ctx := context.Background()
-	cmd := []string{"screen", "-S", "test", "-X", "select", lang}
 	execOpts := types.ExecConfig{
 		User:         "codeuser",
-		AttachStdout: true,
-		AttachStderr: true,
 		Tty:          true,
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: false,
+		WorkingDir:   "/home/codeuser",
 		Cmd:          cmd,
 	}
 
@@ -317,49 +325,51 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		fmt.Println("unable to create exec process: ", err)
 	}
 
-	connection, err := cli.ContainerExecAttach(ctx,
+	connection, err = cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
 		fmt.Println("unable to start/attach to exec process: ", err)
 	}
-	defer connection.Close()
 
-	output := make([]byte, 0, 512)
-	// Get 8-byte header of multiplexed stdout/stderr stream
-	// and then read data, and repeat until EOF
-	for {
-		h := make([]byte, 8)
-		_, err := connection.Reader.Read(h)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Println("error in reading header: ", err)
-		}
+	runner = connection.Conn
+	startRunnerReader()
 
-		// First byte indicates stdout or stderr
-		// var streamType string
-		// if h[0] == 2 {
-		// 	streamType = "stderr"
-		// } else {
-		// 	streamType = "stdout"
-		// }
+	// output := make([]byte, 0, 512)
+	// // Get 8-byte header of multiplexed stdout/stderr stream
+	// // and then read data, and repeat until EOF
+	// for {
+	// 	h := make([]byte, 8)
+	// 	_, err := connection.Reader.Read(h)
+	// 	if err == io.EOF {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		fmt.Println("error in reading header: ", err)
+	// 	}
 
-		// Last 4 bytes represent uint32 size
-		size := h[4] + h[5] + h[6] + h[7]
-		b := make([]byte, size)
-		_, err = connection.Reader.Read(b)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Println("error in reading output body: ", err)
-		}
+	// 	// First byte indicates stdout or stderr
+	// 	// var streamType string
+	// 	// if h[0] == 2 {
+	// 	// 	streamType = "stderr"
+	// 	// } else {
+	// 	// 	streamType = "stdout"
+	// 	// }
 
-		output = append(output, b...)
-	}
+	// 	// Last 4 bytes represent uint32 size
+	// 	size := h[4] + h[5] + h[6] + h[7]
+	// 	b := make([]byte, size)
+	// 	_, err = connection.Reader.Read(b)
+	// 	if err == io.EOF {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		fmt.Println("error in reading output body: ", err)
+	// 	}
 
-	fmt.Println("output from direct command: ", output)
+	// 	output = append(output, b...)
+	// }
+
+	// fmt.Println("output from direct command: ", output)
 }
 
 // TODO: Make sure repl is at prompt before running code
@@ -373,13 +383,6 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	linesOfCode := queryValues.Get("lines")
 	writeToWebsockets([]byte("Running your code...\r\n"))
 	echo = false
-	// ansiS := map[string]string{
-	// 	"saveP":    "\x1B[s",
-	// 	"restoreP": "\x1B[u",
-	// 	"up1":      "\x1B[1A",
-	// 	"down1":    "\x1B[1B",
-	// 	"dLine:":   "\x1B[2K",
-	// }
 	switch lang {
 	case "ruby":
 		runner.Write([]byte("exec $0\n")) // reset repl
