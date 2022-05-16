@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -25,18 +26,20 @@ import (
 var cli *client.Client
 var connection types.HijackedResponse
 var runner net.Conn
+var buffConnReader *bufio.Reader
 var wsockets []*websocket.Conn
 var runnerReaderActive bool
 var echo = true
 var eventSubscribers = make(map[string]func(eventConfig))
 var containerID string
 var lang string
-var attachOpts = types.ContainerAttachOptions{
-	Stream: true, // This apparently needs to be true for Conn.Write to work
-	Stdin:  true,
-	Stdout: true,
-	Stderr: false,
-}
+
+// var attachOpts = types.ContainerAttachOptions{
+//	Stream: true, // This apparently needs to be true for Conn.Write to work
+//	Stdin:  true,
+//	Stdout: true,
+//	Stderr: false,
+// }
 
 type eventConfig struct {
 	count int
@@ -53,15 +56,15 @@ func initClient() {
 // TODO -- Do I even need this now that I have
 // openLanguageConnection and execInContainer?
 // func openRunnerConn() {
-// 	var err error
-// 	fmt.Println("connecting to container id: ", containerID)
-// 	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
-// 	if err != nil {
-// 		fmt.Println("error in getting new connection: ", err)
-// 		panic(err)
-// 	}
-// 	runner = connection.Conn
-// 	lang = "bash"
+//	var err error
+//	fmt.Println("connecting to container id: ", containerID)
+//	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
+//	if err != nil {
+//		fmt.Println("error in getting new connection: ", err)
+//		panic(err)
+//	}
+//	runner = connection.Conn
+//	lang = "bash"
 // }
 
 func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -122,7 +125,25 @@ func startRunnerReader() {
 		fmt.Println("Reading from connection\n")
 		var timer *time.Timer
 		for {
-			ru, _, err := connection.Reader.ReadRune()
+			// Check for 8-byte docker multiplexing header and discard
+			// if present
+			peek, err := buffConnReader.Peek(1)
+			// Peek will fail if connection is closed
+			if err != nil {
+				fmt.Println("peek error: ", err)
+				break
+			}
+			// Header will begin with ascii value 1
+			if peek[0] == 1 {
+				// Discard the header
+				num, err := buffConnReader.Discard(8)
+				if err != nil {
+					fmt.Println("error int discarding header: ", err)
+				}
+				fmt.Println("header bytes discarded: ", num)
+			}
+
+			ru, _, err := buffConnReader.ReadRune()
 			byteSlice := []byte(string(ru))
 			if err == io.EOF {
 				fmt.Println("EOF hit in runner output")
@@ -184,6 +205,7 @@ func startRunnerReader() {
 }
 
 func writeToWebsockets(byteSlice []byte) {
+	fmt.Println("writing to wsockets: ", byteSlice, string(byteSlice))
 	var newList []*websocket.Conn
 	for _, ws := range wsockets {
 		err := ws.Write(context.Background(), websocket.MessageText, byteSlice)
@@ -332,41 +354,42 @@ func execInContainer(cmd []string) {
 	}
 
 	runner = connection.Conn
+	buffConnReader = bufio.NewReader(connection.Reader)
 	startRunnerReader()
 
 	// output := make([]byte, 0, 512)
 	// // Get 8-byte header of multiplexed stdout/stderr stream
 	// // and then read data, and repeat until EOF
 	// for {
-	// 	h := make([]byte, 8)
-	// 	_, err := connection.Reader.Read(h)
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		fmt.Println("error in reading header: ", err)
-	// 	}
+	//	h := make([]byte, 8)
+	//	_, err := connection.Reader.Read(h)
+	//	if err == io.EOF {
+	//		break
+	//	}
+	//	if err != nil {
+	//		fmt.Println("error in reading header: ", err)
+	//	}
 
-	// 	// First byte indicates stdout or stderr
-	// 	// var streamType string
-	// 	// if h[0] == 2 {
-	// 	// 	streamType = "stderr"
-	// 	// } else {
-	// 	// 	streamType = "stdout"
-	// 	// }
+	//	// First byte indicates stdout or stderr
+	//	// var streamType string
+	//	// if h[0] == 2 {
+	//	//	streamType = "stderr"
+	//	// } else {
+	//	//	streamType = "stdout"
+	//	// }
 
-	// 	// Last 4 bytes represent uint32 size
-	// 	size := h[4] + h[5] + h[6] + h[7]
-	// 	b := make([]byte, size)
-	// 	_, err = connection.Reader.Read(b)
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		fmt.Println("error in reading output body: ", err)
-	// 	}
+	//	// Last 4 bytes represent uint32 size
+	//	size := h[4] + h[5] + h[6] + h[7]
+	//	b := make([]byte, size)
+	//	_, err = connection.Reader.Read(b)
+	//	if err == io.EOF {
+	//		break
+	//	}
+	//	if err != nil {
+	//		fmt.Println("error in reading output body: ", err)
+	//	}
 
-	// 	output = append(output, b...)
+	//	output = append(output, b...)
 	// }
 
 	// fmt.Println("output from direct command: ", output)
