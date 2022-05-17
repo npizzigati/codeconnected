@@ -138,7 +138,7 @@ func startRunnerReader() {
 				// Discard the header
 				num, err := buffConnReader.Discard(8)
 				if err != nil {
-					fmt.Println("error int discarding header: ", err)
+					fmt.Println("error in discarding header: ", err)
 				}
 				fmt.Println("header bytes discarded: ", num)
 			}
