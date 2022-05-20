@@ -21,14 +21,15 @@ import { Terminal } from 'xterm';
 // It's not used anywhere in the component
 function CodeArea () {
   const params = useParams();
-  console.log('params.lang: ' + params.lang);
+  const [initialLang, roomID] = params.roomDesc.split('-');
+  console.log('lang in params: ' + initialLang);
   const codeAreaDOMRef = useRef(null);
   const mainTermDOMRef = useRef(null);
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
   const terminalData = useRef(null);
-  const [language, setLanguage] = useState(params.lang);
+  const [language, setLanguage] = useState(initialLang);
   const [codeOptions, setCodeOptions] = useState(null);
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
@@ -36,16 +37,16 @@ function CodeArea () {
   // const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
-    console.log('roomID in params: ' + params.roomID);
+    console.log('roomID in params: ' + roomID);
     term.current = new Terminal();
     term.current.open(mainTermDOMRef.current);
     term.current.onData((data) => {
       ws.current.send(data.toString());
     });
-    ws.current = openWs(params.roomID);
+    ws.current = openWs(roomID);
 
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      mode: params.lang,
+      mode: initialLang,
       value: '',
       lineNumbers: true,
       autoCloseBrackets: true
@@ -73,7 +74,7 @@ function CodeArea () {
     setCmRef(cm);
 
     const yCodeOptions = ydoc.getMap('code options');
-    yCodeOptions.set('language', params.lang);
+    yCodeOptions.set('language', initialLang);
     yCodeOptions.observe(ev => {
       const lang = ev.target.get('language');
       setLanguage(lang);

@@ -36,7 +36,7 @@ function Home () {
       // TODO: Handle this problem / try again
     }
     console.log('RoomID: ' + roomID);
-    navigate(`/${language}/${roomID}`);
+    navigate(`/${language}-${roomID}`);
   }
 
   async function requestRoom () {

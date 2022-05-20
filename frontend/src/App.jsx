@@ -11,7 +11,7 @@ function App () {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='/:lang/:roomID' element={<CodeArea />} />
+          <Route path='/:roomDesc' element={<CodeArea />} />
         </Routes>
       </BrowserRouter>
     </React.StrictMode>
