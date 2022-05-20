@@ -1,17 +1,21 @@
 'use strict';
 
-import React, { useState } from 'react';
-import CodeArea from './CodeArea.jsx';
-// import ResultsArea from './ResultsArea.jsx';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home.jsx';
+import CodeArea from './pages/CodeArea.jsx';
 
 function App () {
-  const [codeContent, setCodeContent] = useState('');
-  console.log(codeContent);
-
   return (
     <React.StrictMode>
-      <CodeArea setCodeContent={setCodeContent} />
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/:lang/:roomID' element={<CodeArea />} />
+        </Routes>
+      </BrowserRouter>
     </React.StrictMode>
+
   );
 }
 

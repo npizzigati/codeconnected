@@ -1,8 +1,13 @@
 'use strict';
 
 import React, { useRef, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+
 import * as Y from 'yjs';
-import { Terminal } from 'xterm';
+import { CodemirrorBinding } from 'y-codemirror';
+import { WebrtcProvider } from 'y-webrtc';
+import { WebsocketProvider } from 'y-websocket';
+
 import CodeMirror from 'codemirror/lib/codemirror.js';
 import 'codemirror/addon/edit/closebrackets.js';
 import 'codemirror/mode/ruby/ruby.js';
@@ -10,21 +15,20 @@ import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/mode/sql/sql.js';
 import 'codemirror/theme/material.css';
 
-import { CodemirrorBinding } from 'y-codemirror';
-import { WebrtcProvider } from 'y-webrtc';
-import { WebsocketProvider } from 'y-websocket';
+import { Terminal } from 'xterm';
 
-const defaultLanguage = 'ruby';
-
-
-function CodeArea ({ codeContent, setCodeContent }) {
+// FIXME: Do I really need the object below as a param?
+// It's not used anywhere in the component
+function CodeArea () {
+  const params = useParams();
+  console.log('params.lang: ' + params.lang);
   const codeAreaDOMRef = useRef(null);
   const mainTermDOMRef = useRef(null);
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
   const terminalData = useRef(null);
-  const [language, setLanguage] = useState(defaultLanguage);
+  const [language, setLanguage] = useState(params.lang);
   const [codeOptions, setCodeOptions] = useState(null);
   const [cmRef, setCmRef] = useState(null);
   const [ydocRef, setYdocRef] = useState(null);
@@ -32,15 +36,16 @@ function CodeArea ({ codeContent, setCodeContent }) {
   // const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
+    console.log('roomID in params: ' + params.roomID);
     term.current = new Terminal();
     term.current.open(mainTermDOMRef.current);
     term.current.onData((data) => {
       ws.current.send(data.toString());
     });
-    ws.current = openWs();
+    ws.current = openWs(params.roomID);
 
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      mode: defaultLanguage,
+      mode: params.lang,
       value: '',
       lineNumbers: true,
       autoCloseBrackets: true
@@ -68,7 +73,7 @@ function CodeArea ({ codeContent, setCodeContent }) {
     setCmRef(cm);
 
     const yCodeOptions = ydoc.getMap('code options');
-    yCodeOptions.set('language', defaultLanguage);
+    yCodeOptions.set('language', params.lang);
     yCodeOptions.observe(ev => {
       const lang = ev.target.get('language');
       setLanguage(lang);
@@ -268,17 +273,16 @@ function CodeArea ({ codeContent, setCodeContent }) {
   //   ws.current.send(fullCmd);
   // }
 
-
-  function openWs () {
+  function openWs (roomID) {
     // const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
     //                          `/api/openreplws?lang=${language}`);
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
-                             '/api/openreplws');
+                             '/api/openws?roomID=' + roomID);
     ws.onmessage = ev => {
       term.current.write(ev.data);
     };
-    // Need to ping at least once every 60 seconds, or else nginx
-    // proxypass will time out
+    // Need to ping with a non-empty payload at least once every
+    // 60 seconds, or else nginx proxypass will time out
     const pingInterval = setInterval(() => ws.send('KEEPALIVE'), 50000);
     ws.onclose = ev => {
       clearInterval(pingInterval);

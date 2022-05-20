@@ -21,18 +21,37 @@ import (
 	"time"
 )
 
-// TODO: Can there variables/constants be passed around in a
-// context object instead?
+type contentModel struct {
+	Content  string
+	Filename string
+}
+
+type roomModel struct {
+	Language string
+}
+
+type containerDetails struct {
+	ID                 string
+	connection         types.HijackedResponse
+	runner             net.Conn
+	bufReader          *bufio.Reader
+	runnerReaderActive bool
+}
+
+type room struct {
+	wsockets  []*websocket.Conn
+	lang      string
+	container *containerDetails
+}
+
+type eventConfig struct {
+	count int
+}
+
 var cli *client.Client
-var connection types.HijackedResponse
-var runner net.Conn
-var buffConnReader *bufio.Reader
-var wsockets []*websocket.Conn
-var runnerReaderActive bool
 var echo = true
 var eventSubscribers = make(map[string]func(eventConfig))
-var containerID string
-var lang string
+var rooms = make(map[string]*room)
 
 // var attachOpts = types.ContainerAttachOptions{
 //	Stream: true, // This apparently needs to be true for Conn.Write to work
@@ -40,10 +59,6 @@ var lang string
 //	Stdout: true,
 //	Stderr: false,
 // }
-
-type eventConfig struct {
-	count int
-}
 
 func initClient() {
 	var err error
@@ -67,25 +82,60 @@ func initClient() {
 //	lang = "bash"
 // }
 
-func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// queryValues := r.URL.Query()
-	// lang = queryValues.Get("lang")
-	// Start initial container if this is the first connection
-	fmt.Println("number of websocket conns: ", len(wsockets))
-	if len(wsockets) == 0 {
-		// fmt.Sprintf("Starting initial container (%s)\n", language)
-		fmt.Println("Starting initial container")
-		lang = "ruby"
-		startContainer()
+func generateRoomID() string {
+	int64ID := time.Now().UnixNano()
+	return strconv.FormatInt(int64ID, 10)
+}
+
+func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	var rm roomModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("err reading json: ", err)
 	}
+	err = json.Unmarshal(body, &rm)
+	if err != nil {
+		fmt.Println("err while trying to unmarshal: ", err)
+	}
+	fmt.Println("*************rm.Language: ", rm.Language)
+	roomID := generateRoomID()
+	fmt.Println("************roomID: ", roomID)
+
+	room := room{
+		lang:      rm.Language,
+		container: startContainer(rm.Language),
+	}
+	rooms[roomID] = &room
+	// TODO: make this a room method
+	startRunnerReader(room.container, roomID)
+
+	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(roomID))
+}
+
+func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	queryValues := r.URL.Query()
+	roomID := queryValues.Get("roomID")
+
+	// fmt.Println("number of websocket conns: ", len(wsockets))
+	// if len(wsockets) == 0 {
+	// 	// fmt.Sprintf("Starting initial container (%s)\n", language)
+	// 	fmt.Println("Starting initial container")
+	// 	startContainer(lang)
+	// }
+
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
 	if err != nil {
-		panic(err)
+		fmt.Println("error in opening websocket: ", err)
 	}
 	defer ws.Close(websocket.StatusInternalError, "deferred close")
-	wsockets = append(wsockets, ws)
+
+	// Append websocket to room socket list
+	rooms[roomID].wsockets = append(rooms[roomID].wsockets, ws)
+	fmt.Println("number of wsocket conns: ", rooms[roomID].wsockets)
 
 	// Websocket receive loop
 	for {
@@ -94,22 +144,25 @@ func openReplWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Println("message: ", message)
 		if err != nil {
 			fmt.Println("error receiving message: ", err, " ", time.Now().String())
+			// Todo -- I should try to recover after this (reopen ws?)
 			break
 		}
 
 		fmt.Printf("Command received: %s\n", message)
 		if string(message) != "KEEPALIVE" {
-			sendToContainer(message)
+			sendToContainer(message, rooms[roomID].container, rooms[roomID].lang)
 		}
 	}
 }
 
-func startRunnerReader() {
-	if runnerReaderActive {
+func startRunnerReader(cn *containerDetails, roomID string) {
+	// There should only be one runner reader per container
+	if cn.runnerReaderActive {
 		return
 	}
-	promptWait := 200 // in ms
-	runnerReaderActive = true
+	cn.runnerReaderActive = true
+	// Wait time before checking whether prompt is ready, in ms
+	promptWait := 200
 	fakeTermBuffer := []byte{}
 	// number of newlines (\n) after a prompt
 	newlineCount := 0
@@ -127,7 +180,7 @@ func startRunnerReader() {
 		for {
 			// Check for 8-byte docker multiplexing header and discard
 			// if present
-			peek, err := buffConnReader.Peek(1)
+			peek, err := cn.bufReader.Peek(1)
 			// Peek will fail if connection is closed
 			if err != nil {
 				fmt.Println("peek error: ", err)
@@ -136,14 +189,14 @@ func startRunnerReader() {
 			// Header will begin with ascii value 1
 			if peek[0] == 1 {
 				// Discard the header
-				num, err := buffConnReader.Discard(8)
+				num, err := cn.bufReader.Discard(8)
 				if err != nil {
 					fmt.Println("error in discarding header: ", err)
 				}
 				fmt.Println("header bytes discarded: ", num)
 			}
 
-			ru, _, err := buffConnReader.ReadRune()
+			ru, _, err := cn.bufReader.ReadRune()
 			byteSlice := []byte(string(ru))
 			if err == io.EOF {
 				fmt.Println("EOF hit in runner output")
@@ -196,37 +249,39 @@ func startRunnerReader() {
 			}()
 
 			if echo == true {
-				writeToWebsockets(byteSlice)
+				writeToWebsockets(byteSlice, roomID)
 			}
 		}
 	}()
 	fmt.Println("closing runner reader")
-	runnerReaderActive = false
+	cn.runnerReaderActive = false
 }
 
-func writeToWebsockets(byteSlice []byte) {
+func writeToWebsockets(byteSlice []byte, roomID string) {
 	fmt.Println("writing to wsockets: ", byteSlice, string(byteSlice))
 	var newList []*websocket.Conn
-	for _, ws := range wsockets {
+	for _, ws := range rooms[roomID].wsockets {
+		fmt.Println("********Writing to websocket*********")
 		err := ws.Write(context.Background(), websocket.MessageText, byteSlice)
+		// If websocket is no longer available, leave it out of new list
 		if err != nil {
 			fmt.Println("ws write err: ", "byteSlice", byteSlice, "; err: ", err)
-			ws.Close(websocket.StatusInternalError, "deferred close")
+			ws.Close(websocket.StatusInternalError, "websocket no longer available")
 			continue
 		}
 		newList = append(newList, ws)
 	}
-	wsockets = newList
+	rooms[roomID].wsockets = newList
 }
 
-func sendToContainer(message []byte) {
+func sendToContainer(message []byte, cn *containerDetails, lang string) {
 	fmt.Println("Sending message to container")
 
 	tries := 0
 	for tries < 5 {
 		// Back off on each failed connection attempt
 		time.Sleep(time.Duration(tries/2) * time.Second)
-		_, err := runner.Write(message)
+		_, err := cn.runner.Write(message)
 		if err == nil {
 			fmt.Printf("Payload bytes: %#v\n\n", message)
 			break
@@ -236,7 +291,7 @@ func sendToContainer(message []byte) {
 		fmt.Println("trying to reestablish connection")
 		// TODO: Do I have to find out the status of connection and
 		// (if active) close it before opening it again?
-		openLanguageConnection()
+		cn.connection, cn.runner, cn.bufReader = openLanguageConnection(cn.ID, lang)
 		tries++
 	}
 
@@ -247,42 +302,40 @@ func sendToContainer(message []byte) {
 }
 
 func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	type contentModel struct {
-		Content  string
-		Filename string
-	}
-	var cm contentModel
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(body, &cm)
-	if err != nil {
-		panic(err)
-	}
-	tarBuffer, err := makeTarball([]byte(cm.Content), cm.Filename)
-	if err != nil {
-		panic(err)
-	}
+	// var cm contentModel
+	// body, err := io.ReadAll(r.Body)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// err = json.Unmarshal(body, &cm)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// tarBuffer, err := makeTarball([]byte(cm.Content), cm.Filename)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		panic(err)
-	}
+	// ctx := context.Background()
+	// cli, err := client.NewClientWithOpts(client.FromEnv)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// Copy contents of user program to container.
-	err = cli.CopyToContainer(ctx, containerID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
-	if err != nil {
-		panic(err)
-	}
+	// // Copy contents of user program to container.
+	// err = cli.CopyToContainer(ctx, containerID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Successfully wrote code to container"))
+	// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	// w.WriteHeader(http.StatusCreated)
+	// w.Write([]byte("Successfully wrote code to container"))
 }
 
-func startContainer() {
+// TODO: Move error handling to createRoom (return error here
+// along with containerDetails)
+func startContainer(lang string) *containerDetails {
 	ctx := context.Background()
 	cmd := []string{"bash"}
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -301,20 +354,27 @@ func startContainer() {
 		panic(err)
 	}
 	fmt.Println("Setting new container id to: ", resp.ID)
-	containerID = resp.ID
-	openLanguageConnection()
+	containerID := resp.ID
+	connection, runner, bufReader := openLanguageConnection(containerID, lang)
+	return &containerDetails{
+		ID:         containerID,
+		connection: connection,
+		runner:     runner,
+		bufReader:  bufReader,
+	}
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
-	connection.Close()
-	queryValues := r.URL.Query()
-	lang = queryValues.Get("lang")
+	// connection.Close()
+	// queryValues := r.URL.Query()
+	// lang := queryValues.Get("lang")
 
-	openLanguageConnection()
+	// // TODO: Need to fix this to work with multiuser system
+	// openLanguageConnection(lang)
 }
 
-func openLanguageConnection() {
+func openLanguageConnection(containerID, lang string) (types.HijackedResponse, net.Conn, *bufio.Reader) {
 	var cmd []string
 	switch lang {
 	case "javascript":
@@ -327,10 +387,10 @@ func openLanguageConnection() {
 		cmd = []string{"bash"}
 	}
 
-	execInContainer(cmd)
+	return execInContainer(containerID, cmd)
 }
 
-func execInContainer(cmd []string) {
+func execInContainer(containerID string, cmd []string) (types.HijackedResponse, net.Conn, *bufio.Reader) {
 	ctx := context.Background()
 	execOpts := types.ExecConfig{
 		User:         "codeuser",
@@ -347,15 +407,16 @@ func execInContainer(cmd []string) {
 		fmt.Println("unable to create exec process: ", err)
 	}
 
-	connection, err = cli.ContainerExecAttach(ctx,
+	connection, err := cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
 		fmt.Println("unable to start/attach to exec process: ", err)
 	}
 
-	runner = connection.Conn
-	buffConnReader = bufio.NewReader(connection.Reader)
-	startRunnerReader()
+	runner := connection.Conn
+	bufReader := bufio.NewReader(connection.Reader)
+
+	return connection, runner, bufReader
 
 	// output := make([]byte, 0, 512)
 	// // Get 8-byte header of multiplexed stdout/stderr stream
@@ -401,45 +462,45 @@ func execInContainer(cmd []string) {
 // TODO: No.2: If repl is not at prompt, get is there (by exiting
 // and re-entering?)
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	queryValues := r.URL.Query()
-	lang := queryValues.Get("lang")
-	linesOfCode := queryValues.Get("lines")
-	writeToWebsockets([]byte("Running your code...\r\n"))
-	echo = false
-	switch lang {
-	case "ruby":
-		runner.Write([]byte("exec $0\n")) // reset repl
-		setEventListener("promptReady", func(config eventConfig) {
-			removeEventListener("promptReady")
-			runner.Write([]byte("puts 'ST' + 'ART'; " + "load 'code.rb';\n"))
-		})
-		setEventListener("startOutput", func(config eventConfig) {
-			removeEventListener("startOutput")
-			echo = true
-		})
-	case "javascript":
-		runner.Write([]byte(".clear\n"))
-		setEventListener("promptReady", func(config eventConfig) {
-			removeEventListener("promptReady")
-			// Delete two previous lines from remote terminal
-			runner.Write([]byte(".load code.js\n"))
+	// queryValues := r.URL.Query()
+	// lang := queryValues.Get("lang")
+	// linesOfCode := queryValues.Get("lines")
+	// writeToWebsockets([]byte("Running your code...\r\n"))
+	// echo = false
+	// switch lang {
+	// case "ruby":
+	// 	runner.Write([]byte("exec $0\n")) // reset repl
+	// 	setEventListener("promptReady", func(config eventConfig) {
+	// 		removeEventListener("promptReady")
+	// 		runner.Write([]byte("puts 'ST' + 'ART'; " + "load 'code.rb';\n"))
+	// 	})
+	// 	setEventListener("startOutput", func(config eventConfig) {
+	// 		removeEventListener("startOutput")
+	// 		echo = true
+	// 	})
+	// case "javascript":
+	// 	runner.Write([]byte(".clear\n"))
+	// 	setEventListener("promptReady", func(config eventConfig) {
+	// 		removeEventListener("promptReady")
+	// 		// Delete two previous lines from remote terminal
+	// 		runner.Write([]byte(".load code.js\n"))
 
-			// Turn echo back on right before output begins
-			// Set this event listener after the promptReady event
-			// fires to ensure that only newlines after the prompt are
-			// counted
-			setEventListener("newline", func(config eventConfig) {
-				lines, err := strconv.Atoi(linesOfCode)
-				if err != nil {
-					fmt.Println("strconv error: ", err)
-				}
-				if config.count == lines+1 {
-					echo = true
-					removeEventListener("newline")
-				}
-			})
-		})
-	}
+	// 		// Turn echo back on right before output begins
+	// 		// Set this event listener after the promptReady event
+	// 		// fires to ensure that only newlines after the prompt are
+	// 		// counted
+	// 		setEventListener("newline", func(config eventConfig) {
+	// 			lines, err := strconv.Atoi(linesOfCode)
+	// 			if err != nil {
+	// 				fmt.Println("strconv error: ", err)
+	// 			}
+	// 			if config.count == lines+1 {
+	// 				echo = true
+	// 				removeEventListener("newline")
+	// 			}
+	// 		})
+	// 	})
+	// }
 }
 
 func emit(event string, config eventConfig) {
@@ -458,10 +519,11 @@ func removeEventListener(event string) {
 
 func main() {
 	initClient()
-	defer connection.Close()
+	// defer connection.Close()
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
-	router.GET("/api/openreplws", openReplWs)
+	router.GET("/api/openws", openWs)
+	router.POST("/api/createroom", createRoom)
 	router.GET("/api/switchlanguage", switchLanguage)
 	router.GET("/api/runfile", runFile)
 	port := 8080
