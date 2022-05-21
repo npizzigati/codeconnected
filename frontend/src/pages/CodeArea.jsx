@@ -17,110 +17,120 @@ import 'codemirror/theme/material.css';
 
 import { Terminal } from 'xterm';
 
-// FIXME: Do I really need the object below as a param?
-// It's not used anywhere in the component
 function CodeArea () {
   const params = useParams();
-  const [initialLang, roomID] = params.roomDesc.split('-');
-  console.log('lang in params: ' + initialLang);
+  const roomID = params.roomID;
   const codeAreaDOMRef = useRef(null);
   const mainTermDOMRef = useRef(null);
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
   const terminalData = useRef(null);
-  const [language, setLanguage] = useState(initialLang);
-  const [codeOptions, setCodeOptions] = useState(null);
-  const [cmRef, setCmRef] = useState(null);
+  const codeOptions = useRef(null);
+  const cmRef = useRef(null);
+  const [language, setLanguage] = useState('');
+  // FIXME: Do I need this? Am I using the ydocRef anywhere?
   const [ydocRef, setYdocRef] = useState(null);
 
   // const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
-    console.log('roomID in params: ' + roomID);
-    term.current = new Terminal();
-    term.current.open(mainTermDOMRef.current);
-    term.current.onData((data) => {
-      ws.current.send(data.toString());
-    });
-    ws.current = openWs(roomID);
+    // Get initial lang info (TODO: and terminal history maybe) from server
+    console.log('Getting initial lang');
+    (async () => {
+      // TODO: Also get terminal history here;
+      // TODO: Set spinner while waiting, maybe
+      const initialLang = await getInitialLang(roomID);
+      setLanguage(initialLang);
+      console.log('initialLang: ' + initialLang);
 
-    const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      mode: initialLang,
-      value: '',
-      lineNumbers: true,
-      autoCloseBrackets: true
-    });
+      console.log('roomID in params: ' + roomID);
+      term.current = new Terminal();
+      term.current.open(mainTermDOMRef.current);
+      term.current.onData((data) => {
+        ws.current.send(data.toString());
+      });
+      ws.current = openWs(roomID);
 
-    cm.setSize('100%', '100%');
+      const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
+        mode: initialLang,
+        value: '',
+        lineNumbers: true,
+        autoCloseBrackets: true
+      });
 
-    // Collaborative editing
-    // Code editor
-    const ydoc = new Y.Doc();
-    setYdocRef(ydoc);
+      cm.setSize('100%', '100%');
 
-    const ytextCode = ydoc.getText('codemirror');
+      // Collaborative editing
+      // Code editor
+      const ydoc = new Y.Doc();
+      setYdocRef(ydoc);
 
-    // y.js connection providers
-    const rtcProvider = new WebrtcProvider('nicks-cm-room-' + language, ydoc);
-    // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
-    const wsProvider = new WebsocketProvider(
-      window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + language, ydoc
-    );
-    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
+      const ytextCode = ydoc.getText('codemirror');
 
-    const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
-    // Copy a reference to code mirror editor to React state
-    setCmRef(cm);
+      // y.js connection providers
+      const rtcProvider = new WebrtcProvider('nicks-cm-room-' + language, ydoc);
+      // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+      const wsProvider = new WebsocketProvider(
+        window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + language, ydoc
+      );
+      wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
 
-    const yCodeOptions = ydoc.getMap('code options');
-    yCodeOptions.set('language', initialLang);
-    yCodeOptions.observe(ev => {
-      const lang = ev.target.get('language');
-      setLanguage(lang);
-      cm.setOption('mode', lang);
-      console.log('language is now: ' + lang);
-    });
-    // Copy a reference to code mirror editor to React state
-    setCodeOptions(yCodeOptions);
+      const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
+      // Copy a reference to code mirror editor to React state
+      cmRef.current = cm;
 
-    const yFlags = ydoc.getMap('flags');
-    yFlags.observe(ev => {
-      if (ev.target.get('signal') === 'clearTerminal') {
-        clearTerminal();
-      }
-    });
-    // Copy a reference to code mirror editor to React state
-    flags.current = yFlags;
+      const yFlags = ydoc.getMap('flags');
+      yFlags.observe(ev => {
+        console.log('flag raised');
+        if (ev.target.get('signal') === 'clearTerminal') {
+          clearTerminal();
+        }
+      });
+      // Copy a reference to React state
+      flags.current = yFlags;
 
-    const yTerminalData = ydoc.getMap('terminal data');
-    // Copy a reference to code mirror editor to React state
-    terminalData.current = yTerminalData;
-    // Initially fill terminal with existing content from shared session
-    // TODO: Should I be using timeout here, or is there a more
-    // reliable way to determine when shared content is available
-    // after loading page?
-    setTimeout(() => {
-      if (yTerminalData.get('text') !== undefined) {
-        console.log('loading terminal state');
-        const text = yTerminalData.get('text');
-        const lines = terminalLines(text);
+      const yTerminalData = ydoc.getMap('terminal data');
+      // Copy a reference to React state
+      terminalData.current = yTerminalData;
+      // Initially fill terminal with existing content from shared session
+      // TODO: Should I be using timeout here, or is there a more
+      // reliable way to determine when shared content is available
+      // after loading page?
+      setTimeout(() => {
+        if (yTerminalData.get('text') !== undefined) {
+          console.log('loading terminal state');
+          const text = yTerminalData.get('text');
+          const lines = terminalLines(text);
 
-        // Join with CRLF for proper display
-        const formattedText = lines.join('\r\n');
-        term.current.write(formattedText);
-      }
-    }, 300);
-    // Save terminal content to shared state, to be passed to new
-    // users when they join
-    let setTerminalState;
-    term.current.onRender(() => {
-      clearTimeout(setTerminalState);
-      setTerminalState = setTimeout(() => {
-        console.log('saving terminal state');
-        terminalData.current.set('text', getTerminalText(term));
-      }, 500);
-    });
+          // Join with CRLF for proper display
+          const formattedText = lines.join('\r\n');
+          term.current.write(formattedText);
+        }
+      }, 300);
+      // Save terminal content to shared state, to be passed to new
+      // users when they join
+      let setTerminalState;
+      term.current.onRender(() => {
+        clearTimeout(setTerminalState);
+        setTerminalState = setTimeout(() => {
+          console.log('saving terminal state');
+          terminalData.current.set('text', getTerminalText(term));
+        }, 500);
+      });
+
+      const yCodeOptions = ydoc.getMap('code options');
+      yCodeOptions.observe(ev => {
+        const lang = ev.target.get('language');
+        setLanguage(lang);
+        cm.setOption('mode', lang);
+        console.log('language is now: ' + lang);
+      });
+      // Copy a reference to React state
+      codeOptions.current = yCodeOptions;
+
+      console.log('end of useEffect');
+    })();
   }, []);
 
   // Use a React ref for the code area since CodeMirror needs to see it
@@ -143,10 +153,35 @@ function CodeArea () {
     </>
   );
 
+  async function getInitialLang (roomID) {
+    const options = {
+      method: 'GET',
+      mode: 'cors'
+    };
+
+    // TODO: Check if successful (status code 200) before processing
+    try {
+      const response = await fetch(`/api/getlang?roomID=${roomID}`, options);
+      const lang = await response.text();
+      return lang;
+    } catch (error) {
+      console.error('Error fetching lang:', error);
+      return null;
+    }
+  }
+
   function switchLanguage (ev) {
+    console.log('switching language');
     const lang = ev.target.value;
-    codeOptions.set('language', lang);
-    fetch(`/api/switchlanguage?lang=${lang}`)
+    codeOptions.current.set('language', lang);
+
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Length': '0' }
+    };
+
+    fetch(`/api/switchlanguage?roomID=${roomID}&lang=${lang}`, options)
       .then(response => {
         console.log(response);
       });
@@ -183,96 +218,16 @@ function CodeArea () {
   }
 
   function runCode (filename, lines) {
-    // switch (language) {
-    // case 'ruby':
-    //   resetCmd = 'exec $0';
-    //   runCmd = `load '${filename}';`;
-    //   break;
-    // case 'javascript':
-    //   // resetCmd = 'exec $0 #--> Resetting REPL';
-    //   console.log('executing javascript code');
-    //   resetCmd = '.clear //--> Resetting REPL';
-    //   runCmd = `.load ${filename}`;
-    //   break;
-    // case 'sql':
-    //   console.log('executing javascript code');
-    //   resetCmd = null;
-    //   runCmd = `\\i ./${filename}`;
-    //   break;
-    // }
-    fetch(`/api/runfile?lang=${language}&lines=${lines}`)
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Length': '0' }
+    };
+    fetch(`/api/runfile?roomID=${params.roomID}&lang=${language}&lines=${lines}`, options)
       .then(response => {
         console.log(response);
       });
   }
-
-  // async function runCode (filename) {
-  //   // TODO: For Ruby, maybe need to make sure we're exiting from
-  //   // any nested pry instances
-  //   // reset repl with exec $0 then wait for prompt
-  //   let resetCmd, runCmd;
-  //   switch (language) {
-  //   case 'ruby':
-  //     resetCmd = 'exec $0 #--> Resetting REPL';
-  //     runCmd = `load '${filename}' #--> Running code;`;
-  //     break;
-  //   case 'javascript':
-  //     // resetCmd = 'exec $0 #--> Resetting REPL';
-  //     console.log('executing javascript code');
-  //     resetCmd = '.clear //--> Resetting REPL';
-  //     runCmd = `.load ${filename}`;
-  //     break;
-  //   case 'sql':
-  //     console.log('executing javascript code');
-  //     resetCmd = null;
-  //     runCmd = `\\i ./${filename}`;
-  //     break;
-  //   }
-  //   let timeoutID;
-  //   if (resetCmd !== null) {
-  //     try {
-  //       // exit Pry to shell
-  //       timeoutID = await executeAndWait(resetCmd);
-  //       clearTimeout(timeoutID);
-  //       console.log('Successfully reset');
-  //     } catch (error) {
-  //       console.log('An error occurred: ' + error);
-  //     } finally {
-  //     }
-  //   }
-  //   executeRun(runCmd);
-
-  //   // If ws is closed/closing, open it again before sending command
-  //   // if (ws.current === null || ws.current.readyState === WebSocket.CLOSED ||
-  //   //     ws.current.readyState === WebSocket.CLOSING) {
-  //   // }
-  // }
-
-  // function executeAndWait (cmd) {
-  //   const timeoutSeconds = 3;
-  //   console.log('Going to execute: ' + cmd);
-  //   let timeoutID;
-  //   const timeout = new Promise(function (resolve, reject) {
-  //     timeoutID = setTimeout(reject, timeoutSeconds * 1000,
-  //                            new Error('Code execution timed out'));
-  //   });
-  //   const runPromise = new Promise(function (resolve, reject) {
-  //     ws.current.send(cmd + '\n');
-
-  //     document.addEventListener('promptReady', () => {
-  //       console.log('promptReady event heard');
-  //       resolve(timeoutID);
-  //     }, { once: true });
-  //   });
-  //   return Promise.race([runPromise, timeout]);
-  // }
-
-  // function executeRun (cmd) {
-  //   console.log('Going to execute: ' + cmd);
-  //   const newline = '\n';
-  //   const fullCmd = cmd + newline;
-  //   ws.current.send(fullCmd);
-  // }
 
   function openWs (roomID) {
     // const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
@@ -292,33 +247,9 @@ function CodeArea () {
     return ws;
   }
 
-  // function handleIncomingChar (char) {
-    // let checkPromptTimeout;
-    // const termination = '> ';
-    // term.current.write(char, () => {
-    //   checkPrompt();
-    // });
-    // function checkPrompt () {
-    //   // Check whether prompt is ready by checking that at
-    //   // least x milliseconds pass from when the indicated
-    //   // termination appears in the terminal output
-    //   clearTimeout(checkPromptTimeout);
-    //   checkPromptTimeout = setTimeout(() => {
-    //     const text = getTerminalText(term);
-    //     const lines = terminalLines(text);
-    //     const lastLine = lines[lines.length - 1];
-    //     const terminationSlice = lastLine.slice(lastLine.length - 2);
-    //     if (terminationSlice === termination) {
-    //       console.log('Dispatching prompt ready event');
-    //       document.dispatchEvent(promptReadyEvent);
-    //     }
-    //   }, 200);
-    // }
-  // }
-
   function executeContent () {
-    const content = cmRef.getValue();
-    const lines = cmRef.lineCount();
+    const content = cmRef.current.getValue();
+    const lines = cmRef.current.lineCount();
     let filename;
     switch (language) {
     case ('ruby'):
@@ -331,7 +262,7 @@ function CodeArea () {
       filename = 'code.sql';
       break;
     }
-    const body = JSON.stringify({ content, filename });
+    const body = JSON.stringify({ content, filename, roomID: params.roomID });
     const options = {
       method: 'POST',
       mode: 'cors',

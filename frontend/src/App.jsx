@@ -11,11 +11,10 @@ function App () {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='/:roomDesc' element={<CodeArea />} />
+          <Route path='/:roomID' element={<CodeArea />} />
         </Routes>
       </BrowserRouter>
     </React.StrictMode>
-
   );
 }
 
