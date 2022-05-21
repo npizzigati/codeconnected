@@ -42,9 +42,6 @@ function CodeArea () {
       // TODO: Set spinner while waiting, maybe
       const initialLang = await getInitialLang(roomID);
       setLanguage(initialLang);
-      console.log('initialLang: ' + initialLang);
-
-      console.log('roomID in params: ' + roomID);
       term.current = new Terminal();
       term.current.open(mainTermDOMRef.current);
       term.current.onData((data) => {
@@ -69,10 +66,10 @@ function CodeArea () {
       const ytextCode = ydoc.getText('codemirror');
 
       // y.js connection providers
-      const rtcProvider = new WebrtcProvider('nicks-cm-room-' + language, ydoc);
+      const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc);
       // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
       const wsProvider = new WebsocketProvider(
-        window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + language, ydoc
+        window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
       );
       wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
 
@@ -82,7 +79,6 @@ function CodeArea () {
 
       const yFlags = ydoc.getMap('flags');
       yFlags.observe(ev => {
-        console.log('flag raised');
         if (ev.target.get('signal') === 'clearTerminal') {
           clearTerminal();
         }
@@ -128,8 +124,6 @@ function CodeArea () {
       });
       // Copy a reference to React state
       codeOptions.current = yCodeOptions;
-
-      console.log('end of useEffect');
     })();
   }, []);
 
