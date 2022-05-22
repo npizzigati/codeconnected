@@ -161,7 +161,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 		fmt.Printf("Command received: %s\n", message)
 		if string(message) != "KEEPALIVE" {
-			sendToContainer(message, rooms[roomID].container, rooms[roomID].lang)
+			sendToContainer(message, roomID)
 		}
 	}
 }
@@ -285,8 +285,10 @@ func writeToWebsockets(byteSlice []byte, roomID string) {
 	rooms[roomID].wsockets = newList
 }
 
-func sendToContainer(message []byte, cn *containerDetails, lang string) {
+func sendToContainer(message []byte, roomID string) {
 	fmt.Println("Sending message to container")
+	cn := rooms[roomID].container
+	lang := rooms[roomID].lang
 
 	tries := 0
 	for tries < 5 {
@@ -300,11 +302,22 @@ func sendToContainer(message []byte, cn *containerDetails, lang string) {
 		fmt.Println("runner write error: ", err)
 		// Reestablish connection
 		// FIXME: This part doesn't seem to be working  -- connection
-		// is not being reestablished
+		// is not being reestablished after: runner write
+		// error: write tcp 172.22.0.3:58204->5.161.62.82:2376:
+		// write: broken pipe
+		// It seems to be reconnecting... i.e., it only tries once
+		// and doesn't give any error messages, but it doesn't
+		// actually reconnect... ***or maybe it does and I also have
+		// to restart the runner reader...
+		// which happens, e.g. when I leave the computer overnight to
+		// sleep
+		// ATTEMPTED FIX: Now restarting runner reader, too... Does
+		// this work now?
 		fmt.Println("trying to reestablish connection")
 		// TODO: Do I have to find out the status of connection and
 		// (if active) close it before opening it again?
 		cn.connection, cn.runner, cn.bufReader = openLanguageConnection(cn.ID, lang)
+		startRunnerReader(cn, roomID)
 		tries++
 	}
 
@@ -355,6 +368,8 @@ func startContainer(lang string) *containerDetails {
 	ctx := context.Background()
 	cmd := []string{"bash"}
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		// Don't specify the non-root user here, since the entrypoint
+		// needs to be root to start up Postgres
 		Image:        "myrunner",
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -381,6 +396,8 @@ func startContainer(lang string) *containerDetails {
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// TODO: Switch to an existing container with the language in
+	// question if already open
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
 	roomID := queryValues.Get("roomID")
