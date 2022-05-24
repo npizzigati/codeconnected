@@ -314,8 +314,6 @@ func sendToContainer(message []byte, roomID string) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		// cn.connection, cn.runner, cn.bufReader = openLanguageConnection(lang, roomID)
-		// startRunnerReader(cn, roomID)
 		tries++
 	}
 
