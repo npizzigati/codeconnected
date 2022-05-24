@@ -70,6 +70,11 @@ func (r *room) removeEventListener(event string) {
 
 var cli *client.Client
 var rooms = make(map[string]*room)
+var initialPrompts = map[string][]byte{
+	"ruby":       []byte("[1] pry(main)> "),
+	"javascript": []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n> "),
+	"sql":        []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
+}
 
 func initClient() {
 	var err error
@@ -135,6 +140,11 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Append websocket to room socket list
 	rooms[roomID].wsockets = append(rooms[roomID].wsockets, ws)
 
+	// If first websocket in room, display initial repl message/prompt
+	if len(rooms[roomID].wsockets) == 1 {
+		displayInitialPrompt(roomID)
+	}
+
 	// Websocket receive loop
 	for {
 		// Receive command
@@ -142,7 +152,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Println("message: ", message)
 		if err != nil {
 			fmt.Println("error receiving message: ", err, " ", time.Now().String())
-			// Todo -- I should try to recover after this (reopen ws?)
+			// TODO: -- I should try to recover after this (reopen ws?)
 			break
 		}
 
@@ -365,6 +375,7 @@ func startContainer(lang, roomID string) {
 	cn := room.container
 	ctx := context.Background()
 	cmd := []string{"bash"}
+
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		// Don't specify the non-root user here, since the entrypoint
 		// needs to be root to start up Postgres
@@ -394,7 +405,6 @@ func startContainer(lang, roomID string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	room.echo = true
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -421,6 +431,7 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 func openLanguageConnection(lang, roomID string) error {
 	room := rooms[roomID]
+	room.echo = false
 	// Number of attempts to make
 	maxTries := 5
 	tries := 0
@@ -436,6 +447,8 @@ loop:
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
+			room.echo = true
+			displayInitialPrompt(roomID)
 			return nil
 		case <-time.After(time.Duration(waitTime) * time.Millisecond):
 			tries++
@@ -487,6 +500,21 @@ func attemptLangConn(lang, roomID string) {
 	cn.runner = cn.connection.Conn
 	cn.bufReader = bufio.NewReader(cn.connection.Reader)
 	startRunnerReader(roomID)
+}
+
+func displayInitialPrompt(roomID string) {
+	lang := rooms[roomID].lang
+	var message []byte
+	switch lang {
+	case "ruby":
+		message = initialPrompts["ruby"]
+	case "javascript":
+		message = initialPrompts["javascript"]
+	case "sql":
+		message = initialPrompts["sql"]
+	}
+	writeToWebsockets([]byte("RESET"), roomID)
+	writeToWebsockets(message, roomID)
 }
 
 // TODO: Make sure repl is at prompt before running code

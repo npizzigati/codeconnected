@@ -189,6 +189,10 @@ function CodeArea () {
     term.current.clear();
   }
 
+  function resetTerminal () {
+    term.current.reset();
+  }
+
   function getTerminalText (terminal) {
     terminal.current.selectAll();
     const text = terminal.current.getSelection();
@@ -229,6 +233,10 @@ function CodeArea () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                              '/api/openws?roomID=' + roomID);
     ws.onmessage = ev => {
+      if (ev.data === 'RESET') {
+        resetTerminal();
+        return;
+      }
       term.current.write(ev.data);
     };
     // Need to ping with a non-empty payload at least once every
