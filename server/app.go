@@ -71,13 +71,6 @@ var cli *client.Client
 var echo = true
 var rooms = make(map[string]*room)
 
-// var attachOpts = types.ContainerAttachOptions{
-//	Stream: true, // This apparently needs to be true for Conn.Write to work
-//	Stdin:  true,
-//	Stdout: true,
-//	Stderr: false,
-// }
-
 func initClient() {
 	var err error
 	cli, err = client.NewClientWithOpts(client.FromEnv)
@@ -85,20 +78,6 @@ func initClient() {
 		panic(err)
 	}
 }
-
-// TODO -- Do I even need this now that I have
-// openLanguageConnection and execInContainer?
-// func openRunnerConn() {
-//	var err error
-//	fmt.Println("connecting to container id: ", containerID)
-//	connection, err = cli.ContainerAttach(context.Background(), containerID, attachOpts)
-//	if err != nil {
-//		fmt.Println("error in getting new connection: ", err)
-//		panic(err)
-//	}
-//	runner = connection.Conn
-//	lang = "bash"
-// }
 
 func generateRoomID() string {
 	int64ID := time.Now().UnixNano()
@@ -144,13 +123,6 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
-
-	// fmt.Println("number of websocket conns: ", len(wsockets))
-	// if len(wsockets) == 0 {
-	// 	// fmt.Sprintf("Starting initial container (%s)\n", language)
-	// 	fmt.Println("Starting initial container")
-	// 	startContainer(lang)
-	// }
 
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
@@ -567,20 +539,6 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		})
 	}
 }
-
-// func emit(event string, config eventConfig) {
-// 	if callback, ok := eventSubscribers[event]; ok {
-// 		callback(config)
-// 	}
-// }
-
-// func setEventListener(event string, callback func(config eventConfig)) {
-// 	eventSubscribers[event] = callback
-// }
-
-// func removeEventListener(event string) {
-// 	delete(eventSubscribers, event)
-// }
 
 func main() {
 	initClient()
