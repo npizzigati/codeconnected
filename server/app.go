@@ -46,6 +46,7 @@ type eventConfig struct {
 type room struct {
 	wsockets         []*websocket.Conn
 	lang             string
+	echo             bool
 	container        *containerDetails
 	eventSubscribers map[string]func(eventConfig)
 }
@@ -68,7 +69,6 @@ func (r *room) removeEventListener(event string) {
 }
 
 var cli *client.Client
-var echo = true
 var rooms = make(map[string]*room)
 
 func initClient() {
@@ -248,7 +248,7 @@ func startRunnerReader(roomID string) {
 				}
 			}()
 
-			if echo == true {
+			if room.echo == true {
 				writeToWebsockets(byteSlice, roomID)
 			}
 		}
@@ -361,7 +361,8 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 // TODO: Move error handling to createRoom (return error here
 // along with containerDetails)
 func startContainer(lang, roomID string) {
-	cn := rooms[roomID].container
+	room := rooms[roomID]
+	cn := room.container
 	ctx := context.Background()
 	cmd := []string{"bash"}
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -393,6 +394,7 @@ func startContainer(lang, roomID string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	room.echo = true
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -500,7 +502,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	lang := queryValues.Get("lang")
 	linesOfCode := queryValues.Get("lines")
 	writeToWebsockets([]byte("Running your code...\r\n"), roomID)
-	echo = false
+	room.echo = false
 	switch lang {
 	case "ruby":
 		cn.runner.Write([]byte("exec $0\n")) // reset repl
@@ -510,7 +512,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		})
 		room.setEventListener("startOutput", func(config eventConfig) {
 			room.removeEventListener("startOutput")
-			echo = true
+			room.echo = true
 		})
 	case "javascript":
 		cn.runner.Write([]byte(".clear\n"))
@@ -529,7 +531,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 					fmt.Println("strconv error: ", err)
 				}
 				if config.count == lines+1 {
-					echo = true
+					room.echo = true
 					room.removeEventListener("newline")
 				}
 			})
