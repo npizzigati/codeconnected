@@ -411,7 +411,6 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	if err != nil {
 		fmt.Println(err)
 	}
-	// startRunnerReader(cn, roomID)
 
 	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
