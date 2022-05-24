@@ -39,19 +39,36 @@ type containerDetails struct {
 	runnerReaderActive bool
 }
 
-type room struct {
-	wsockets  []*websocket.Conn
-	lang      string
-	container *containerDetails
-}
-
 type eventConfig struct {
 	count int
 }
 
+type room struct {
+	wsockets         []*websocket.Conn
+	lang             string
+	container        *containerDetails
+	eventSubscribers map[string]func(eventConfig)
+}
+
+func (r *room) emit(event string, config eventConfig) {
+	if callback, ok := r.eventSubscribers[event]; ok {
+		callback(config)
+	}
+}
+
+func (r *room) setEventListener(event string, callback func(config eventConfig)) {
+	if r.eventSubscribers == nil {
+		r.eventSubscribers = make(map[string]func(eventConfig))
+	}
+	r.eventSubscribers[event] = callback
+}
+
+func (r *room) removeEventListener(event string) {
+	delete(r.eventSubscribers, event)
+}
+
 var cli *client.Client
 var echo = true
-var eventSubscribers = make(map[string]func(eventConfig))
 var rooms = make(map[string]*room)
 
 // var attachOpts = types.ContainerAttachOptions{
@@ -114,11 +131,10 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	room := room{
 		lang:      rm.Language,
-		container: startContainer(rm.Language),
+		container: &containerDetails{},
 	}
 	rooms[roomID] = &room
-	// TODO: make this a room method
-	startRunnerReader(room.container, roomID)
+	startContainer(rm.Language, roomID)
 
 	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
@@ -146,7 +162,6 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// Append websocket to room socket list
 	rooms[roomID].wsockets = append(rooms[roomID].wsockets, ws)
-	fmt.Println("number of wsocket conns: ", rooms[roomID].wsockets)
 
 	// Websocket receive loop
 	for {
@@ -166,7 +181,9 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
-func startRunnerReader(cn *containerDetails, roomID string) {
+func startRunnerReader(roomID string) {
+	room := rooms[roomID]
+	cn := room.container
 	// There should only be one runner reader per container
 	if cn.runnerReaderActive {
 		return
@@ -222,7 +239,7 @@ func startRunnerReader(cn *containerDetails, roomID string) {
 			if string(ru) == "\n" {
 				fmt.Println("*********newline in output*********")
 				newlineCount++
-				emit("newline", eventConfig{count: newlineCount})
+				room.emit("newline", eventConfig{count: newlineCount})
 				fmt.Println("newlineCount: ", newlineCount)
 			}
 
@@ -230,7 +247,7 @@ func startRunnerReader(cn *containerDetails, roomID string) {
 			fakeTermBuffer = append(fakeTermBuffer, byteSlice...)
 
 			if bytes.HasSuffix(fakeTermBuffer, []byte("START")) {
-				emit("startOutput", eventConfig{})
+				room.emit("startOutput", eventConfig{})
 				// Skip over current character, with is that last
 				// character in start sequence
 				continue
@@ -249,7 +266,7 @@ func startRunnerReader(cn *containerDetails, roomID string) {
 					fakeTermBuffer = ansiEscapes.ReplaceAll(fakeTermBuffer, []byte(""))
 					// Check whether fakeTermBuffer ends with prompt termination
 					if promptTermination.Match(fakeTermBuffer) {
-						emit("promptReady", eventConfig{})
+						room.emit("promptReady", eventConfig{})
 						fmt.Println("Matched prompt termination")
 						fakeTermBuffer = []byte{}
 						newlineCount = 0
@@ -268,8 +285,13 @@ func startRunnerReader(cn *containerDetails, roomID string) {
 	cn.runnerReaderActive = false
 }
 
+// TODO: (but maybe not right here): when there are no more
+// websocket connections (or after a certain time out with no
+// activity on any of the wsocket connections in a room), terminate all connections for that room
+// and terminate container
 func writeToWebsockets(byteSlice []byte, roomID string) {
 	fmt.Println("writing to wsockets: ", byteSlice, string(byteSlice))
+	fmt.Println("number of wsocket conns: ", len(rooms[roomID].wsockets))
 	var newList []*websocket.Conn
 	for _, ws := range rooms[roomID].wsockets {
 		fmt.Println("********Writing to websocket*********")
@@ -316,8 +338,12 @@ func sendToContainer(message []byte, roomID string) {
 		fmt.Println("trying to reestablish connection")
 		// TODO: Do I have to find out the status of connection and
 		// (if active) close it before opening it again?
-		cn.connection, cn.runner, cn.bufReader = openLanguageConnection(cn.ID, lang)
-		startRunnerReader(cn, roomID)
+		err = openLanguageConnection(lang, roomID)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// cn.connection, cn.runner, cn.bufReader = openLanguageConnection(lang, roomID)
+		// startRunnerReader(cn, roomID)
 		tries++
 	}
 
@@ -364,7 +390,8 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // TODO: Move error handling to createRoom (return error here
 // along with containerDetails)
-func startContainer(lang string) *containerDetails {
+func startContainer(lang, roomID string) {
+	cn := rooms[roomID].container
 	ctx := context.Background()
 	cmd := []string{"bash"}
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -385,13 +412,16 @@ func startContainer(lang string) *containerDetails {
 		panic(err)
 	}
 	fmt.Println("Setting new container id to: ", resp.ID)
-	containerID := resp.ID
-	connection, runner, bufReader := openLanguageConnection(containerID, lang)
-	return &containerDetails{
-		ID:         containerID,
-		connection: connection,
-		runner:     runner,
-		bufReader:  bufReader,
+	cn.ID = resp.ID
+	// Sql container needs a slight pause to create user
+	// This will give openLanguageConnection a better chance of
+	// correctly opening the connection on the first try
+	if lang == "sql" {
+		time.Sleep(2 * time.Second)
+	}
+	err = openLanguageConnection(lang, roomID)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
@@ -405,16 +435,50 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	room := rooms[roomID]
 	cn := room.container
 	room.lang = lang
+	// TODO: Check if connection is open before closing it
 	cn.connection.Close()
-	cn.connection, cn.runner, cn.bufReader = openLanguageConnection(cn.ID, lang)
-	startRunnerReader(cn, roomID)
+	err := openLanguageConnection(lang, roomID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// startRunnerReader(cn, roomID)
 
 	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Success"))
 }
 
-func openLanguageConnection(containerID, lang string) (types.HijackedResponse, net.Conn, *bufio.Reader) {
+func openLanguageConnection(lang, roomID string) error {
+	room := rooms[roomID]
+	// Number of attempts to make
+	maxTries := 5
+	tries := 0
+	// Wait until prompt is ready
+	waitTime := 3000
+	success := make(chan struct{})
+	room.setEventListener("promptReady", func(config eventConfig) {
+		close(success)
+		room.removeEventListener("promptReady")
+	})
+loop:
+	for {
+		attemptLangConn(lang, roomID)
+		select {
+		case <-success:
+			return nil
+		case <-time.After(time.Duration(waitTime) * time.Millisecond):
+			tries++
+			if tries >= maxTries {
+				break loop
+			}
+		}
+	}
+	return errors.New("Unable to open language connection (could not get prompt)")
+}
+
+func attemptLangConn(lang, roomID string) {
+	room := rooms[roomID]
+	cn := room.container
 	var cmd []string
 	switch lang {
 	case "javascript":
@@ -427,10 +491,6 @@ func openLanguageConnection(containerID, lang string) (types.HijackedResponse, n
 		cmd = []string{"bash"}
 	}
 
-	return execInContainer(containerID, cmd)
-}
-
-func execInContainer(containerID string, cmd []string) (types.HijackedResponse, net.Conn, *bufio.Reader) {
 	ctx := context.Background()
 	execOpts := types.ExecConfig{
 		User:         "codeuser",
@@ -442,21 +502,20 @@ func execInContainer(containerID string, cmd []string) (types.HijackedResponse, 
 		Cmd:          cmd,
 	}
 
-	resp, err := cli.ContainerExecCreate(ctx, containerID, execOpts)
+	resp, err := cli.ContainerExecCreate(ctx, cn.ID, execOpts)
 	if err != nil {
 		fmt.Println("unable to create exec process: ", err)
 	}
 
-	connection, err := cli.ContainerExecAttach(ctx,
+	cn.connection, err = cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
 		fmt.Println("unable to start/attach to exec process: ", err)
 	}
 
-	runner := connection.Conn
-	bufReader := bufio.NewReader(connection.Reader)
-
-	return connection, runner, bufReader
+	cn.runner = cn.connection.Conn
+	cn.bufReader = bufio.NewReader(cn.connection.Reader)
+	startRunnerReader(roomID)
 }
 
 // TODO: Make sure repl is at prompt before running code
@@ -467,26 +526,27 @@ func execInContainer(containerID string, cmd []string) (types.HijackedResponse, 
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
+	room := rooms[roomID]
+	cn := room.container
 	lang := queryValues.Get("lang")
 	linesOfCode := queryValues.Get("lines")
-	cn := rooms[roomID].container
 	writeToWebsockets([]byte("Running your code...\r\n"), roomID)
 	echo = false
 	switch lang {
 	case "ruby":
 		cn.runner.Write([]byte("exec $0\n")) // reset repl
-		setEventListener("promptReady", func(config eventConfig) {
-			removeEventListener("promptReady")
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
 			cn.runner.Write([]byte("puts 'ST' + 'ART'; " + "load 'code.rb';\n"))
 		})
-		setEventListener("startOutput", func(config eventConfig) {
-			removeEventListener("startOutput")
+		room.setEventListener("startOutput", func(config eventConfig) {
+			room.removeEventListener("startOutput")
 			echo = true
 		})
 	case "javascript":
 		cn.runner.Write([]byte(".clear\n"))
-		setEventListener("promptReady", func(config eventConfig) {
-			removeEventListener("promptReady")
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
 			// Delete two previous lines from remote terminal
 			cn.runner.Write([]byte(".load code.js\n"))
 
@@ -494,33 +554,33 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			// Set this event listener after the promptReady event
 			// fires to ensure that only newlines after the prompt are
 			// counted
-			setEventListener("newline", func(config eventConfig) {
+			room.setEventListener("newline", func(config eventConfig) {
 				lines, err := strconv.Atoi(linesOfCode)
 				if err != nil {
 					fmt.Println("strconv error: ", err)
 				}
 				if config.count == lines+1 {
 					echo = true
-					removeEventListener("newline")
+					room.removeEventListener("newline")
 				}
 			})
 		})
 	}
 }
 
-func emit(event string, config eventConfig) {
-	if callback, ok := eventSubscribers[event]; ok {
-		callback(config)
-	}
-}
+// func emit(event string, config eventConfig) {
+// 	if callback, ok := eventSubscribers[event]; ok {
+// 		callback(config)
+// 	}
+// }
 
-func setEventListener(event string, callback func(config eventConfig)) {
-	eventSubscribers[event] = callback
-}
+// func setEventListener(event string, callback func(config eventConfig)) {
+// 	eventSubscribers[event] = callback
+// }
 
-func removeEventListener(event string) {
-	delete(eventSubscribers, event)
-}
+// func removeEventListener(event string) {
+// 	delete(eventSubscribers, event)
+// }
 
 func main() {
 	initClient()

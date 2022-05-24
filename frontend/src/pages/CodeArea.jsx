@@ -241,6 +241,8 @@ function CodeArea () {
     return ws;
   }
 
+  // TODO: This should be debounced so that it is only sent once
+  // even if user clicks multiple times
   function executeContent () {
     const content = cmRef.current.getValue();
     const lines = cmRef.current.lineCount();
