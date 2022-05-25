@@ -21,16 +21,6 @@ import (
 	"time"
 )
 
-type contentModel struct {
-	Content  string
-	Filename string
-	RoomID   string
-}
-
-type roomModel struct {
-	Language string
-}
-
 type containerDetails struct {
 	ID                 string
 	connection         types.HijackedResponse
@@ -49,6 +39,7 @@ type room struct {
 	echo             bool
 	container        *containerDetails
 	eventSubscribers map[string]func(eventConfig)
+	termHist         []byte
 }
 
 func (r *room) emit(event string, config eventConfig) {
@@ -89,17 +80,34 @@ func generateRoomID() string {
 	return strconv.FormatInt(int64ID, 10)
 }
 
-func getLang(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func getLangAndHist(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
 	lang := rooms[roomID].lang
+	hist := rooms[roomID].termHist
 
-	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+	type responseModel struct {
+		Language string `json:"language"`
+		History  string `json:"history"`
+	}
+	response := &responseModel{
+		Language: lang,
+		History:  string(hist),
+	}
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(lang))
+	w.Write(jsonResp)
 }
 
 func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type roomModel struct {
+		Language string
+	}
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -157,9 +165,11 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}
 
 		fmt.Printf("Command received: %s\n", message)
-		if string(message) != "KEEPALIVE" {
-			sendToContainer(message, roomID)
+		stringMessage := string(message)
+		if stringMessage == "KEEPALIVE" {
+			continue
 		}
+		sendToContainer(message, roomID)
 	}
 }
 
@@ -271,22 +281,31 @@ func startRunnerReader(roomID string) {
 // websocket connections (or after a certain time out with no
 // activity on any of the wsocket connections in a room), terminate all connections for that room
 // and terminate container
-func writeToWebsockets(byteSlice []byte, roomID string) {
-	fmt.Println("writing to wsockets: ", byteSlice, string(byteSlice))
+func writeToWebsockets(text []byte, roomID string) {
+	fmt.Println("writing to wsockets: ", text, string(text))
 	fmt.Println("number of wsocket conns: ", len(rooms[roomID].wsockets))
+	room := rooms[roomID]
 	var newList []*websocket.Conn
-	for _, ws := range rooms[roomID].wsockets {
+	// Also write to history if at least one client connected
+	if len(room.wsockets) > 0 {
+		// Don't write special reset message to history
+		if string(text) != "RESETTERMINAL" {
+			room.termHist = append(room.termHist, text...)
+		}
+	}
+
+	for _, ws := range room.wsockets {
 		fmt.Println("********Writing to websocket*********")
-		err := ws.Write(context.Background(), websocket.MessageText, byteSlice)
+		err := ws.Write(context.Background(), websocket.MessageText, text)
 		// If websocket is no longer available, leave it out of new list
 		if err != nil {
-			fmt.Println("ws write err: ", "byteSlice", byteSlice, "; err: ", err)
+			fmt.Println("ws write err: ", "text", text, "; err: ", err)
 			ws.Close(websocket.StatusInternalError, "websocket no longer available")
 			continue
 		}
 		newList = append(newList, ws)
 	}
-	rooms[roomID].wsockets = newList
+	room.wsockets = newList
 }
 
 func sendToContainer(message []byte, roomID string) {
@@ -334,7 +353,11 @@ func sendToContainer(message []byte, roomID string) {
 }
 
 func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-
+	type contentModel struct {
+		Content  string
+		Filename string
+		RoomID   string
+	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -513,8 +536,37 @@ func displayInitialPrompt(roomID string) {
 	case "sql":
 		message = initialPrompts["sql"]
 	}
-	writeToWebsockets([]byte("RESET"), roomID)
+	resetTerminal(roomID)
 	writeToWebsockets(message, roomID)
+}
+
+// TODO: make this a room method
+func resetTerminal(roomID string) {
+	writeToWebsockets([]byte("RESETTERMINAL"), roomID)
+	// Also reset terminal history
+	rooms[roomID].termHist = []byte("")
+}
+
+func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type contentModel struct {
+		LastLine string `json:"lastLine"`
+		RoomID   string `json:"roomID"`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+
+	rooms[cm.RoomID].termHist = []byte(cm.LastLine)
+
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte("Successfully cleared history"))
 }
 
 // TODO: Make sure repl is at prompt before running code
@@ -574,9 +626,10 @@ func main() {
 	// FIXME: Should this be a POST (is it really idempotent)?
 	router.GET("/api/openws", openWs)
 	router.POST("/api/createroom", createRoom)
-	router.GET("/api/getlang", getLang)
+	router.GET("/api/getlangandhist", getLangAndHist)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
+	router.POST("/api/clientclearterm", clientClearTerm)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	fmt.Printf("Starting server on port %d\n", port)

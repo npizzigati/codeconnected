@@ -25,7 +25,7 @@ function CodeArea () {
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
-  const terminalData = useRef(null);
+  // const terminalData = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
   const [language, setLanguage] = useState('');
@@ -35,15 +35,19 @@ function CodeArea () {
   // const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
-    // Get initial lang info (TODO: and terminal history maybe) from server
-    console.log('Getting initial lang');
+    // Get initial lang and terminal history from server
+    console.log('Getting initial lang and history');
     (async () => {
-      // TODO: Also get terminal history here;
       // TODO: Set spinner while waiting, maybe
-      const initialLang = await getInitialLang(roomID);
+      const initialVars = await getInitialLangAndHist(roomID);
+      const initialLang = initialVars.language;
+      const initialHist = initialVars.history;
       setLanguage(initialLang);
+      console.log('initial lang: ' + initialLang);
+      console.log('initial hist: ' + initialHist);
       term.current = new Terminal();
       term.current.open(mainTermDOMRef.current);
+      term.current.write(initialHist);
       term.current.onData((data) => {
         ws.current.send(data.toString());
       });
@@ -86,34 +90,34 @@ function CodeArea () {
       // Copy a reference to React state
       flags.current = yFlags;
 
-      const yTerminalData = ydoc.getMap('terminal data');
+      // const yTerminalData = ydoc.getMap('terminal data');
       // Copy a reference to React state
-      terminalData.current = yTerminalData;
+      // terminalData.current = yTerminalData;
       // Initially fill terminal with existing content from shared session
       // TODO: Should I be using timeout here, or is there a more
       // reliable way to determine when shared content is available
       // after loading page?
-      setTimeout(() => {
-        if (yTerminalData.get('text') !== undefined) {
-          console.log('loading terminal state');
-          const text = yTerminalData.get('text');
-          const lines = terminalLines(text);
+      // setTimeout(() => {
+      //   if (yTerminalData.get('text') !== undefined) {
+      //     console.log('loading terminal state');
+      //     const text = yTerminalData.get('text');
+      //     const lines = terminalLines(text);
 
-          // Join with CRLF for proper display
-          const formattedText = lines.join('\r\n');
-          term.current.write(formattedText);
-        }
-      }, 300);
+      //     // Join with CRLF for proper display
+      //     const formattedText = lines.join('\r\n');
+      //     term.current.write(formattedText);
+      //   }
+      // }, 300);
       // Save terminal content to shared state, to be passed to new
       // users when they join
-      let setTerminalState;
-      term.current.onRender(() => {
-        clearTimeout(setTerminalState);
-        setTerminalState = setTimeout(() => {
-          console.log('saving terminal state');
-          terminalData.current.set('text', getTerminalText(term));
-        }, 500);
-      });
+      // let setTerminalState;
+      // term.current.onRender(() => {
+      //   clearTimeout(setTerminalState);
+      //   setTerminalState = setTimeout(() => {
+      //     console.log('saving terminal state');
+      //     terminalData.current.set('text', getTerminalText(term));
+      //   }, 500);
+      // });
 
       const yCodeOptions = ydoc.getMap('code options');
       yCodeOptions.observe(ev => {
@@ -147,7 +151,7 @@ function CodeArea () {
     </>
   );
 
-  async function getInitialLang (roomID) {
+  async function getInitialLangAndHist (roomID) {
     const options = {
       method: 'GET',
       mode: 'cors'
@@ -155,11 +159,10 @@ function CodeArea () {
 
     // TODO: Check if successful (status code 200) before processing
     try {
-      const response = await fetch(`/api/getlang?roomID=${roomID}`, options);
-      const lang = await response.text();
-      return lang;
+      const response = await fetch(`/api/getlangandhist?roomID=${roomID}`, options);
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching lang:', error);
+      console.error('Error fetching json:', error);
       return null;
     }
   }
@@ -185,22 +188,43 @@ function CodeArea () {
     flags.current.set('signal', 'clearTerminal');
   }
 
+  // TODO: Also implement reset
+  // TODO: Make this work for Ctrl-L too
   function clearTerminal () {
     term.current.clear();
+    const lastLine = getLastTermLine();
+    const roomID = params.roomID;
+    console.log('lastLine: ' + lastLine);
+    // TODO: Send a post request to server with the last line in
+    // xterm.js, for server to clear history and insert that last
+    // line into history (the prompt line at the top of the screen)
+    const body = JSON.stringify({ lastLine, roomID });
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
+    };
+
+    fetch('/api/clientclearterm', options)
+      .then(response => {
+        console.log(response);
+      });
   }
 
   function resetTerminal () {
     term.current.reset();
   }
 
-  function getTerminalText (terminal) {
-    terminal.current.selectAll();
-    const text = terminal.current.getSelection();
-    terminal.current.clearSelection();
+  function getTerminalText () {
+    term.current.selectAll();
+    const text = term.current.getSelection();
+    term.current.clearSelection();
     return text;
   }
 
-  function terminalLines (text) {
+  function getLastTermLine () {
+    const text = getTerminalText();
     const lines = text.split('\n');
 
     // Remove blank lines at end
@@ -212,9 +236,13 @@ function CodeArea () {
         break;
       }
     }
-    return lines.slice(0, lastLineNum + 1);
+    return lines[lastLineNum];
   }
 
+  // FIXME:
+  // When there is text written at the repl prompt but not
+  // executed, this fails (the command is appending onto the
+  // command already in the repl)
   function runCode (filename, lines) {
     const options = {
       method: 'POST',
@@ -233,7 +261,7 @@ function CodeArea () {
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
                              '/api/openws?roomID=' + roomID);
     ws.onmessage = ev => {
-      if (ev.data === 'RESET') {
+      if (ev.data === 'RESETTERMINAL') {
         resetTerminal();
         return;
       }
