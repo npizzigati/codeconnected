@@ -25,14 +25,12 @@ function CodeArea () {
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
-  // const terminalData = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
   const [language, setLanguage] = useState('');
   // FIXME: Do I need this? Am I using the ydocRef anywhere?
   const [ydocRef, setYdocRef] = useState(null);
 
-  // const promptReadyEvent = new Event('promptReady');
 
   useEffect(() => {
     // Get initial lang and terminal history from server
@@ -89,35 +87,6 @@ function CodeArea () {
       });
       // Copy a reference to React state
       flags.current = yFlags;
-
-      // const yTerminalData = ydoc.getMap('terminal data');
-      // Copy a reference to React state
-      // terminalData.current = yTerminalData;
-      // Initially fill terminal with existing content from shared session
-      // TODO: Should I be using timeout here, or is there a more
-      // reliable way to determine when shared content is available
-      // after loading page?
-      // setTimeout(() => {
-      //   if (yTerminalData.get('text') !== undefined) {
-      //     console.log('loading terminal state');
-      //     const text = yTerminalData.get('text');
-      //     const lines = terminalLines(text);
-
-      //     // Join with CRLF for proper display
-      //     const formattedText = lines.join('\r\n');
-      //     term.current.write(formattedText);
-      //   }
-      // }, 300);
-      // Save terminal content to shared state, to be passed to new
-      // users when they join
-      // let setTerminalState;
-      // term.current.onRender(() => {
-      //   clearTimeout(setTerminalState);
-      //   setTerminalState = setTimeout(() => {
-      //     console.log('saving terminal state');
-      //     terminalData.current.set('text', getTerminalText(term));
-      //   }, 500);
-      // });
 
       const yCodeOptions = ydoc.getMap('code options');
       yCodeOptions.observe(ev => {
