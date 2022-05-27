@@ -29,3 +29,8 @@
 #alt-terminal {
     display: none;
 }
+
+.sign-up-form {
+    display: block;
+    margin-bottom: 10px;
+}

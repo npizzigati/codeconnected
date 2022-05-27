@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const defaultLanguage = 'javascript';
 
@@ -26,6 +26,7 @@ function Home () {
         </label>
         <input type='submit' value='Start Session' />
       </form>
+      <Link to='/signup'>Sign up</Link>
     </>
   );
 

@@ -1,5 +1,14 @@
 version: "3.8"
 services:
+  db:
+    container_name: db
+    image: postgres:14.1
+    restart: always
+    env_file:
+      - ./db/.env
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/init_codeconnected.sql:/docker-entrypoint-initdb.d/init_codeconnected.sql
   server:
     container_name: server
     build: ./server
@@ -8,6 +17,8 @@ services:
     env_file:
       - ./server/.env
     restart: always
+    depends_on:
+      - "db"
   frontend:
     container_name: frontend
     build: ./frontend

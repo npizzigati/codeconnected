@@ -10,12 +10,14 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/jackc/pgx/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"io"
 	"net"
 	"net/http"
 	"nhooyr.io/websocket"
+	// "os"
 	"regexp"
 	"strconv"
 	"time"
@@ -569,6 +571,37 @@ func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	w.Write([]byte("Successfully cleared history"))
 }
 
+func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type contentModel struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("credentials: ", cm.Username, cm.Email, cm.Password)
+
+	dbURL := "postgres://postgres@db/"
+	// conn, err := pgx.Connect(context.Background(), os.Getenv("PGHOST"))
+	conn, err := pgx.Connect(context.Background(), dbURL)
+	if err != nil {
+		fmt.Println("unable to connect to db: ", err)
+	}
+	defer conn.Close(context.Background())
+
+	query := "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
+	if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, cm.Password); err != nil {
+		fmt.Println("unable to insert: ", err)
+	}
+}
+
 // TODO: Make sure repl is at prompt before running code
 // TODO: Make sure prompt is in correct repl before running code
 // (maybe by running a certain command and examining the output)
@@ -629,6 +662,7 @@ func main() {
 	router.GET("/api/getlangandhist", getLangAndHist)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
+	router.POST("/api/signup", signUp)
 	router.POST("/api/clientclearterm", clientClearTerm)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
