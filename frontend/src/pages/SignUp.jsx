@@ -36,7 +36,7 @@ function SignUp () {
 
   function handleSubmit (ev) {
     ev.preventDefault();
-    const body = JSON.stringify({ username, email, password });
+    const body = JSON.stringify({ username, email, plainTextPW: password });
     const options = {
       method: 'POST',
       mode: 'cors',

@@ -13,11 +13,12 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
+	"golang.org/x/crypto/bcrypt"
 	"io"
 	"net"
 	"net/http"
 	"nhooyr.io/websocket"
-	// "os"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -572,10 +573,11 @@ func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	dbURL := "postgres://postgres@db/"
 	type contentModel struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Username    string `json:"username"`
+		Email       string `json:"email"`
+		PlainTextPW string `json:"plainTextPW"`
 	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
@@ -586,9 +588,13 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("credentials: ", cm.Username, cm.Email, cm.Password)
-
-	dbURL := "postgres://postgres@db/"
+	fmt.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
+	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
+	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
+		bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
 	// conn, err := pgx.Connect(context.Background(), os.Getenv("PGHOST"))
 	conn, err := pgx.Connect(context.Background(), dbURL)
 	if err != nil {
@@ -597,7 +603,7 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	defer conn.Close(context.Background())
 
 	query := "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
-	if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, cm.Password); err != nil {
+	if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW); err != nil {
 		fmt.Println("unable to insert: ", err)
 	}
 }
