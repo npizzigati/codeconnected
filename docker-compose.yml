@@ -2,13 +2,12 @@ version: "3.8"
 services:
   db:
     container_name: db
-    image: postgres:14.1
+    build: ./db
     restart: always
     env_file:
       - ./db/.env
     volumes:
-      - ./db/data:/var/lib/postgresql/data
-      - ./db/init_codeconnected.sql:/docker-entrypoint-initdb.d/init_codeconnected.sql
+      - pgdata:/var/lib/postgresql/data
   server:
     container_name: server
     build: ./server
@@ -30,3 +29,5 @@ services:
   y_websocket_provider:
     container_name: y_websocket_provider
     build: ./y_websocket_provider
+volumes:
+  pgdata:
