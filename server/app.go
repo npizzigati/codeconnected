@@ -620,6 +620,10 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		signedIn = true
 		session.Values["auth"] = true
 		session.Values["email"] = cm.Email
+		if err = session.Save(r, w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	} else {
 		fmt.Println("*****Sign in was unsuccessful.")
 	}
@@ -635,10 +639,6 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Println("err in marshaling: ", err)
 	}
 
-	if err = session.Save(r, w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
