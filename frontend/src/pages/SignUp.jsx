@@ -44,7 +44,7 @@ function SignUp () {
       body: body
     };
 
-    fetch('/api/signup', options)
+    fetch('/api/sign-up', options)
       .then(response => {
         console.log(response);
       });

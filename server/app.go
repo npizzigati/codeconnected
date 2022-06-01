@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/gorilla/sessions"
 	"github.com/jackc/pgx/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
@@ -64,11 +65,14 @@ func (r *room) removeEventListener(event string) {
 
 var cli *client.Client
 var rooms = make(map[string]*room)
+var store = sessions.NewCookieStore([]byte(os.Getenv("SESS_STORE_SECRET")))
 var initialPrompts = map[string][]byte{
 	"ruby":       []byte("[1] pry(main)> "),
 	"javascript": []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n> "),
 	"sql":        []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
 }
+
+const dbURL = "postgres://postgres@db/"
 
 func initClient() {
 	var err error
@@ -572,8 +576,152 @@ func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	w.Write([]byte("Successfully cleared history"))
 }
 
+func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type contentModel struct {
+		Email       string `json:"email"`
+		PlainTextPW string `json:"plainTextPW"`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("credentials: ", cm.Email, cm.PlainTextPW)
+	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
+
+	conn, err := pgx.Connect(context.Background(), dbURL)
+	if err != nil {
+		fmt.Println("unable to connect to db: ", err)
+	}
+	defer conn.Close(context.Background())
+
+	emailFound := true
+	signedIn := false
+	var encryptedPW string
+	query := "SELECT encrypted_pw FROM users WHERE email = $1"
+	if err := conn.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW); err != nil {
+		emailFound = false
+		fmt.Println("select query error: ", err)
+	}
+
+	if emailFound && bcrypt.CompareHashAndPassword([]byte(encryptedPW), []byte(pepperedPW)) == nil {
+		// success
+		fmt.Println("*****Successfully signed in")
+		signedIn = true
+		session.Values["auth"] = true
+		session.Values["email"] = cm.Email
+	} else {
+		fmt.Println("*****Sign in was unsuccessful.")
+	}
+
+	type responseModel struct {
+		SignedIn bool `json:"signedIn"`
+	}
+	response := &responseModel{
+		SignedIn: signedIn,
+	}
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+
+	if err = session.Save(r, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
+func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	fmt.Println("checking auth on server")
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type responseModel struct {
+		Auth     bool   `json:"auth"`
+		UserName string `json:"userName"`
+		Email    string `json:"email"`
+	}
+
+	if auth, ok := session.Values["auth"].(bool); !ok || !auth {
+		response := &responseModel{
+			Auth: false,
+		}
+		fmt.Println("user not authorized")
+		jsonResp, err := json.Marshal(response)
+		if err != nil {
+			fmt.Println("err in marshaling: ", err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonResp)
+		return
+	}
+
+	var (
+		email, username string
+		ok              bool
+	)
+	if email, ok = session.Values["email"].(string); !ok {
+		fmt.Println("Email not found")
+	}
+
+	// Get username
+	// TODO: Extract this to a method
+	conn, err := pgx.Connect(context.Background(), dbURL)
+	if err != nil {
+		fmt.Println("unable to connect to db: ", err)
+	}
+	defer conn.Close(context.Background())
+
+	query := "SELECT username FROM users WHERE email = $1"
+	if err := conn.QueryRow(context.Background(), query, email).Scan(&username); err != nil {
+		fmt.Println("username select query error: ", err)
+	}
+
+	fmt.Printf("Server: User logged in as %s, with email: %s", username, email)
+
+	session.Values["username"] = username
+
+	response := &responseModel{
+		Auth:     true,
+		Email:    email,
+		UserName: username,
+	}
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
+// TODO: Need to guard against duplicate emails
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	dbURL := "postgres://postgres@db/"
 	type contentModel struct {
 		Username    string `json:"username"`
 		Email       string `json:"email"`
@@ -660,15 +808,20 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func main() {
 	initClient()
+	store.Options = &sessions.Options{
+		SameSite: http.SameSiteStrictMode,
+	}
 	router := httprouter.New()
 	router.POST("/api/savecontent", saveContent)
 	// FIXME: Should this be a POST (is it really idempotent)?
 	router.GET("/api/openws", openWs)
 	router.POST("/api/createroom", createRoom)
 	router.GET("/api/getlangandhist", getLangAndHist)
+	router.GET("/api/check-auth", checkAuth)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
-	router.POST("/api/signup", signUp)
+	router.POST("/api/sign-up", signUp)
+	router.POST("/api/sign-in", signIn)
 	router.POST("/api/clientclearterm", clientClearTerm)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)

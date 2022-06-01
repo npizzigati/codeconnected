@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -8,27 +8,60 @@ const defaultLanguage = 'javascript';
 
 function Home () {
   const [language, setLanguage] = useState(defaultLanguage);
+  const [auth, setAuth] = useState(false);
   const navigate = useNavigate();
 
-  return (
-    <>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Choose the language for your coding session:
-          <select
-            value={language}
-            onChange={ev => setLanguage(ev.target.value)}
-          >
-            <option value='javascript'>Javascript(Node)</option>
-            <option value='ruby'>Ruby</option>
-            <option value='sql'>PostgreSQL</option>
-          </select>
-        </label>
-        <input type='submit' value='Start Session' />
-      </form>
-      <Link to='/signup'>Sign up</Link>
-    </>
-  );
+  useEffect(() => {
+    console.log('Checking user authentication');
+    (async () => {
+      setAuth(await isAuth());
+    })();
+  });
+
+  console.log('User auth: ' + auth);
+  if (auth) {
+    return (
+      <>
+        <form onSubmit={handleSubmit}>
+          <label>
+            Choose the language for your coding session:
+            <select
+              value={language}
+              onChange={ev => setLanguage(ev.target.value)}
+            >
+              <option value='javascript'>Javascript(Node)</option>
+              <option value='ruby'>Ruby</option>
+              <option value='sql'>PostgreSQL</option>
+            </select>
+          </label>
+          <input type='submit' value='Start Session' />
+        </form>
+      </>
+    );
+  } else {
+    return (
+      <>
+        <div><Link to='/sign-up'>Sign up</Link></div>
+        <div><Link to='/sign-in'>Sign in</Link></div>
+      </>
+    );
+  }
+
+  async function isAuth () {
+    const options = {
+      method: 'GET',
+      mode: 'cors'
+    };
+
+    try {
+      const response = await fetch('/api/check-auth', options);
+      const json = await response.json();
+      return json.auth;
+    } catch (error) {
+      console.log('Error fetching auth status: ' + error);
+      return false;
+    }
+  }
 
   async function handleSubmit (ev) {
     ev.preventDefault();
