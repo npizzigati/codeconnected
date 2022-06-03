@@ -10,6 +10,7 @@ RUN GOOS=linux go build -o ./bin/app .
 
 
 FROM debian:11
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 RUN groupadd -r appuser && useradd -m -r appuser -g appuser
 WORKDIR /home/appuser
 COPY --from=go-builder /codeconnected-buildstep/bin/app ./

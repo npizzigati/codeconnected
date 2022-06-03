@@ -35,6 +35,7 @@ function SignUp () {
   }
 
   function handleSubmit (ev) {
+    // TODO: Validate fields
     ev.preventDefault();
     const body = JSON.stringify({ username, email, plainTextPW: password });
     const options = {

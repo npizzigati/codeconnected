@@ -7,6 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	// "github.com/aws/aws-sdk-go-v2"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	sesTypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -16,6 +20,7 @@ import (
 	"github.com/rs/cors"
 	"golang.org/x/crypto/bcrypt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"nhooyr.io/websocket"
@@ -72,7 +77,50 @@ var initialPrompts = map[string][]byte{
 	"sql":        []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
 }
 
+var sesCli *sesv2.Client
+
 const dbURL = "postgres://postgres@db/"
+
+func initSesClient() {
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		fmt.Println("error in loading AWS SES config: ", err)
+	}
+	sesCli = sesv2.NewFromConfig(cfg)
+}
+
+func sendEmail() {
+	fromAddr := "npizzigati@gmail.com"
+	destAddr := sesTypes.Destination{
+		ToAddresses: []string{"npizzigati@gmail.com"},
+	}
+	emailSubject := "Test Message"
+	emailBody := "Test Message"
+	simpleMessage := sesTypes.Message{
+		Subject: &sesTypes.Content{
+			Data: &emailSubject,
+		},
+		Body: &sesTypes.Body{
+			Text: &sesTypes.Content{
+				Data: &emailBody,
+			},
+		},
+	}
+	emailContent := sesTypes.EmailContent{
+		Simple: &simpleMessage,
+	}
+	email := sesv2.SendEmailInput{
+		Destination:      &destAddr,
+		FromEmailAddress: &fromAddr,
+		Content:          &emailContent,
+	}
+	output, err := sesCli.SendEmail(context.Background(), &email)
+	if err != nil {
+		fmt.Println("Error in sending email: ", err)
+		return
+	}
+	fmt.Println("sendEmail output: ", output)
+}
 
 func initClient() {
 	var err error
@@ -720,7 +768,42 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write(jsonResp)
 }
 
-// TODO: Need to guard against duplicate emails
+func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// type contentModel struct {
+	// 	Username    string `json:"username"`
+	// 	Email       string `json:"email"`
+	// 	PlainTextPW string `json:"plainTextPW"`
+	// }
+	// var cm contentModel
+	// body, err := io.ReadAll(r.Body)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// err = json.Unmarshal(body, &cm)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
+	// pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
+	// encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
+	// 	bcrypt.DefaultCost)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// // conn, err := pgx.Connect(context.Background(), os.Getenv("PGHOST"))
+	// conn, err := pgx.Connect(context.Background(), dbURL)
+	// if err != nil {
+	// 	fmt.Println("unable to connect to db: ", err)
+	// }
+	// defer conn.Close(context.Background())
+
+	// query := "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
+	// if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW); err != nil {
+	// 	fmt.Println("unable to insert: ", err)
+	// }
+}
+
+// TODO: Need to guard against duplicate email addresses
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type contentModel struct {
 		Username    string `json:"username"`
@@ -750,10 +833,15 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	defer conn.Close(context.Background())
 
-	query := "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
-	if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW); err != nil {
+	rand.Seed(time.Now().UnixNano())
+	code := strconv.Itoa(rand.Int())
+
+	query := "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code) VALUES($1, $2, $3, $4)"
+	if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code); err != nil {
 		fmt.Println("unable to insert: ", err)
 	}
+
+	sendEmail()
 }
 
 // TODO: Make sure repl is at prompt before running code
@@ -808,6 +896,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func main() {
 	initClient()
+	initSesClient()
 	store.Options = &sessions.Options{
 		SameSite: http.SameSiteStrictMode,
 	}
