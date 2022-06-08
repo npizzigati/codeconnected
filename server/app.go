@@ -891,11 +891,8 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	if time.Now().Unix() > expiry {
 		status = "failure"
 		reason = "code expired"
-		// Delete expired reset request from database
-		query = "DELETE FROM password_reset_requests WHERE reset_code = $1"
-		if _, err := pool.Exec(context.Background(), query, cm.Code); err != nil {
-			fmt.Println("unable to delete expired request record: ", err)
-		}
+		// delete expired record
+		deleteRequestRec(cm.Code)
 	}
 
 	if status == "failure" {
@@ -920,7 +917,16 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		sendStringJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
+	// Delete completed reset request from database
+	deleteRequestRec(cm.Code)
 	sendStringJsonResponse(w, map[string]string{"status": "success"})
+}
+
+func deleteRequestRec(code string) {
+	query := "DELETE FROM password_reset_requests WHERE reset_code = $1"
+	if _, err := pool.Exec(context.Background(), query, code); err != nil {
+		fmt.Println("unable to delete request record: ", err)
+	}
 }
 
 func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
