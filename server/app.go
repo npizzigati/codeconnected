@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	// "github.com/aws/aws-sdk-go-v2"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
@@ -15,7 +16,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/sessions"
-	"github.com/jackc/pgx/v4"
+	// "github.com/jackc/pgx/v4"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"golang.org/x/crypto/bcrypt"
@@ -76,10 +77,19 @@ var initialPrompts = map[string][]byte{
 	"javascript": []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n> "),
 	"sql":        []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
 }
+var pool *pgxpool.Pool
 
 var sesCli *sesv2.Client
 
-const dbURL = "postgres://postgres@db/"
+// const dbURL = "postgres://postgres@db/"
+
+func initDBConnectionPool() {
+	config, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		// ...
+	}
+	pool, err = pgxpool.ConnectConfig(context.Background(), config)
+}
 
 func initSesClient() {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
@@ -89,20 +99,33 @@ func initSesClient() {
 	sesCli = sesv2.NewFromConfig(cfg)
 }
 
-func sendEmail() {
-	fromAddr := "npizzigati@gmail.com"
+func sendPasswordResetEmail(baseURL, resetCode string) {
+	resetURL := fmt.Sprintf("%s/resetPassword?code=%s", baseURL, resetCode)
+	subject := "Reset your password"
+	body := fmt.Sprintf("Reset your password by visiting the following link: %s", resetURL)
+	fromAddr := "noreply@codeconnected.dev"
+	sendEmail(subject, body, fromAddr)
+}
+
+func sendVerificationEmail(baseURL, activationCode string) {
+	activationURL := fmt.Sprintf("%s/activate?code=%s", baseURL, activationCode)
+	subject := "Verify your email address"
+	body := fmt.Sprintf("Verify your email address by visiting the following URL: %s", activationURL)
+	fromAddr := "noreply@codeconnected.dev"
+	sendEmail(subject, body, fromAddr)
+}
+
+func sendEmail(subject, body, fromAddr string) {
 	destAddr := sesTypes.Destination{
 		ToAddresses: []string{"npizzigati@gmail.com"},
 	}
-	emailSubject := "Test Message"
-	emailBody := "Test Message"
 	simpleMessage := sesTypes.Message{
 		Subject: &sesTypes.Content{
-			Data: &emailSubject,
+			Data: &subject,
 		},
 		Body: &sesTypes.Body{
 			Text: &sesTypes.Content{
-				Data: &emailBody,
+				Data: &body,
 			},
 		},
 	}
@@ -647,17 +670,12 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	fmt.Println("credentials: ", cm.Email, cm.PlainTextPW)
 	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
 
-	conn, err := pgx.Connect(context.Background(), dbURL)
-	if err != nil {
-		fmt.Println("unable to connect to db: ", err)
-	}
-	defer conn.Close(context.Background())
-
 	emailFound := true
 	signedIn := false
 	var encryptedPW string
 	query := "SELECT encrypted_pw FROM users WHERE email = $1"
-	if err := conn.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW); err != nil {
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW); err != nil {
+		// Will throw error if no records found
 		emailFound = false
 		fmt.Println("select query error: ", err)
 	}
@@ -732,14 +750,8 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// Get username
 	// TODO: Extract this to a method
-	conn, err := pgx.Connect(context.Background(), dbURL)
-	if err != nil {
-		fmt.Println("unable to connect to db: ", err)
-	}
-	defer conn.Close(context.Background())
-
 	query := "SELECT username FROM users WHERE email = $1"
-	if err := conn.QueryRow(context.Background(), query, email).Scan(&username); err != nil {
+	if err := pool.QueryRow(context.Background(), query, email).Scan(&username); err != nil {
 		fmt.Println("username select query error: ", err)
 	}
 
@@ -768,44 +780,140 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write(jsonResp)
 }
 
-func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// type contentModel struct {
-	// 	Username    string `json:"username"`
-	// 	Email       string `json:"email"`
-	// 	PlainTextPW string `json:"plainTextPW"`
-	// }
-	// var cm contentModel
-	// body, err := io.ReadAll(r.Body)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// err = json.Unmarshal(body, &cm)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
-	// pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
-	// encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
-	// 	bcrypt.DefaultCost)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// // conn, err := pgx.Connect(context.Background(), os.Getenv("PGHOST"))
-	// conn, err := pgx.Connect(context.Background(), dbURL)
-	// if err != nil {
-	// 	fmt.Println("unable to connect to db: ", err)
-	// }
-	// defer conn.Close(context.Background())
+func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type contentModel struct {
+		Email   string `json:"email"`
+		BaseURL string `json:"baseURL`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Email received: ", cm.Email)
+	// Determine whether email is in database
+	query := "SELECT 1 FROM users WHERE email = $1"
+	emailFound := true
+	var tmp int
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err != nil {
+		fmt.Println("query error: ", err)
+		emailFound = false
+	}
 
-	// query := "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
-	// if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW); err != nil {
-	// 	fmt.Println("unable to insert: ", err)
-	// }
+	if !emailFound {
+		// TODO: Change other json structs into maps
+		failureResp, err := json.Marshal(
+			map[string]string{
+				"status": "failure",
+			})
+		if err != nil {
+			fmt.Println("err in marshaling: ", err)
+		}
+		sendJsonResponse(w, failureResp)
+		return
+	}
+
+	fmt.Println("Email was found")
+
+	code := generateRandomCode()
+	sendPasswordResetEmail(cm.BaseURL, code)
+
+	successResp, err := json.Marshal(
+		map[string]string{
+			"status": "success",
+		})
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+	sendJsonResponse(w, successResp)
 }
 
-// TODO: Need to guard against duplicate email addresses
+func generateRandomCode() string {
+	rand.Seed(time.Now().UnixNano())
+	return strconv.Itoa(rand.Int())
+}
+
+// TODO: Use this helper function when appropriate
+func sendJsonResponse(w http.ResponseWriter, jsonResp []byte) {
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
+func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	session, err := store.Get(r, "session")
+	type contentModel struct {
+		Code string `json:"code"`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("activation code received: ", cm.Code)
+	// Move user from pending activations to user if code is found
+	query := "SELECT username, email, encrypted_pw FROM pending_activations WHERE activation_code = $1"
+	var username, email, encryptedPW string
+	recordFound := true
+	status := "success"
+	if err = pool.QueryRow(context.Background(), query, cm.Code).Scan(&username, &email, &encryptedPW); err != nil {
+		fmt.Println("query error: ", err)
+		recordFound = false
+		status = "failure"
+	}
+
+	type responseModel struct {
+		Status string `json:"status"`
+	}
+	if recordFound {
+		query := "DELETE FROM pending_activations WHERE activation_code=$1"
+		if _, err := pool.Exec(context.Background(), query, cm.Code); err != nil {
+			fmt.Println("unable to delete activation record: ", err)
+			status = "failure"
+		}
+		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
+		// TODO: use query pool for all connections; see pgx documentation
+		if _, err := pool.Exec(context.Background(), query, username, email, encryptedPW); err != nil {
+			fmt.Println("unable to insert user data: ", err)
+			status = "failure"
+		}
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	session.Values["auth"] = true
+	session.Values["email"] = email
+	if err = session.Save(r, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := &responseModel{
+		Status: status,
+	}
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type contentModel struct {
+		BaseURL     string `json:"baseURL"`
 		Username    string `json:"username"`
 		Email       string `json:"email"`
 		PlainTextPW string `json:"plainTextPW"`
@@ -820,28 +928,57 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		panic(err)
 	}
 	fmt.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
+	fmt.Println("baseURL: ", cm.BaseURL)
 	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
 	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
 		bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
-	// conn, err := pgx.Connect(context.Background(), os.Getenv("PGHOST"))
-	conn, err := pgx.Connect(context.Background(), dbURL)
+
+	code := generateRandomCode()
+
+	// Check whether user has already registered
+	var emailUsed bool
+	query := "SELECT 1 FROM users WHERE email = $1"
+	var tmp int
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err == nil {
+		// Will throw error if no records found
+		fmt.Printf("email %s already registered", cm.Email)
+		emailUsed = true
+	} else {
+		query = "SELECT 1 FROM pending_activations WHERE email = $1"
+		var tmp int
+		if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err == nil {
+			// Will throw error if no records found
+			fmt.Printf("email %s is pending activation", cm.Email)
+			emailUsed = true
+		}
+	}
+
+	if !emailUsed {
+		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code) VALUES($1, $2, $3, $4)"
+		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code); err != nil {
+			fmt.Println("unable to insert: ", err)
+		}
+
+		sendVerificationEmail(cm.BaseURL, code)
+	}
+
+	type responseModel struct {
+		EmailUsed bool `json:"emailUsed"`
+	}
+	response := &responseModel{
+		EmailUsed: emailUsed,
+	}
+	jsonResp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("unable to connect to db: ", err)
-	}
-	defer conn.Close(context.Background())
-
-	rand.Seed(time.Now().UnixNano())
-	code := strconv.Itoa(rand.Int())
-
-	query := "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code) VALUES($1, $2, $3, $4)"
-	if _, err := conn.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code); err != nil {
-		fmt.Println("unable to insert: ", err)
+		fmt.Println("err in marshaling: ", err)
 	}
 
-	sendEmail()
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
 }
 
 // TODO: Make sure repl is at prompt before running code
@@ -897,6 +1034,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 func main() {
 	initClient()
 	initSesClient()
+	initDBConnectionPool()
 	store.Options = &sessions.Options{
 		SameSite: http.SameSiteStrictMode,
 	}
@@ -905,12 +1043,14 @@ func main() {
 	// FIXME: Should this be a POST (is it really idempotent)?
 	router.GET("/api/openws", openWs)
 	router.POST("/api/createroom", createRoom)
+	router.POST("/api/activateuser", activateUser)
 	router.GET("/api/getlangandhist", getLangAndHist)
 	router.GET("/api/check-auth", checkAuth)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
+	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)

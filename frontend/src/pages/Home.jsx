@@ -14,11 +14,12 @@ function Home () {
   useEffect(() => {
     console.log('Checking user authentication');
     (async () => {
-      setAuth(await isAuth());
+      const serverAuth = await isAuth();
+      setAuth(serverAuth);
+      console.log('auth in useEffect: ' + serverAuth);
     })();
   });
 
-  console.log('User auth: ' + auth);
   if (auth) {
     return (
       <>

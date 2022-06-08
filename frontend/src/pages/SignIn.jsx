@@ -1,7 +1,7 @@
 'use strict';
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function SignIn () {
   const [email, setEmail] = useState('');
@@ -16,6 +16,7 @@ function SignIn () {
         <input id='password' className='sign-in-form' name='password' type='password' value={password} onChange={handleChange} />
         <input className='sign-in-form' type='submit' value='Submit' />
       </form>
+      <div><Link to='/forgot-password'>Forgot your password?</Link></div>
     </>
   );
 
