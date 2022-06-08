@@ -820,7 +820,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 	expiry := time.Now().Add(5 * time.Minute).Unix()
 	code := generateRandomCode()
-	// Enter code into password reset requests
+	// Enter code and expiry into password reset requests
 	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
 	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
 		fmt.Println("unable to insert password reset request in db: ", err)
