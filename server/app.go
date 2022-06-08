@@ -100,7 +100,7 @@ func initSesClient() {
 }
 
 func sendPasswordResetEmail(baseURL, resetCode string) {
-	resetURL := fmt.Sprintf("%s/resetPassword?code=%s", baseURL, resetCode)
+	resetURL := fmt.Sprintf("%s/reset-password?code=%s", baseURL, resetCode)
 	subject := "Reset your password"
 	body := fmt.Sprintf("Reset your password by visiting the following link: %s", resetURL)
 	fromAddr := "noreply@codeconnected.dev"
@@ -794,12 +794,11 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Email received: ", cm.Email)
 	// Determine whether email is in database
-	query := "SELECT 1 FROM users WHERE email = $1"
+	query := "SELECT id FROM users WHERE email = $1"
 	emailFound := true
-	var tmp int
-	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err != nil {
+	var userID int
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&userID); err != nil {
 		fmt.Println("query error: ", err)
 		emailFound = false
 	}
@@ -819,7 +818,13 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 	fmt.Println("Email was found")
 
+	expiry := time.Now().Add(5 * time.Minute).Unix()
 	code := generateRandomCode()
+	// Enter code into password reset requests
+	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
+	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
+		fmt.Println("unable to insert password reset request in db: ", err)
+	}
 	sendPasswordResetEmail(cm.BaseURL, code)
 
 	successResp, err := json.Marshal(
@@ -837,11 +842,85 @@ func generateRandomCode() string {
 	return strconv.Itoa(rand.Int())
 }
 
+// TODO: Use this where appropriate
+func sendStringJsonResponse(w http.ResponseWriter, data map[string]string) {
+	resp, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+	sendJsonResponse(w, resp)
+	return
+}
+
 // TODO: Use this helper function when appropriate
 func sendJsonResponse(w http.ResponseWriter, jsonResp []byte) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
+}
+
+func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type contentModel struct {
+		Code           string `json:"code"`
+		NewPlaintextPW string `json:"newPlaintextPW"`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("reset code received: ", cm.Code)
+
+	// Find reset code in db
+	query := "SELECT user_id, expiry FROM password_reset_requests WHERE reset_code = $1"
+	var userID int
+	var expiry int64
+	var status, reason string
+	if err := pool.QueryRow(context.Background(), query, cm.Code).Scan(&userID, &expiry); err != nil {
+		fmt.Println("Error in finding user (reset password): ", err)
+		status = "failure"
+		reason = "row not found or other database error"
+	}
+
+	fmt.Println("now: ", time.Now().Unix())
+	fmt.Println("expiry: ", expiry)
+	if time.Now().Unix() > expiry {
+		status = "failure"
+		reason = "code expired"
+		// Delete expired reset request from database
+		query = "DELETE FROM password_reset_requests WHERE reset_code = $1"
+		if _, err := pool.Exec(context.Background(), query, cm.Code); err != nil {
+			fmt.Println("unable to delete expired request record: ", err)
+		}
+	}
+
+	if status == "failure" {
+		sendStringJsonResponse(w, map[string]string{"status": "failure", "reason": reason})
+		return
+	}
+
+	fmt.Println("Reset password code and user found")
+
+	// Generate encrypted password
+	pepperedPW := cm.NewPlaintextPW + os.Getenv("PWPEPPER")
+	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
+		bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+
+	// Change password in db
+	query = "UPDATE users SET encrypted_pw = $1 WHERE id = $2"
+	if _, err := pool.Exec(context.Background(), query, encryptedPW, userID); err != nil {
+		fmt.Println("unable to insert: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+	sendStringJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -880,7 +959,6 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			status = "failure"
 		}
 		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
-		// TODO: use query pool for all connections; see pgx documentation
 		if _, err := pool.Exec(context.Background(), query, username, email, encryptedPW); err != nil {
 			fmt.Println("unable to insert user data: ", err)
 			status = "failure"
@@ -1051,6 +1129,7 @@ func main() {
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
 	router.POST("/api/forgot-password", forgotPassword)
+	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)

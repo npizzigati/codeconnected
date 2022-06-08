@@ -17,3 +17,10 @@ CREATE TABLE pending_activations (
   activation_code VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE password_reset_requests (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  reset_code VARCHAR(100) NOT NULL,
+  expiry BIGINT NOT NULL
+);
+
