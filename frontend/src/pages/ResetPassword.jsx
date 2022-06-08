@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 function ResetPassword () {
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [searchParams, _] = useSearchParams();
   const code = searchParams.get('code');
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ function ResetPassword () {
   return (
     <>
       <form onSubmit={handleSubmit}>
+        <label htmlFor='email'>Email:</label>
+        <input id='email' name='email' className='reset-password-form' type='text' value={email} onChange={handleChange} />
         <label htmlFor='password'>Enter your new password:</label>
         <input id='password' className='reset-password-form' name='password' type='password' value={password} onChange={handleChange} />
         <input className='reset-password-form' type='submit' value='Submit' />
@@ -21,6 +24,9 @@ function ResetPassword () {
 
   function handleChange (ev) {
     switch (ev.target.name) {
+    case 'email':
+      setEmail(ev.target.value);
+      break;
     case 'password':
       setPassword(ev.target.value);
       break;
@@ -29,7 +35,7 @@ function ResetPassword () {
 
   function handleSubmit (ev) {
     ev.preventDefault();
-    const body = JSON.stringify({ code, newPlaintextPW: password });
+    const body = JSON.stringify({ email, code, newPlaintextPW: password });
     const options = {
       method: 'POST',
       mode: 'cors',

@@ -861,6 +861,7 @@ func sendJsonResponse(w http.ResponseWriter, jsonResp []byte) {
 
 func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type contentModel struct {
+		Email          string `json:"email"`
 		Code           string `json:"code"`
 		NewPlaintextPW string `json:"newPlaintextPW"`
 	}
@@ -876,11 +877,11 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	fmt.Println("reset code received: ", cm.Code)
 
 	// Find reset code in db
-	query := "SELECT user_id, expiry FROM password_reset_requests WHERE reset_code = $1"
+	query := "SELECT p.user_id, p.expiry FROM password_reset_requests AS p INNER JOIN users AS u ON p.user_id = u.id WHERE p.reset_code = $1 AND u.email = $2"
 	var userID int
 	var expiry int64
 	var status, reason string
-	if err := pool.QueryRow(context.Background(), query, cm.Code).Scan(&userID, &expiry); err != nil {
+	if err := pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&userID, &expiry); err != nil {
 		fmt.Println("Error in finding user (reset password): ", err)
 		status = "failure"
 		reason = "row not found or other database error"
@@ -888,7 +889,8 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 
 	fmt.Println("now: ", time.Now().Unix())
 	fmt.Println("expiry: ", expiry)
-	if time.Now().Unix() > expiry {
+	// If row was not found, expiry will be 0
+	if expiry != 0 && time.Now().Unix() > expiry {
 		status = "failure"
 		reason = "code expired"
 		// delete expired record
