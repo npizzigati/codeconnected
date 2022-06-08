@@ -781,6 +781,8 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// Reset timeout in minutes
+	const resetTimeout = 5
 	type contentModel struct {
 		Email   string `json:"email"`
 		BaseURL string `json:"baseURL`
@@ -818,13 +820,25 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 	fmt.Println("Email was found")
 
-	expiry := time.Now().Add(5 * time.Minute).Unix()
+	expiry := time.Now().Add(resetTimeout * time.Minute).Unix()
 	code := generateRandomCode()
 	// Enter code and expiry into password reset requests
 	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
 	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
 		fmt.Println("unable to insert password reset request in db: ", err)
 	}
+
+	// Automatically delete reset request after timeout
+	go func() {
+		for {
+			time.Sleep(1 * time.Minute)
+			if time.Now().Unix() > expiry {
+				deleteRequestRec(code)
+				break
+			}
+		}
+	}()
+
 	sendPasswordResetEmail(cm.BaseURL, code)
 
 	successResp, err := json.Marshal(
