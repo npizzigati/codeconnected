@@ -1163,9 +1163,10 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 // Remove old unused containers
-func startContainerCloser() {
+func startRoomCloser() {
 	go func() {
 		for {
+			toDelete := []string{}
 			time.Sleep(1 * time.Minute)
 			for roomID, room := range rooms {
 				fmt.Println("checking for empty rooms")
@@ -1173,13 +1174,21 @@ func startContainerCloser() {
 				fmt.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 				if len(room.wsockets) == 0 {
 					fmt.Println("removing room container: ", room.container.ID)
-					// Close room container
+					// Remove room container
 					err := stopAndRemoveContainer(room.container.ID)
 					if err != nil {
 						fmt.Println("error in stopping/removing container: ", err)
 					}
+					// Record roomID for deletion
+					toDelete = append(toDelete, roomID)
 				}
 			}
+			// Remove empty rooms
+			for _, id := range toDelete {
+				delete(rooms, id)
+			}
+			// TODO: remove this println
+			fmt.Println("number of rooms open: ", len(rooms))
 		}
 	}()
 }
@@ -1208,7 +1217,7 @@ func main() {
 	initClient()
 	initSesClient()
 	initDBConnectionPool()
-	startContainerCloser()
+	startRoomCloser()
 	store.Options = &sessions.Options{
 		SameSite: http.SameSiteStrictMode,
 	}
