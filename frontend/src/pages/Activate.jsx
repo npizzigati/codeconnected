@@ -38,7 +38,7 @@ function Activate () {
   return (
     <>
       <p>Registration status: {status}.
-        {(status === 'failure') ? ' Please reload page to retry.' : ''}
+        {(status === 'failure') ? ' Your activation request has expired. Please sign up again.' : ''}
         {(status === 'success') ? ' Signing you in now...' : ''}
       </p>
     </>
