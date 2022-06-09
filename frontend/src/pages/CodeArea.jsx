@@ -234,6 +234,9 @@ function CodeArea () {
         resetTerminal();
         return;
       }
+      if (ev.data === 'PING') {
+        return;
+      }
       term.current.write(ev.data);
     };
     // Need to ping with a non-empty payload at least once every

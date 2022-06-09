@@ -366,8 +366,8 @@ func writeToWebsockets(text []byte, roomID string) {
 	var newList []*websocket.Conn
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
-		// Don't write special reset message to history
-		if string(text) != "RESETTERMINAL" {
+		// Don't write special messages to history
+		if string(text) != "RESETTERMINAL" && string(text) != "PING" {
 			room.termHist = append(room.termHist, text...)
 		}
 	}
@@ -480,6 +480,7 @@ func startContainer(lang, roomID string) {
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		// Don't specify the non-root user here, since the entrypoint
 		// needs to be root to start up Postgres
+		// The image needs to already be created on the runner server
 		Image:        "myrunner",
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -1161,10 +1162,53 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
+// Remove old unused containers
+func startContainerCloser() {
+	go func() {
+		for {
+			time.Sleep(1 * time.Minute)
+			for roomID, room := range rooms {
+				fmt.Println("checking for empty rooms")
+				writeToWebsockets([]byte("PING"), roomID)
+				fmt.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
+				if len(room.wsockets) == 0 {
+					fmt.Println("removing room container: ", room.container.ID)
+					// Close room container
+					err := stopAndRemoveContainer(room.container.ID)
+					if err != nil {
+						fmt.Println("error in stopping/removing container: ", err)
+					}
+				}
+			}
+		}
+	}()
+}
+
+func stopAndRemoveContainer(containername string) error {
+	ctx := context.Background()
+
+	if err := cli.ContainerStop(ctx, containername, nil); err != nil {
+		fmt.Printf("Unable to stop container %s: %s", containername, err)
+	}
+
+	removeOptions := types.ContainerRemoveOptions{
+		// RemoveVolumes: true,
+		Force: true,
+	}
+
+	if err := cli.ContainerRemove(ctx, containername, removeOptions); err != nil {
+		fmt.Printf("Unable to remove container: %s", err)
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 	initClient()
 	initSesClient()
 	initDBConnectionPool()
+	startContainerCloser()
 	store.Options = &sessions.Options{
 		SameSite: http.SameSiteStrictMode,
 	}
