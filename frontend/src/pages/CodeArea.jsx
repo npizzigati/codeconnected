@@ -1,7 +1,7 @@
 'use strict';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import * as Y from 'yjs';
 import { CodemirrorBinding } from 'y-codemirror';
@@ -18,6 +18,7 @@ import 'codemirror/theme/material.css';
 import { Terminal } from 'xterm';
 
 function CodeArea () {
+  const navigate = useNavigate();
   const params = useParams();
   const roomID = params.roomID;
   const codeAreaDOMRef = useRef(null);
@@ -34,8 +35,15 @@ function CodeArea () {
 
   useEffect(() => {
     // Get initial lang and terminal history from server
-    console.log('Getting initial lang and history');
     (async () => {
+      // Check whether room exists
+      if (!(await roomExists(roomID))) {
+        console.log('room does not exist');
+        navigate('/');
+        return;
+      }
+
+      console.log('Getting initial lang and history');
       // TODO: Set spinner while waiting, maybe
       const initialVars = await getInitialLangAndHist(roomID);
       const initialLang = initialVars.language;
@@ -130,6 +138,23 @@ function CodeArea () {
     try {
       const response = await fetch(`/api/getlangandhist?roomID=${roomID}`, options);
       return await response.json();
+    } catch (error) {
+      console.error('Error fetching json:', error);
+      return null;
+    }
+  }
+
+  async function roomExists (roomID) {
+    const options = {
+      method: 'GET',
+      mode: 'cors'
+    };
+
+    // TODO: Check if successful (status code 200) before processing
+    try {
+      const response = await fetch(`/api/does-room-exist?roomID=${roomID}`, options);
+      const json = await response.json();
+      return json.roomExists;
     } catch (error) {
       console.error('Error fetching json:', error);
       return null;

@@ -867,6 +867,15 @@ func sendStringJsonResponse(w http.ResponseWriter, data map[string]string) {
 	return
 }
 
+func sendBoolJsonResponse(w http.ResponseWriter, data map[string]bool) {
+	resp, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+	sendJsonResponse(w, resp)
+	return
+}
+
 // TODO: Use this helper function when appropriate
 func sendJsonResponse(w http.ResponseWriter, jsonResp []byte) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -1112,6 +1121,18 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write(jsonResp)
 }
 
+func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	queryValues := r.URL.Query()
+	roomID := queryValues.Get("roomID")
+	var exists bool
+	if _, found := rooms[roomID]; found {
+		exists = true
+	} else {
+		exists = false
+	}
+	sendBoolJsonResponse(w, map[string]bool{"roomExists": exists})
+}
+
 // TODO: Make sure repl is at prompt before running code
 // TODO: Make sure prompt is in correct repl before running code
 // (maybe by running a certain command and examining the output)
@@ -1227,6 +1248,7 @@ func main() {
 	router.GET("/api/openws", openWs)
 	router.POST("/api/createroom", createRoom)
 	router.POST("/api/activateuser", activateUser)
+	router.GET("/api/does-room-exist", doesRoomExist)
 	router.GET("/api/getlangandhist", getLangAndHist)
 	router.GET("/api/check-auth", checkAuth)
 	router.POST("/api/switchlanguage", switchLanguage)
