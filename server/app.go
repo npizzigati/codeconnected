@@ -782,7 +782,7 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Reset timeout in minutes
-	const resetTimeout = 5
+	const resetTimeout = 10
 	type contentModel struct {
 		Email   string `json:"email"`
 		BaseURL string `json:"baseURL`
@@ -1027,7 +1027,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Activation timeout in minutes
-	const activationTimeout = 1
+	const activationTimeout = 10
 	type contentModel struct {
 		BaseURL     string `json:"baseURL"`
 		Username    string `json:"username"`
