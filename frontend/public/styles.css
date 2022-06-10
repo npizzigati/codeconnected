@@ -1,3 +1,7 @@
+body {
+    background-color: #202124;
+}
+
 #repl {
     font-family: 'Source Code Pro', monospace;
     border: black 1px solid;
