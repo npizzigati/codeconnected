@@ -279,7 +279,7 @@ func startRunnerReader(roomID string) {
 			// Check for 8-byte docker multiplexing header and discard
 			// if present
 			peek, err := cn.bufReader.Peek(1)
-			// Peek will fail if connection is closed
+			// Peek will fail if connection is closed (err == EOF)
 			if err != nil {
 				fmt.Println("peek error: ", err)
 				break
@@ -355,10 +355,6 @@ func startRunnerReader(roomID string) {
 	cn.runnerReaderActive = false
 }
 
-// TODO: (but maybe not right here): when there are no more
-// websocket connections (or after a certain time out with no
-// activity on any of the wsocket connections in a room), terminate all connections for that room
-// and terminate container
 func writeToWebsockets(text []byte, roomID string) {
 	fmt.Println("writing to wsockets: ", text, string(text))
 	fmt.Println("number of wsocket conns: ", len(rooms[roomID].wsockets))
@@ -1184,6 +1180,13 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 // Remove old unused containers
+// FIXME: This doesn't remove all containers (sometimes a
+// container won't be removed -- when exactly does this happen?)
+// FIXME: When user is on a room whose container has expired and
+// their computer sleeps, they come back to the same page when
+// computer wakes up and the terminal is unresponsive (container
+// has been deleted?) Give them a message that room has been
+// closed and take them to home page.
 func startRoomCloser() {
 	go func() {
 		for {

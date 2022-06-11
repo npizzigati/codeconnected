@@ -233,10 +233,6 @@ function CodeArea () {
     return lines[lastLineNum];
   }
 
-  // FIXME:
-  // When there is text written at the repl prompt but not
-  // executed, this fails (the command is appending onto the
-  // command already in the repl)
   function runCode (filename, lines) {
     const options = {
       method: 'POST',
@@ -277,6 +273,17 @@ function CodeArea () {
   // TODO: This should be debounced so that it is only sent once
   // even if user clicks multiple times
   function executeContent () {
+
+    // Check whether repl is at a prompt
+    const prompt = /> $/;
+    const lastLine = getLastTermLine();
+    console.log('prompt ready? ' + prompt.test(lastLine));
+    if (!prompt.test(lastLine)) {
+      // TODO: Pop up a message to user that code can only run
+      // when prompt is ready
+      return;
+    }
+
     const content = cmRef.current.getValue();
     const lines = cmRef.current.lineCount();
     let filename;
