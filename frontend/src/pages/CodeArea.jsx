@@ -105,6 +105,16 @@ function CodeArea () {
       });
       // Copy a reference to React state
       codeOptions.current = yCodeOptions;
+      // Check whether room exists at an interval. This is so
+      // that users returning from sleep to a closed room or
+      // experiencing unrecoverable server/runner errors can
+      // automatically return to home page
+      setInterval(() => {
+        if (!roomExists(roomID)) {
+          window.alert('Room no longer exists');
+          navigate('/');
+        }
+      }, 5000);
     })();
   }, []);
 
@@ -154,6 +164,7 @@ function CodeArea () {
     try {
       const response = await fetch(`/api/does-room-exist?roomID=${roomID}`, options);
       const json = await response.json();
+      console.log('response from roomExists: ' + json.roomExists);
       return json.roomExists;
     } catch (error) {
       console.error('Error fetching json:', error);
