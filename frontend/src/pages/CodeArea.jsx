@@ -279,8 +279,7 @@ function CodeArea () {
     const lastLine = getLastTermLine();
     console.log('prompt ready? ' + prompt.test(lastLine));
     if (!prompt.test(lastLine)) {
-      // TODO: Pop up a message to user that code can only run
-      // when prompt is ready
+      window.alert('REPL prompt must be empty before code can be run.');
       return;
     }
 
