@@ -1183,6 +1183,18 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			room.removeEventListener("startOutput")
 			room.echo = true
 		})
+	case "sql":
+		cn.runner.Write([]byte("\\i code.sql\n"))
+		room.setEventListener("newline", func(config eventConfig) {
+			// lines, err := strconv.Atoi(linesOfCode)
+			// if err != nil {
+			// 	fmt.Println("strconv error: ", err)
+			// }
+			if config.count == 1 {
+				room.echo = true
+				room.removeEventListener("newline")
+			}
+		})
 	case "javascript":
 		cn.runner.Write([]byte(".clear\n"))
 		room.setEventListener("promptReady", func(config eventConfig) {
