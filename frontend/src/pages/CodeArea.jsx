@@ -164,7 +164,6 @@ function CodeArea () {
     try {
       const response = await fetch(`/api/does-room-exist?roomID=${roomID}`, options);
       const json = await response.json();
-      console.log('response from roomExists: ' + json.roomExists);
       return json.roomExists;
     } catch (error) {
       console.error('Error fetching json:', error);
