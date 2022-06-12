@@ -1170,7 +1170,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	cn := room.container
 	lang := queryValues.Get("lang")
 	linesOfCode := queryValues.Get("lines")
-	writeToWebsockets([]byte("Running your code...\r\n"), roomID)
+	writeToWebsockets([]byte("\r\n\r\nRunning your code...\r\n"), roomID)
 	room.echo = false
 	switch lang {
 	case "ruby":
