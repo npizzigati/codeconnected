@@ -32,11 +32,12 @@ import (
 )
 
 type containerDetails struct {
-	ID                 string
-	connection         types.HijackedResponse
-	runner             net.Conn
-	bufReader          *bufio.Reader
-	runnerReaderActive bool
+	ID                  string
+	connection          types.HijackedResponse
+	runner              net.Conn
+	bufReader           *bufio.Reader
+	runnerReaderActive  bool
+	runnerReaderRestart bool
 }
 
 type eventConfig struct {
@@ -252,13 +253,16 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func startRunnerReader(roomID string) {
+	fmt.Println("Starting runner reader")
 	room := rooms[roomID]
 	cn := room.container
 	// There should only be one runner reader per container
 	if cn.runnerReaderActive {
+		fmt.Println("Runner reader already active")
 		return
 	}
 	cn.runnerReaderActive = true
+	cn.runnerReaderRestart = true
 	// Wait time before checking whether prompt is ready, in ms
 	promptWait := 200
 	fakeTermBuffer := []byte{}
@@ -279,7 +283,7 @@ func startRunnerReader(roomID string) {
 			// Check for 8-byte docker multiplexing header and discard
 			// if present
 			peek, err := cn.bufReader.Peek(1)
-			// Peek will fail if connection is closed (err == EOF)
+			// Peek will fail if reader is EOF (err == EOF)
 			if err != nil {
 				fmt.Println("peek error: ", err)
 				break
@@ -350,9 +354,16 @@ func startRunnerReader(roomID string) {
 				writeToWebsockets(byteSlice, roomID)
 			}
 		}
+		fmt.Println("runner reader loop ended")
+		cn.runnerReaderActive = false
+		// Try to reestablish connection if anybody is in room
+		// and restart flag is true
+		if len(room.wsockets) > 0 && room.container.runnerReaderRestart == true {
+			fmt.Println("Trying to reestablish connection")
+			cn.connection.Close()
+			openLanguageConnection(room.lang, roomID)
+		}
 	}()
-	fmt.Println("closing runner reader")
-	cn.runnerReaderActive = false
 }
 
 func writeToWebsockets(text []byte, roomID string) {
@@ -388,6 +399,8 @@ func sendToContainer(message []byte, roomID string) {
 	lang := rooms[roomID].lang
 
 	tries := 0
+	// TODO: Is this retry logic duplicated in the attemptLangConn
+	// or does it do something else?
 	for tries < 5 {
 		// Back off on each failed connection attempt
 		time.Sleep(time.Duration(tries/2) * time.Second)
@@ -413,6 +426,8 @@ func sendToContainer(message []byte, roomID string) {
 		fmt.Println("trying to reestablish connection")
 		// TODO: Do I have to find out the status of connection and
 		// (if active) close it before opening it again?
+		cn.runnerReaderRestart = false
+		cn.connection.Close()
 		err = openLanguageConnection(lang, roomID)
 		if err != nil {
 			fmt.Println(err)
@@ -515,7 +530,11 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	room := rooms[roomID]
 	cn := room.container
 	room.lang = lang
-	// TODO: Check if connection is open before closing it
+	fmt.Println("Switching language")
+	// Set the restart flag to false so that the reader doesn't
+	// automatically restart when we close the connection
+	cn.runnerReaderRestart = false
+	// Connection must be closed here to switch language
 	cn.connection.Close()
 	err := openLanguageConnection(lang, roomID)
 	if err != nil {
@@ -542,6 +561,7 @@ func openLanguageConnection(lang, roomID string) error {
 	})
 loop:
 	for {
+		fmt.Println("Attempting language connection")
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
@@ -556,6 +576,15 @@ loop:
 		}
 	}
 	return errors.New("Unable to open language connection (could not get prompt)")
+}
+
+func closeContainerConnection(connection types.HijackedResponse) {
+	// Close connection if it exists
+	// (If it doesn't exist, reader ptr will be nil)
+	if connection.Reader != nil {
+		fmt.Println("closing existing connection")
+		connection.Close()
+	}
 }
 
 func attemptLangConn(lang, roomID string) {
@@ -587,12 +616,14 @@ func attemptLangConn(lang, roomID string) {
 	resp, err := cli.ContainerExecCreate(ctx, cn.ID, execOpts)
 	if err != nil {
 		fmt.Println("unable to create exec process: ", err)
+		return
 	}
 
 	cn.connection, err = cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
 		fmt.Println("unable to start/attach to exec process: ", err)
+		return
 	}
 
 	cn.runner = cn.connection.Conn
@@ -1198,6 +1229,8 @@ func startRoomCloser() {
 				fmt.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 				if len(room.wsockets) == 0 {
 					fmt.Println("removing room container: ", room.container.ID)
+					// Close hijacked connection with runner
+					closeContainerConnection(room.container.connection)
 					// Remove room container
 					err := stopAndRemoveContainer(room.container.ID)
 					if err != nil {
@@ -1219,6 +1252,8 @@ func startRoomCloser() {
 
 func stopAndRemoveContainer(containername string) error {
 	ctx := context.Background()
+
+	// close connection
 
 	if err := cli.ContainerStop(ctx, containername, nil); err != nil {
 		fmt.Printf("Unable to stop container %s: %s", containername, err)
