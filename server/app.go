@@ -521,8 +521,6 @@ func startContainer(lang, roomID string) {
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// TODO: Switch to an existing container with the language in
-	// question if already open
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
 	roomID := queryValues.Get("roomID")
