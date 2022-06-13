@@ -1,5 +1,8 @@
 package main
 
+// TODO: General: 1. Limit processor time for each container
+//                2. Remove networking
+
 import (
 	"bufio"
 	"bytes"
