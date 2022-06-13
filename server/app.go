@@ -82,7 +82,6 @@ var initialPrompts = map[string][]byte{
 	"sql":        []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
 }
 var pool *pgxpool.Pool
-
 var sesCli *sesv2.Client
 
 // const dbURL = "postgres://postgres@db/"
@@ -215,9 +214,41 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write([]byte(roomID))
 }
 
+func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *room) {
+	t := time.NewTimer(d)
+	defer t.Stop()
+	for {
+		select {
+		case <-t.C:
+		}
+		// the Ping method sends a ping and returns on receipt of the
+		// corresponding pong or cancelation of the context. If the error
+		// returned from Ping is nil, then the pong was received.
+		err := ws.Ping(ctx)
+		if err != nil {
+			fmt.Println("-------------------------------------Pong not recieved -- client no longer connected")
+			fmt.Println("time pong not recieved: ", time.Now().String())
+			ws.Close(websocket.StatusInternalError, "websocket no longer available")
+			// Remove websocket from room
+			var deadIdx int
+			for idx, socket := range room.wsockets {
+				if socket == ws {
+					deadIdx = idx
+				}
+			}
+			room.wsockets = append(room.wsockets[:deadIdx], room.wsockets[deadIdx+1:]...)
+			closeEmptyRooms()
+			return
+		}
+		fmt.Println("-------------------------------------Pong recieved")
+		t.Reset(d)
+	}
+}
+
 func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
+	room := rooms[roomID]
 
 	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
@@ -228,12 +259,14 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	defer ws.Close(websocket.StatusInternalError, "deferred close")
 
 	// Append websocket to room socket list
-	rooms[roomID].wsockets = append(rooms[roomID].wsockets, ws)
+	room.wsockets = append(rooms[roomID].wsockets, ws)
 
 	// If first websocket in room, display initial repl message/prompt
-	if len(rooms[roomID].wsockets) == 1 {
+	if len(room.wsockets) == 1 {
 		displayInitialPrompt(roomID)
 	}
+
+	go heartbeat(context.Background(), ws, 10*time.Second, room)
 
 	// Websocket receive loop
 	for {
@@ -242,12 +275,14 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		fmt.Println("message: ", message)
 		if err != nil {
 			fmt.Println("error receiving message: ", err, " ", time.Now().String())
-			// TODO: -- I should try to recover after this (reopen ws?)
+			// TODO: -- I should try to recover after this (reopen
+			// ws?). I don't think so
 			break
 		}
 
 		fmt.Printf("Command received: %s\n", message)
 		stringMessage := string(message)
+		// TODO: Remove keepalive here and in codearea
 		if stringMessage == "KEEPALIVE" {
 			continue
 		}
@@ -371,13 +406,12 @@ func startRunnerReader(roomID string) {
 
 func writeToWebsockets(text []byte, roomID string) {
 	fmt.Println("writing to wsockets: ", text, string(text))
-	fmt.Println("number of wsocket conns: ", len(rooms[roomID].wsockets))
 	room := rooms[roomID]
 	var newList []*websocket.Conn
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
 		// Don't write special messages to history
-		if string(text) != "RESETTERMINAL" && string(text) != "PING" {
+		if string(text) != "RESETTERMINAL" {
 			room.termHist = append(room.termHist, text...)
 		}
 	}
@@ -394,6 +428,7 @@ func writeToWebsockets(text []byte, roomID string) {
 		newList = append(newList, ws)
 	}
 	room.wsockets = newList
+	fmt.Println("number of wsocket conns: ", len(room.wsockets))
 }
 
 func sendToContainer(message []byte, roomID string) {
@@ -1219,39 +1254,22 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
-// Remove old unused containers
-// FIXME: This doesn't remove all containers (sometimes a
-// container won't be removed -- when exactly does this happen?)
-// FIXME: When user is on a room whose container has expired and
-// their computer sleeps, they come back to the same page when
-// computer wakes up and the terminal is unresponsive (container
-// has been deleted?) Give them a message that room has been
-// closed and take them to home page.
-// (My attempted fix client side (in codearea.jsx), checking
-// every 5 seconds to see if room is stillopen, hasn't
-// worked.)
-func startRoomCloser() {
-	go func() {
-		for {
-			toDelete := []string{}
-			time.Sleep(1 * time.Minute)
-			for roomID, room := range rooms {
-				fmt.Println("checking for empty rooms")
-				writeToWebsockets([]byte("PING"), roomID)
-				fmt.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
-				if len(room.wsockets) == 0 {
-					fmt.Println("removing room container: ", room.container.ID)
-					// Close hijacked connection with runner
-					closeContainerConnection(room.container.connection)
-					// Remove room container
-					err := stopAndRemoveContainer(room.container.ID)
-					if err != nil {
-						fmt.Println("error in stopping/removing container: ", err)
-					}
-					// Record roomID for deletion
-					toDelete = append(toDelete, roomID)
-				}
+func closeEmptyRooms() {
+	toDelete := []string{}
+	for roomID, room := range rooms {
+		// fmt.Println("checking for empty rooms")
+		fmt.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
+		if len(room.wsockets) == 0 {
+			fmt.Println("removing room container: ", room.container.ID)
+			// Close hijacked connection with runner
+			closeContainerConnection(room.container.connection)
+			// Remove room container
+			err := stopAndRemoveContainer(room.container.ID)
+			if err != nil {
+				fmt.Println("error in stopping/removing container: ", err)
 			}
+			// Record roomID for deletion
+			toDelete = append(toDelete, roomID)
 			// Remove empty rooms
 			for _, id := range toDelete {
 				delete(rooms, id)
@@ -1259,10 +1277,22 @@ func startRoomCloser() {
 			// TODO: remove this println
 			fmt.Println("number of rooms open: ", len(rooms))
 		}
+	}
+}
+
+// Remove old unused containers/close rooms
+func startRoomCloser() {
+	const checkInterval = 60 // Time between checks in seconds
+	go func() {
+		for {
+			time.Sleep(checkInterval * time.Second)
+			closeEmptyRooms()
+		}
 	}()
 }
 
 func stopAndRemoveContainer(containername string) error {
+	fmt.Println("Removing container: ", containername)
 	ctx := context.Background()
 
 	// close connection

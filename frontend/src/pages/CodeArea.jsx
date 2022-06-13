@@ -105,16 +105,13 @@ function CodeArea () {
       });
       // Copy a reference to React state
       codeOptions.current = yCodeOptions;
-      // Check whether room exists at an interval. This is so
-      // that users returning from sleep to a closed room or
-      // experiencing unrecoverable server/runner errors can
-      // automatically return to home page
-      setInterval(() => {
-        if (!roomExists(roomID)) {
-          window.alert('Room no longer exists');
-          navigate('/');
-        }
-      }, 5000);
+      // Check whether room exists when user comes online. This
+      // is so that users returning from sleep or otherwise being
+      // offline can automatically return to home page.
+      window.addEventListener('online', () => {
+        console.log('now online');
+        redirectIfNoRoom(roomID);
+      });
     })();
   }, []);
 
@@ -137,6 +134,14 @@ function CodeArea () {
       </div>
     </>
   );
+
+  async function redirectIfNoRoom (roomID) {
+    if (!(await roomExists(roomID))) {
+      console.log('room does not exist');
+      window.alert('The room no longer exists');
+      navigate('/');
+    }
+  }
 
   async function getInitialLangAndHist (roomID) {
     const options = {
