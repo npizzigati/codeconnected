@@ -1227,6 +1227,9 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 // computer wakes up and the terminal is unresponsive (container
 // has been deleted?) Give them a message that room has been
 // closed and take them to home page.
+// (My attempted fix client side (in codearea.jsx), checking
+// every 5 seconds to see if room is stillopen, hasn't
+// worked.)
 func startRoomCloser() {
 	go func() {
 		for {
