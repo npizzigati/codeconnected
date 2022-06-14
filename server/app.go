@@ -230,9 +230,8 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 		// returned from Ping is nil, then the pong was received.
 		err := ws.Ping(ctx)
 		if err != nil {
-			fmt.Println("-------------------------------------Pong not recieved -- client no longer connected")
-			fmt.Println("time pong not recieved: ", time.Now().String())
 			ws.Close(websocket.StatusInternalError, "websocket no longer available")
+			fmt.Println("---------------------Pong NOT received---------------------")
 			// Remove websocket from room
 			var deadIdx int
 			for idx, socket := range room.wsockets {
@@ -244,12 +243,13 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 			closeEmptyRooms()
 			return
 		}
-		fmt.Println("-------------------------------------Pong recieved")
+		fmt.Println("---------------------Pong received---------------------")
 		t.Reset(d)
 	}
 }
 
 func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	const heartbeatTime = 30
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
 	room := rooms[roomID]
