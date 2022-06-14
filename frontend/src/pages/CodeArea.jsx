@@ -219,6 +219,7 @@ function CodeArea () {
     fetch('/api/clientclearterm', options)
       .then(response => {
         console.log(response);
+        flags.current.set('signal', '');
       });
   }
 
