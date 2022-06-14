@@ -285,11 +285,6 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}
 
 		fmt.Printf("Command received: %s\n", message)
-		stringMessage := string(message)
-		// TODO: Remove keepalive here and in codearea
-		if stringMessage == "KEEPALIVE" {
-			continue
-		}
 		sendToContainer(message, roomID)
 	}
 }
