@@ -214,6 +214,10 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write([]byte(roomID))
 }
 
+// Ping/pong to detect when people leave room (websockets stop
+// responding client-side). This also takes care of the need to
+// ping websockets with a non-empty payload at least once every
+// 60 seconds, to prevent nginx proxypass from timing out.
 func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *room) {
 	t := time.NewTimer(d)
 	defer t.Stop()
