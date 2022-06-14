@@ -270,7 +270,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		displayInitialPrompt(roomID)
 	}
 
-	go heartbeat(context.Background(), ws, 10*time.Second, room)
+	go heartbeat(context.Background(), ws, heartbeatTime*time.Second, room)
 
 	// Websocket receive loop
 	for {
