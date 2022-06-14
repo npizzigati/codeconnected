@@ -232,6 +232,9 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 		if err != nil {
 			ws.Close(websocket.StatusInternalError, "websocket no longer available")
 			fmt.Println("---------------------Pong NOT received---------------------")
+			// TODO: Retry ping after a few seconds to account for the
+			// case where a client temporary disconnects (or refreshes
+			// the page) at exact instance of ping
 			// Remove websocket from room
 			var deadIdx int
 			for idx, socket := range room.wsockets {
