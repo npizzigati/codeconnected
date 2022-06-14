@@ -17,6 +17,10 @@ import 'codemirror/theme/material.css';
 
 import { Terminal } from 'xterm';
 
+// TODO: Somehow ping the server to deal with the case where the
+// room is closed with a client still attached, as in when I shut
+// down the server with rooms still open. Currently the client's
+// terminals just freeze.
 function CodeArea () {
   const navigate = useNavigate();
   const params = useParams();
