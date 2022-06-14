@@ -270,16 +270,7 @@ function CodeArea () {
         resetTerminal();
         return;
       }
-      if (ev.data === 'PING') {
-        return;
-      }
       term.current.write(ev.data);
-    };
-    // Need to ping with a non-empty payload at least once every
-    // 60 seconds, or else nginx proxypass will time out
-    const pingInterval = setInterval(() => ws.send('KEEPALIVE'), 50000);
-    ws.onclose = ev => {
-      clearInterval(pingInterval);
     };
 
     return ws;
