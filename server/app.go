@@ -406,7 +406,6 @@ func startRunnerReader(roomID string) {
 func writeToWebsockets(text []byte, roomID string) {
 	fmt.Println("writing to wsockets: ", text, string(text))
 	room := rooms[roomID]
-	var newList []*websocket.Conn
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
 		// Don't write special messages to history
@@ -418,15 +417,10 @@ func writeToWebsockets(text []byte, roomID string) {
 	for _, ws := range room.wsockets {
 		fmt.Println("********Writing to websocket*********")
 		err := ws.Write(context.Background(), websocket.MessageText, text)
-		// If websocket is no longer available, leave it out of new list
 		if err != nil {
 			fmt.Println("ws write err: ", "text", text, "; err: ", err)
-			ws.Close(websocket.StatusInternalError, "websocket no longer available")
-			continue
 		}
-		newList = append(newList, ws)
 	}
-	room.wsockets = newList
 	fmt.Println("number of wsocket conns: ", len(room.wsockets))
 }
 
