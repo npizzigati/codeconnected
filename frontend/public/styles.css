@@ -2,21 +2,16 @@ body {
     background-color: #202124;
 }
 
-#repl {
-    font-family: 'Source Code Pro', monospace;
-    border: black 1px solid;
-    white-space: pre-wrap;
-    overflow: scroll;
-    width: 35%;
-    margin: 0 10px 0 0;
+#terminal-container {
+    height: 100%;
+}
+
+.terminal.xterm {
+    height: 100%;
 }
 
 #language-chooser {
     margin-left: 5px;
-}
-
-#repl-caret {
-    background-color: lightgray;
 }
 
 #main-container {
@@ -25,13 +20,9 @@ body {
     margin-top: 5px
 }
 
-#codemirror-wrapper {
-    width: 65%;
-    margin: 0 10px 0 10px;
-}
-
-#alt-terminal {
-    display: none;
+#codemirror-container {
+    height: 100%;
+    width: 50%;
 }
 
 .sign-up-form {
@@ -52,4 +43,11 @@ body {
 .sign-in-form {
     display: block;
     margin-bottom: 10px;
+}
+
+#resizer{
+    background: gray;
+    cursor: col-resize;
+    height: 100%;
+    width: 15px;
 }
