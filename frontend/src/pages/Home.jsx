@@ -68,7 +68,9 @@ function Home () {
     ev.preventDefault();
     const roomID = await requestRoom();
     if (roomID === null) {
+      console.log('Could not create room');
       // TODO: Handle this problem / try again
+      return;
     }
     console.log('RoomID: ' + roomID);
     navigate(`/${roomID}`);
@@ -88,7 +90,13 @@ function Home () {
     // TODO: Check if successful (status code 201) before processing
     try {
       const response = await fetch('/api/createroom', options);
-      const roomID = await response.text();
+      const json = await response.json();
+      console.log(JSON.stringify(json));
+      const roomID = json.roomID;
+      if (roomID === undefined) {
+        console.error('Error fetching room ID');
+        return null;
+      }
       return roomID;
     } catch (error) {
       console.error('Error fetching room ID:', error);

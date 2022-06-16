@@ -209,9 +209,7 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	rooms[roomID] = &room
 	startContainer(rm.Language, roomID)
 
-	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(roomID))
+	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
 }
 
 // Ping/pong to detect when people leave room (websockets stop
