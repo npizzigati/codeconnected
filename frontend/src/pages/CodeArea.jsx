@@ -95,9 +95,6 @@ function CodeArea () {
     const deltaX = Math.round(event.clientX) - Math.round(initialX.current);
     const leftBoundary = minCmWidth;
     const rightBoundary = (initialCmWidth + resizeBarWidth + initialTermWidth) - minTermWidth;
-    console.log('clientX: ' + event.clientX);
-    console.log('left bound: ' + leftBoundary);
-    console.log('right bound: ' + rightBoundary);
     let newCmWidth = initialCmWidth + deltaX;
     let newTermWidth = initialTermWidth - deltaX;
     if (event.clientX < leftBoundary || event.clientX > rightBoundary) {
