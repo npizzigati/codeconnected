@@ -128,6 +128,17 @@ function CodeArea () {
     const elem = resizeBarDOMRef.current;
     elem.onpointermove = null;
     elem.releasePointerCapture(event.pointerId);
+    // Convert measurement units back to percentages to allow for resizing
+    const cmWidth = cmContainerDOMRef.current.offsetWidth;
+    const termWidth = mainTermDOMRef.current.offsetWidth;
+    const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
+    const totalWidth = cmWidth + termWidth + resizeBarWidth;
+    const cmWidthPercent = parseFloat((cmWidth / totalWidth) * 100, 10) + '%';
+    const termWidthPercent = parseFloat((termWidth / totalWidth) * 100, 10) + '%';
+    console.log('cm percent: ' + cmWidthPercent);
+    console.log('term percent: ' + termWidthPercent);
+    setCmWidth(cmWidthPercent);
+    setTermWidth(termWidthPercent);
   }
 
   async function setup () {
