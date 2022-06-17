@@ -27,7 +27,8 @@ function CodeArea () {
   const params = useParams();
   const roomID = params.roomID;
   const codeAreaDOMRef = useRef(null);
-  const mainTermDOMRef = useRef(null);
+  const termDomRef = useRef(null);
+  const termContainerDomRef = useRef(null);
   const term = useRef(null);
   const fitAddon = useRef(null);
   const ws = useRef(null);
@@ -57,7 +58,6 @@ function CodeArea () {
   return (
     <>
       <button onClick={executeContent}>Run</button>
-      <button onClick={setTerminalClearFlag}>Clear terminal</button>
       <select id='language-chooser' value={language} onChange={switchLanguage}>
         <option value='ruby'>Ruby</option>
         <option value='javascript'>Node.js</option>
@@ -78,19 +78,29 @@ function CodeArea () {
           id='resizer'
           onPointerDown={startResize}
           onPointerUp={stopResize}
-        />
+        >
+          <div id='resizer-decoration' />
+        </div>
         <div
-          ref={mainTermDOMRef}
           id='terminal-container'
+          ref={termContainerDomRef}
           style={{ width: termWidth }}
-        />
+        >
+          <div id='term-button-row'>
+            <button onClick={setTerminalClearFlag}>Clear terminal</button>
+          </div>
+          <div
+            ref={termDomRef}
+            id='terminal-wrapper'
+          />
+        </div>
       </div>
     </>
   );
 
   function resize (event, startEvent) {
     const initialCmWidth = cmContainerDOMRef.current.offsetWidth;
-    const initialTermWidth = mainTermDOMRef.current.offsetWidth;
+    const initialTermWidth = termContainerDomRef.current.offsetWidth;
     const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
     const deltaX = event.clientX - initialX.current;
     const leftBoundary = minCmWidth;
@@ -129,16 +139,16 @@ function CodeArea () {
     elem.onpointermove = null;
     elem.releasePointerCapture(event.pointerId);
     // Convert measurement units back to percentages to allow for resizing
-    const cmWidth = cmContainerDOMRef.current.offsetWidth;
-    const termWidth = mainTermDOMRef.current.offsetWidth;
-    const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
-    const totalWidth = cmWidth + termWidth + resizeBarWidth;
-    const cmWidthPercent = parseFloat((cmWidth / totalWidth) * 100, 10) + '%';
-    const termWidthPercent = parseFloat((termWidth / totalWidth) * 100, 10) + '%';
-    console.log('cm percent: ' + cmWidthPercent);
-    console.log('term percent: ' + termWidthPercent);
-    setCmWidth(cmWidthPercent);
-    setTermWidth(termWidthPercent);
+    // const cmWidth = cmContainerDOMRef.current.offsetWidth;
+    // const termWidth = termContainerDomRef.current.offsetWidth;
+    // const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
+    // const totalWidth = cmWidth + termWidth + resizeBarWidth;
+    // const cmWidthPercent = parseFloat((cmWidth / totalWidth) * 100, 10) + '%';
+    // const termWidthPercent = parseFloat((termWidth / totalWidth) * 100, 10) + '%';
+    // console.log('cm percent: ' + cmWidthPercent);
+    // console.log('term percent: ' + termWidthPercent);
+    // setCmWidth(cmWidthPercent);
+    // setTermWidth(termWidthPercent);
   }
 
   async function setup () {
@@ -158,7 +168,7 @@ function CodeArea () {
     console.log('initial hist: ' + initialHist);
     term.current = new Terminal();
     fitAddon.current = new FitAddon();
-    term.current.open(mainTermDOMRef.current);
+    term.current.open(termDomRef.current);
     term.current.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     window.addEventListener('resize', () => fitAddon.current.fit());
