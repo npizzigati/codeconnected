@@ -5,6 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 function SignUp () {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordDup, setPasswordDup] = useState('');
   const [username, setUsername] = useState('');
   const [emailUsed, setEmailUsed] = useState(false);
   const [displayVerifyMessage, setDisplayVerifyMessage] = useState(false);
@@ -25,6 +26,8 @@ function SignUp () {
         <input id='email' name='email' className='sign-up-form' type='text' value={email} onChange={handleChange} ref={emailInput} />
         <label htmlFor='password'>Password:</label>
         <input id='password' className='sign-up-form' name='password' type='password' value={password} onChange={handleChange} />
+        <label htmlFor='passwordDup'>Enter your password again:</label>
+        <input id='passwordDup' className='sign-up-form' name='passwordDup' type='password' value={passwordDup} onChange={handleChange} />
         <input className='sign-up-form' type='submit' value='Submit' />
       </form>
 
@@ -44,12 +47,21 @@ function SignUp () {
     case 'password':
       setPassword(ev.target.value);
       break;
+    case 'passwordDup':
+      setPasswordDup(ev.target.value);
+      break;
     }
   }
 
   function handleSubmit (ev) {
     // TODO: Validate fields
     ev.preventDefault();
+
+    // Check password entered same twice
+    if (password !== passwordDup) {
+      window.alert('Please make sure you enter the same password in both fields.');
+      return;
+    }
     // Send the baseURL so that the activation link can have the
     // proper address so we can, e.g., test on localhost
     const portString = (window.location.port === '') ? '' : `:${window.location.port}`;
@@ -73,6 +85,7 @@ function SignUp () {
         }
       });
   }
+
 }
 
 export { SignUp as default };
