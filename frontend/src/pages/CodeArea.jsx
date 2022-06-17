@@ -92,7 +92,7 @@ function CodeArea () {
     const initialCmWidth = cmContainerDOMRef.current.offsetWidth;
     const initialTermWidth = mainTermDOMRef.current.offsetWidth;
     const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
-    const deltaX = Math.round(event.clientX) - Math.round(initialX.current);
+    const deltaX = event.clientX - initialX.current;
     const leftBoundary = minCmWidth;
     const rightBoundary = (initialCmWidth + resizeBarWidth + initialTermWidth) - minTermWidth;
     let newCmWidth = initialCmWidth + deltaX;
@@ -106,10 +106,10 @@ function CodeArea () {
     if (newTermWidth < minTermWidth) {
       newTermWidth = minTermWidth;
     }
-    const newCmWidthString = parseInt(newCmWidth, 10) + 'px';
+    const newCmWidthString = parseFloat(newCmWidth, 10) + 'px';
     setCmWidth(newCmWidthString);
 
-    const newTermWidthString = parseInt(newTermWidth, 10) + 'px';
+    const newTermWidthString = parseFloat(newTermWidth, 10) + 'px';
     setTermWidth(newTermWidthString);
 
     initialX.current += deltaX;

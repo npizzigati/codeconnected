@@ -17,7 +17,8 @@ body {
 #main-container {
     display: flex;
     height: 90vh;
-    margin-top: 5px
+    margin-top: 5px;
+    background-color: black;
 }
 
 #codemirror-container {
