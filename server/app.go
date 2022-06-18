@@ -553,20 +553,45 @@ func startContainer(lang, roomID string) {
 }
 
 func updateTermDimensions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	status := "success"
 	queryValues := r.URL.Query()
 	rows := queryValues.Get("rows")
 	cols := queryValues.Get("cols")
 	roomID := queryValues.Get("roomID")
 	fmt.Println("rows: ", rows)
 	fmt.Println("cols: ", cols)
+	fmt.Println("roomID: ", roomID)
 
 	room := rooms[roomID]
 	cn := room.container
 
-	// TODO: Exec stty command on container
+	// dimChange := fmt.Sprintf("\"stty rows %s cols %s\"", rows, cols)
+	dimChange := fmt.Sprintf("'stty rows 20 cols 20'", rows, cols)
+	cmd := []string{"bash", "-c", dimChange}
+	ctx := context.Background()
+	execOpts := types.ExecConfig{
+		User:         "codeuser",
+		Tty:          false,
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: false,
+		WorkingDir:   "/home/codeuser",
+		Cmd:          cmd,
+	}
 
-	sendStringJsonResponse(w, map[string]string{"status": "success"})
+	resp, err := cli.ContainerExecCreate(ctx, cn.ID, execOpts)
+	if err != nil {
+		fmt.Println("unable to create exec process: ", err)
+		status = "failure"
+	}
 
+	err = cli.ContainerExecStart(ctx, resp.ID, types.ExecStartCheck{})
+	if err != nil {
+		fmt.Println("Unable to start exec process: ", err)
+		status = "failure"
+	}
+
+	sendStringJsonResponse(w, map[string]string{"status": status})
 }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

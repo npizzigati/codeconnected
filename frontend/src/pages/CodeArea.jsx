@@ -129,7 +129,7 @@ function CodeArea () {
   }
 
   // Inform remote terminal of new dimensions
-  async function updateTermDimensions (roomID) {
+  async function updateTermDimensions () {
     // Get dimensions from xterm.js
     const rows = term.current.rows;
     const cols = term.current.cols;
