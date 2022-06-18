@@ -552,6 +552,23 @@ func startContainer(lang, roomID string) {
 	}
 }
 
+func updateTermDimensions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	queryValues := r.URL.Query()
+	rows := queryValues.Get("rows")
+	cols := queryValues.Get("cols")
+	roomID := queryValues.Get("roomID")
+	fmt.Println("rows: ", rows)
+	fmt.Println("cols: ", cols)
+
+	room := rooms[roomID]
+	cn := room.container
+
+	// TODO: Exec stty command on container
+
+	sendStringJsonResponse(w, map[string]string{"status": "success"})
+
+}
+
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
@@ -1332,6 +1349,7 @@ func main() {
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
+	router.POST("/api/update-term-dimensions", updateTermDimensions)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	fmt.Printf("Starting server on port %d\n", port)

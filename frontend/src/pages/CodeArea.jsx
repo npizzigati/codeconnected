@@ -124,6 +124,34 @@ function CodeArea () {
 
     initialX.current += deltaX;
     fitAddon.current.fit();
+
+    updateTermDimensions();
+  }
+
+  // Inform remote terminal of new dimensions
+  async function updateTermDimensions (roomID) {
+    // Get dimensions from xterm.js
+    const rows = term.current.rows;
+    const cols = term.current.cols;
+    console.log('new rows: ' + rows + ' new cols: ' + cols);
+
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Length': '0' }
+    };
+
+    try {
+      const response = await fetch(`/api/update-term-dimensions?rows=${rows}&cols=${cols}&roomID=${roomID}`, options);
+      const json = await response.json();
+      if (json.status === 'success') {
+        console.log('Rows and columns updated');
+      } else {
+        console.log('Error in updating rows and columns');
+      }
+    } catch (error) {
+      console.error('Error fetching json:', error);
+    }
   }
 
   function startResize (event) {
@@ -149,6 +177,8 @@ function CodeArea () {
     // console.log('term percent: ' + termWidthPercent);
     // setCmWidth(cmWidthPercent);
     // setTermWidth(termWidthPercent);
+
+    // TODO: Set remote tty columns and rows
   }
 
   async function setup () {
@@ -171,7 +201,10 @@ function CodeArea () {
     term.current.open(termDomRef.current);
     term.current.loadAddon(fitAddon.current);
     fitAddon.current.fit();
-    window.addEventListener('resize', () => fitAddon.current.fit());
+    window.addEventListener('resize', () => {
+      fitAddon.current.fit();
+      updateTermDimensions();
+    });
     term.current.write(initialHist);
     term.current.onData((data) => {
       ws.current.send(data.toString());
