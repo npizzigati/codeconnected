@@ -36,6 +36,7 @@ import (
 
 type containerDetails struct {
 	ID                  string
+	execID              string
 	connection          types.HijackedResponse
 	runner              net.Conn
 	bufReader           *bufio.Reader
@@ -552,43 +553,38 @@ func startContainer(lang, roomID string) {
 	}
 }
 
+func resizeTTY(cn *containerDetails, rows int, cols int) error {
+	ctx := context.Background()
+	resizeOpts := types.ResizeOptions{
+		Height: uint(rows),
+		Width:  uint(cols),
+	}
+
+	err := cli.ContainerExecResize(ctx, cn.execID, resizeOpts)
+	return err
+}
+
 func updateTermDimensions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	status := "success"
 	queryValues := r.URL.Query()
-	rows := queryValues.Get("rows")
-	cols := queryValues.Get("cols")
+	rows, err := strconv.Atoi(queryValues.Get("rows"))
+	if err != nil {
+		fmt.Println("error converting row value to int: ", err)
+	}
+	cols, err := strconv.Atoi(queryValues.Get("cols"))
+	if err != nil {
+		fmt.Println("error converting row value to int: ", err)
+	}
 	roomID := queryValues.Get("roomID")
 	fmt.Println("rows: ", rows)
 	fmt.Println("cols: ", cols)
 	fmt.Println("roomID: ", roomID)
 
 	room := rooms[roomID]
-	cn := room.container
 
-	// dimChange := fmt.Sprintf("\"stty rows %s cols %s\"", rows, cols)
-	dimChange := fmt.Sprintf("'stty rows 20 cols 20'", rows, cols)
-	cmd := []string{"bash", "-c", dimChange}
-	ctx := context.Background()
-	execOpts := types.ExecConfig{
-		User:         "codeuser",
-		Tty:          false,
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: false,
-		WorkingDir:   "/home/codeuser",
-		Cmd:          cmd,
-	}
-
-	resp, err := cli.ContainerExecCreate(ctx, cn.ID, execOpts)
+	err = resizeTTY(room.container, rows, cols)
 	if err != nil {
-		fmt.Println("unable to create exec process: ", err)
-		status = "failure"
-	}
-
-	err = cli.ContainerExecStart(ctx, resp.ID, types.ExecStartCheck{})
-	if err != nil {
-		fmt.Println("Unable to start exec process: ", err)
-		status = "failure"
+		fmt.Println("unable to resize terminal: ", err)
 	}
 
 	sendStringJsonResponse(w, map[string]string{"status": status})
@@ -698,6 +694,7 @@ func attemptLangConn(lang, roomID string) {
 		return
 	}
 
+	cn.execID = resp.ID
 	cn.runner = cn.connection.Conn
 	cn.bufReader = bufio.NewReader(cn.connection.Reader)
 	startRunnerReader(roomID)

@@ -201,6 +201,7 @@ function CodeArea () {
     term.current.open(termDomRef.current);
     term.current.loadAddon(fitAddon.current);
     fitAddon.current.fit();
+    updateTermDimensions();
     window.addEventListener('resize', () => {
       fitAddon.current.fit();
       updateTermDimensions();
