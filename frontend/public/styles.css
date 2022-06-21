@@ -22,9 +22,13 @@ button {
 /* Hide overflow to avoid visual jankiness caused by weird
    resizing of xterm.js */
 #terminal-wrapper {
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: auto;
     width: 100%;
     height: 100%;
+    display: flex;
+    align-items: flex-start;
+    padding-bottom: 10px;
 }
 
 #terminal-container {
@@ -36,8 +40,12 @@ button {
     flex-direction: column;
     flex: 1 1 auto;
     border: 1px gray solid;
-    margin: 0 5px 0 0;
+    margin: 0 5px 0px 0;
     /* padding: 5px 5px 5px 5px; */
+}
+
+#term-footer {
+    height: 1;
 }
 
 #term-button-row {
@@ -53,7 +61,7 @@ button {
 
 
 .terminal.xterm {
-    height: 100%;
+    /* height: 100%; */
 }
 
 #language-chooser {
@@ -102,8 +110,8 @@ button {
 }
 
 #resizer-decoration{
-    height: 99%;
+    height: 10%;
     width: 2px;
-    border-right: 1px gray solid;
-    border-left: 1px gray solid;
+    border-right: 2px gray solid;
+    border-left: 2px gray solid;
 }

@@ -564,32 +564,6 @@ func resizeTTY(cn *containerDetails, rows int, cols int) error {
 	return err
 }
 
-func updateTermDimensions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	status := "success"
-	queryValues := r.URL.Query()
-	rows, err := strconv.Atoi(queryValues.Get("rows"))
-	if err != nil {
-		fmt.Println("error converting row value to int: ", err)
-	}
-	cols, err := strconv.Atoi(queryValues.Get("cols"))
-	if err != nil {
-		fmt.Println("error converting row value to int: ", err)
-	}
-	roomID := queryValues.Get("roomID")
-	fmt.Println("rows: ", rows)
-	fmt.Println("cols: ", cols)
-	fmt.Println("roomID: ", roomID)
-
-	room := rooms[roomID]
-
-	err = resizeTTY(room.container, rows, cols)
-	if err != nil {
-		fmt.Println("unable to resize terminal: ", err)
-	}
-
-	sendStringJsonResponse(w, map[string]string{"status": status})
-}
-
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
@@ -1248,7 +1222,12 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		cn.runner.Write([]byte("exec $0\n")) // reset repl
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
-			cn.runner.Write([]byte("puts 'ST' + 'ART'; " + "load 'code.rb';\n"))
+			// The following cmd depends on the following ~/.pryrc file
+			// on the runner server:
+			// def run_code(start_marker, filename)
+			//   puts start_marker; load filename; Pry.history.clear
+			// end
+			cn.runner.Write([]byte("run_code('code.rb');\n"))
 		})
 		room.setEventListener("startOutput", func(config eventConfig) {
 			room.removeEventListener("startOutput")
@@ -1371,7 +1350,6 @@ func main() {
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
-	router.POST("/api/update-term-dimensions", updateTermDimensions)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	fmt.Printf("Starting server on port %d\n", port)

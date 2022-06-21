@@ -16,7 +16,6 @@ import 'codemirror/mode/sql/sql.js';
 import 'codemirror/theme/material.css';
 
 import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
 
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
@@ -29,8 +28,8 @@ function CodeArea () {
   const codeAreaDOMRef = useRef(null);
   const termDomRef = useRef(null);
   const termContainerDomRef = useRef(null);
+  const termFooter = useRef(null);
   const term = useRef(null);
-  const fitAddon = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
   const codeOptions = useRef(null);
@@ -93,6 +92,10 @@ function CodeArea () {
             ref={termDomRef}
             id='terminal-wrapper'
           />
+          <div
+            ref={termFooter}
+            id='term-footer'
+          />
         </div>
       </div>
     </>
@@ -107,6 +110,7 @@ function CodeArea () {
     const rightBoundary = (initialCmWidth + resizeBarWidth + initialTermWidth) - minTermWidth;
     let newCmWidth = initialCmWidth + deltaX;
     let newTermWidth = initialTermWidth - deltaX;
+
     if (event.clientX < leftBoundary || event.clientX > rightBoundary) {
       return;
     }
@@ -123,35 +127,6 @@ function CodeArea () {
     setTermWidth(newTermWidthString);
 
     initialX.current += deltaX;
-    fitAddon.current.fit();
-
-    updateTermDimensions();
-  }
-
-  // Inform remote terminal of new dimensions
-  async function updateTermDimensions () {
-    // Get dimensions from xterm.js
-    const rows = term.current.rows;
-    const cols = term.current.cols;
-    console.log('new rows: ' + rows + ' new cols: ' + cols);
-
-    const options = {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Length': '0' }
-    };
-
-    try {
-      const response = await fetch(`/api/update-term-dimensions?rows=${rows}&cols=${cols}&roomID=${roomID}`, options);
-      const json = await response.json();
-      if (json.status === 'success') {
-        console.log('Rows and columns updated');
-      } else {
-        console.log('Error in updating rows and columns');
-      }
-    } catch (error) {
-      console.error('Error fetching json:', error);
-    }
   }
 
   function startResize (event) {
@@ -159,26 +134,14 @@ function CodeArea () {
     console.log('clientX: ' + event.clientX);
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
+
     elem.onpointermove = (moveEvent) => resize(moveEvent, event);
   }
 
-  function stopResize (event) {
+  async function stopResize (event) {
     const elem = resizeBarDOMRef.current;
     elem.onpointermove = null;
     elem.releasePointerCapture(event.pointerId);
-    // Convert measurement units back to percentages to allow for resizing
-    // const cmWidth = cmContainerDOMRef.current.offsetWidth;
-    // const termWidth = termContainerDomRef.current.offsetWidth;
-    // const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
-    // const totalWidth = cmWidth + termWidth + resizeBarWidth;
-    // const cmWidthPercent = parseFloat((cmWidth / totalWidth) * 100, 10) + '%';
-    // const termWidthPercent = parseFloat((termWidth / totalWidth) * 100, 10) + '%';
-    // console.log('cm percent: ' + cmWidthPercent);
-    // console.log('term percent: ' + termWidthPercent);
-    // setCmWidth(cmWidthPercent);
-    // setTermWidth(termWidthPercent);
-
-    // TODO: Set remote tty columns and rows
   }
 
   async function setup () {
@@ -194,18 +157,8 @@ function CodeArea () {
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
     setLanguage(initialLang);
-    console.log('initial lang: ' + initialLang);
-    console.log('initial hist: ' + initialHist);
     term.current = new Terminal();
-    fitAddon.current = new FitAddon();
     term.current.open(termDomRef.current);
-    term.current.loadAddon(fitAddon.current);
-    fitAddon.current.fit();
-    updateTermDimensions();
-    window.addEventListener('resize', () => {
-      fitAddon.current.fit();
-      updateTermDimensions();
-    });
     term.current.write(initialHist);
     term.current.onData((data) => {
       ws.current.send(data.toString());
@@ -327,6 +280,7 @@ function CodeArea () {
   // TODO: Make this work for Ctrl-L too
   function clearTerminal () {
     term.current.clear();
+    termDomRef.current.scroll({ top: 0, behavior: 'smooth' });
     const lastLine = getLastTermLine();
     const roomID = params.roomID;
     console.log('lastLine: ' + lastLine);
@@ -375,6 +329,8 @@ function CodeArea () {
     return lines[lastLineNum];
   }
 
+  // TODO: Deactivate run button while this is in progress (among
+  // other controls, such as language switcher)
   function runCode (filename, lines) {
     const options = {
       method: 'POST',
@@ -398,6 +354,8 @@ function CodeArea () {
         return;
       }
       term.current.write(ev.data);
+      term.current.scrollToBottom();
+      termFooter.current.scrollIntoView();
     };
 
     return ws;

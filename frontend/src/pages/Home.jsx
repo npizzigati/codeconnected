@@ -88,6 +88,9 @@ function Home () {
     };
 
     // TODO: Check if successful (status code 201) before processing
+    // (If room is not created successfully, console.log spits
+    // out the error from go, but we don't handle the error (we
+    // just display our fake prompt and pretend everything went ok))
     try {
       const response = await fetch('/api/createroom', options);
       const json = await response.json();
