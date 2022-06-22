@@ -115,3 +115,33 @@ button {
     border-right: 2px gray solid;
     border-left: 2px gray solid;
 }
+
+/* Works on Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: gray black;
+}
+
+/* Works on Chrome, Edge, and Safari */
+ /* width */
+::-webkit-scrollbar {
+    height: 4px;
+    /* Disable vertical scrollbar because in Chrome it doesn't
+     * correctly scroll */
+    width: 0px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: black;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
+} 
