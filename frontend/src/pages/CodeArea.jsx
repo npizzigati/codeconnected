@@ -28,7 +28,6 @@ function CodeArea () {
   const codeAreaDOMRef = useRef(null);
   const termDomRef = useRef(null);
   const termContainerDomRef = useRef(null);
-  const termFooter = useRef(null);
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
@@ -91,10 +90,6 @@ function CodeArea () {
           <div
             ref={termDomRef}
             id='terminal-wrapper'
-          />
-          <div
-            ref={termFooter}
-            id='term-footer'
           />
         </div>
       </div>
@@ -355,7 +350,7 @@ function CodeArea () {
       }
       term.current.write(ev.data);
       term.current.scrollToBottom();
-      termFooter.current.scrollIntoView();
+      termDomRef.current.scrollBy(0, 5000);
     };
 
     return ws;
