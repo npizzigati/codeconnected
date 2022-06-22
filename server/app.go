@@ -2,6 +2,8 @@ package main
 
 // TODO: General: 1. Limit processor time for each container
 //                2. Remove networking
+//                3. Have containers timeout after certain period
+//                   of inactivity
 
 import (
 	"bufio"

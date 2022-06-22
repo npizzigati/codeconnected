@@ -28,7 +28,7 @@ button {
     height: 100%;
     display: flex;
     align-items: flex-start;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
 }
 
 #terminal-container {
@@ -44,10 +44,6 @@ button {
     /* padding: 5px 5px 5px 5px; */
 }
 
-#term-footer {
-    height: 5px;
-}
-
 #term-button-row {
     display: flex;
     background-color: inherit;
@@ -57,11 +53,6 @@ button {
 
 #term-button-row > button {
     font-size: 0.7rem;
-}
-
-
-.terminal.xterm {
-    /* height: 100%; */
 }
 
 #language-chooser {
@@ -110,10 +101,10 @@ button {
 }
 
 #resizer-decoration{
-    height: 10%;
+    height: 25px;
     width: 2px;
-    border-right: 2px gray solid;
-    border-left: 2px gray solid;
+    border-right: 2px gray dotted;
+    border-left: 2px gray dotted;
 }
 
 /* Works on Firefox */
@@ -128,6 +119,11 @@ button {
     height: 5px;
     /* Disable vertical scrollbar because in Chrome it doesn't
      * correctly scroll */
+}
+
+#terminal-wrapper::-webkit-scrollbar {
+    /* Disable vertical scrollbar on terminal in Chrome because it
+     * doesn't correctly scroll */
     width: 0px;
 }
 
@@ -144,4 +140,4 @@ button {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #444;
-} 
+}
