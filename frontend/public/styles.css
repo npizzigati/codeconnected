@@ -19,8 +19,6 @@ button {
     overflow: hidden !important;
 }
 
-/* Hide overflow to avoid visual jankiness caused by weird
-   resizing of xterm.js */
 #terminal-wrapper {
     overflow-y: auto;
     overflow-x: auto;
