@@ -125,7 +125,7 @@ button {
 /* Works on Chrome, Edge, and Safari */
  /* width */
 ::-webkit-scrollbar {
-    height: 4px;
+    height: 5px;
     /* Disable vertical scrollbar because in Chrome it doesn't
      * correctly scroll */
     width: 0px;
@@ -138,10 +138,10 @@ button {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #444;
+  background: #222;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #777;
+  background: #444;
 } 

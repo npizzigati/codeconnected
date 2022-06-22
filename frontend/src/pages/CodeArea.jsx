@@ -276,7 +276,7 @@ function CodeArea () {
   function clearTerminal () {
     term.current.clear();
     termDomRef.current.scroll({ top: 0, behavior: 'smooth' });
-    const lastLine = getLastTermLine();
+    const { lastLine } = getLastTermLineAndNumber();
     const roomID = params.roomID;
     console.log('lastLine: ' + lastLine);
     // TODO: Send a post request to server with the last line in
@@ -308,7 +308,7 @@ function CodeArea () {
     return text;
   }
 
-  function getLastTermLine () {
+  function getLastTermLineAndNumber () {
     const text = getTerminalText();
     const lines = text.split('\n');
 
@@ -321,7 +321,7 @@ function CodeArea () {
         break;
       }
     }
-    return lines[lastLineNum];
+    return { lastLine: lines[lastLineNum], lastLineNum };
   }
 
   // TODO: Deactivate run button while this is in progress (among
@@ -350,7 +350,13 @@ function CodeArea () {
       }
       term.current.write(ev.data);
       term.current.scrollToBottom();
-      termDomRef.current.scrollBy(0, 5000);
+      const { lastLineNum } = getLastTermLineAndNumber();
+      const totalLines = term.current.rows;
+      // If terminal is almost or totally full, make sure we
+      // scroll all the way down when new text is entered
+      if (lastLineNum > totalLines - 10) {
+        termDomRef.current.scrollBy(0, 5000);
+      }
     };
 
     return ws;
@@ -362,7 +368,7 @@ function CodeArea () {
 
     // Check whether repl is at a prompt
     const prompt = /> $/;
-    const lastLine = getLastTermLine();
+    const { lastLine } = getLastTermLineAndNumber();
     console.log('prompt ready? ' + prompt.test(lastLine));
     if (!prompt.test(lastLine)) {
       window.alert('REPL prompt must be empty before code can be run.');
