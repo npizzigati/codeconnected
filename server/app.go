@@ -1226,8 +1226,8 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			room.removeEventListener("promptReady")
 			// The following cmd depends on the following ~/.pryrc file
 			// on the runner server:
-			// def run_code(start_marker, filename)
-			//   puts start_marker; load filename; Pry.history.clear
+			// def run_code(filename)
+			//   puts 'START'; load filename; Pry.history.clear
 			// end
 			cn.runner.Write([]byte("run_code('code.rb');\n"))
 		})
@@ -1244,26 +1244,18 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 		})
 	case "javascript":
-		cn.runner.Write([]byte(".clear\n"))
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-			// Delete two previous lines from remote terminal
-			cn.runner.Write([]byte(".load code.js\n"))
+		cn.runner.Write([]byte(".runUserCode\n"))
 
-			// Turn echo back on right before output begins
-			// Set this event listener after the promptReady event
-			// fires to ensure that only newlines after the prompt are
-			// counted
-			room.setEventListener("newline", func(config eventConfig) {
-				lines, err := strconv.Atoi(linesOfCode)
-				if err != nil {
-					fmt.Println("strconv error: ", err)
-				}
-				if config.count == lines+1 {
-					room.echo = true
-					room.removeEventListener("newline")
-				}
-			})
+		// Turn echo back on right before output begins
+		room.setEventListener("newline", func(config eventConfig) {
+			lines, err := strconv.Atoi(linesOfCode)
+			if err != nil {
+				fmt.Println("strconv error: ", err)
+			}
+			if config.count == lines+2 {
+				room.echo = true
+				room.removeEventListener("newline")
+			}
 		})
 	}
 }
