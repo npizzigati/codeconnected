@@ -590,6 +590,9 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	w.Write([]byte("Success"))
 }
 
+// FIXME: When this fails, is currently eventually goes to the
+// regular codearea user screen. It should give user a modal
+// message instead.
 func openLanguageConnection(lang, roomID string) error {
 	room := rooms[roomID]
 	room.echo = false
