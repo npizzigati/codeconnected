@@ -264,6 +264,7 @@ function CodeArea () {
     fetch(`/api/switchlanguage?roomID=${roomID}&lang=${lang}`, options)
       .then(response => {
         console.log(response);
+        termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
       });
   }
 
@@ -275,7 +276,7 @@ function CodeArea () {
   // TODO: Make this work for Ctrl-L too
   function clearTerminal () {
     term.current.clear();
-    termDomRef.current.scroll({ top: 0, behavior: 'smooth' });
+    termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
     const { lastLine } = getLastTermLineAndNumber();
     const roomID = params.roomID;
     console.log('lastLine: ' + lastLine);
