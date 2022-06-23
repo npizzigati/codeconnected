@@ -1247,7 +1247,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 		})
 	case "javascript":
-		cn.runner.Write([]byte(".runUserCode\n"))
+		cn.runner.Write([]byte(".runUserCode code.js\n"))
 
 		// Turn echo back on right before output begins
 		room.setEventListener("newline", func(config eventConfig) {
