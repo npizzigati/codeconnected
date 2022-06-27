@@ -17,6 +17,8 @@ import 'codemirror/theme/material.css';
 
 import { Terminal } from 'xterm';
 
+import Select from './components/Select.jsx';
+
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
 // down the server with rooms still open. Currently the client's
@@ -42,8 +44,8 @@ function CodeArea () {
   const [cmWidth, setCmWidth] = useState('50%');
   const [termWidth, setTermWidth] = useState('50%');
   const [minCmWidth, minTermWidth] = [200, 200];
+  const [replTitle, setReplTitle] = useState('');
   const cmContainerDOMRef = useRef(null);
-
 
   useEffect(() => {
     (async () => {
@@ -84,8 +86,15 @@ function CodeArea () {
           ref={termContainerDomRef}
           style={{ width: termWidth }}
         >
-          <div id='term-button-row'>
-            <button onClick={setTerminalClearFlag}>Clear terminal</button>
+          <div id='term-title-row'>
+            <div id='repl-title'>{replTitle}</div>
+            <Select
+              options={[{ value: 'clear', label: 'Clear' },
+                        { value: 'reset', label: 'Reset' }]}
+              title='Actions'
+              callback={executeReplAction}
+              config={{ staticTitle: true }}
+            />
           </div>
           <div
             ref={termDomRef}
@@ -95,6 +104,14 @@ function CodeArea () {
       </div>
     </>
   );
+
+  function executeReplAction (action) {
+    switch (action) {
+    case 'clear':
+      setTerminalClearFlag();
+      break;
+    }
+  }
 
   function resize (event, startEvent) {
     const initialCmWidth = cmContainerDOMRef.current.offsetWidth;
@@ -152,6 +169,7 @@ function CodeArea () {
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
     setLanguage(initialLang);
+    showReplTitle(initialLang);
     term.current = new Terminal();
     term.current.open(termDomRef.current);
     term.current.write(initialHist);
@@ -250,6 +268,20 @@ function CodeArea () {
     }
   }
 
+  function showReplTitle (lang) {
+    switch (lang) {
+    case 'javascript':
+      setReplTitle('Node.js REPL');
+      break;
+    case 'ruby':
+      setReplTitle('Ruby REPL (Pry)');
+      break;
+    case 'sql':
+      setReplTitle('psql');
+      break;
+    }
+  }
+
   function switchLanguage (ev) {
     console.log('switching language');
     const lang = ev.target.value;
@@ -265,6 +297,7 @@ function CodeArea () {
       .then(response => {
         console.log(response);
         termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
+        showReplTitle(lang);
       });
   }
 

@@ -10,8 +10,81 @@ button {
     background-color: var(--main-bg-color);
     color: lightgray;
     border: 1px #005252 solid;
+    border-radius: 5px;
     background-color: #005252;
 }
+
+.select {
+    position: relative;
+}
+
+.select:hover {
+    cursor: default;
+}
+
+.select-button {
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.7rem;
+    background-color: inherit;
+    color: #777;
+    user-select: none;
+    display: flex;
+}
+
+.select-button:hover {
+    color: #888;
+}
+
+.select-title {
+    padding-right: 5px;
+}
+
+.select-arrow-down {
+    font-family: 'Roboto', sans-serif;
+    transform: translate(0, 1px) scale(0.7);
+    transition: transform .3s;
+}
+
+.select-arrow-up {
+    font-family: 'Roboto', sans-serif;
+    transform: translate(0, 1px) scale(0.7) rotate(180deg);
+    transition: transform .3s;
+}
+
+.select-dropdown {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.7rem;
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    z-index: 1000;
+    background-color: #333;
+    border-radius: 4px;
+    display: block;
+    transition: opacity .5s;
+    opacity: 1;
+    padding-bottom: 4px;
+}
+
+.select-dropdown-hidden {
+    z-index: -1;
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.select-dropdown-item {
+    margin: 4px 0 0 0;
+    padding: 2px;
+    color: #777;
+}
+
+.select-dropdown-item:hover {
+    background-color: #777;
+    color: #333;
+}
+
 /* Disable xterm.js scrollbar The built in scrollbar is hard to
    theme and position (position moves during resizing) Better to
    disable completely and implement a custom solution if needed. */
@@ -20,6 +93,7 @@ button {
 }
 
 #terminal-wrapper {
+    box-sizing: border-box;
     overflow-y: auto;
     overflow-x: auto;
     width: 100%;
@@ -27,6 +101,7 @@ button {
     display: flex;
     align-items: flex-start;
     padding-bottom: 5px;
+    border: 2px #333 solid;
 }
 
 #terminal-container {
@@ -37,20 +112,26 @@ button {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    border: 1px gray solid;
     margin: 0 5px 0px 0;
     /* padding: 5px 5px 5px 5px; */
 }
 
-#term-button-row {
+#term-title-row {
     display: flex;
-    background-color: inherit;
+    background-color: #222;
     padding: 3px 3px 3px 3px;
-    border-bottom: 1px gray solid;
+    align-items: center;
 }
 
-#term-button-row > button {
+#term-title-row > select {
     font-size: 0.7rem;
+}
+
+#repl-title {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.7rem;
+    color: #777;
+    padding-right: 20px;
 }
 
 #language-chooser {
