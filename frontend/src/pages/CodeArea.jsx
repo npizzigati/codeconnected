@@ -1,7 +1,7 @@
 'use strict';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 import * as Y from 'yjs';
 import { CodemirrorBinding } from 'y-codemirror';
@@ -17,6 +17,7 @@ import 'codemirror/mode/sql/sql.js';
 import { Terminal } from 'xterm';
 
 import Select from './components/Select.jsx';
+import UserDashboard from './components/UserDashboard.jsx';
 
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
@@ -57,6 +58,15 @@ function CodeArea () {
   // in the DOM in order to attach to it
   return (
     <>
+      <div id='header-bar'>
+        <div id='header-left-side'>
+          <Link id='header-logo' to='/' />
+        </div>
+        <div id='header-right-side'>
+          <img id='avatar' src='./blank_avatar.png' alt='avatar' />
+        </div>
+        <UserDashboard />
+      </div>
       <div id='main-container'>
         <div
           ref={cmContainerDOMRef}
