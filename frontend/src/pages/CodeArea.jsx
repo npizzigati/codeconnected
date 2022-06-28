@@ -64,14 +64,18 @@ function CodeArea () {
           style={{ width: cmWidth }}
         >
           <div className='title-row'>
-            <div className='editor-and-repl-title'>{cmTitle}</div>
+            <div className='editor-and-repl-title'>Code Editor</div>
+            <span className='editor-lang-label'>Language:</span>
             <Select
               options={[{ value: 'ruby', label: 'Ruby' },
                         { value: 'javascript', label: 'Node.js' },
                         { value: 'sql', label: 'PostgreSQL' }]}
-              title='Language'
-              callback={switchLanguage}
-              config={{ staticTitle: true }}
+              title={cmTitle}
+              callback={(ev) => {
+                const lang = ev.target.dataset.value;
+                switchLanguage(lang);
+              }}
+              config={{ staticTitle: true, dropdownWidth: '75px' }}
             />
             <button id='run-button' onClick={executeContent}>Run</button>
           </div>
@@ -284,15 +288,15 @@ function CodeArea () {
     switch (lang) {
     case 'javascript':
       setReplTitle('Node.js REPL');
-      setCmTitle('Code Editor: Node.js');
+      setCmTitle('Node.js');
       break;
     case 'ruby':
       setReplTitle('Ruby REPL (Pry)');
-      setCmTitle('Code Editor: Ruby');
+      setCmTitle('Ruby');
       break;
     case 'sql':
       setReplTitle('psql');
-      setCmTitle('Code Editor: PostgreSQL');
+      setCmTitle('PostgreSQL');
       break;
     }
   }
