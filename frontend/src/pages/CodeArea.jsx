@@ -85,7 +85,7 @@ function CodeArea () {
                 const lang = ev.target.dataset.value;
                 switchLanguage(lang);
               }}
-              config={{ staticTitle: true, dropdownWidth: '75px' }}
+              config={{ staticTitle: true, autoWidth: true }}
             />
             <button id='run-button' onClick={executeContent}>Run</button>
           </div>

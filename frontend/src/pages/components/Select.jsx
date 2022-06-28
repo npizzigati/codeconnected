@@ -62,7 +62,7 @@ function Select ({ options, title, callback, config }) {
         <div
           ref={dropdown}
           className='select-dropdown-hidden'
-          style={config.width ? { width: config.dropdownWidth } : { width: 'auto' }}
+          style={config.autoWidth ? { width: 'auto' } : { width: '100%' }}
         >
           {options.map((option, index) => (
             <div
