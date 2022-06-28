@@ -7,6 +7,45 @@ body {
     background-color: var(--main-bg-color);
 }
 
+#header-bar {
+    height: 30px;
+    margin-left: 8px;
+    margin-top: 5px;
+    display: flex;
+    margin-right: 8px;
+}
+
+#header-left-side {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+}
+
+#header-right-side {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#header-logo {
+    margin-left: 5px;
+    height: 30px;
+    width: 30px;
+    background-image: url('./codeconnected.png');
+    background-size: 30px 30px;
+    background-repeat: no-repeat;
+}
+
+#avatar {
+    height: 15px;
+    width: 15px;
+    margin-right: 10px;
+    margin-top: 10px;
+}
+
 #run-button {
     background-color: var(--main-bg-color);
     color: white;
@@ -40,6 +79,7 @@ body {
     color: #999;
     user-select: none;
     display: flex;
+    padding: 5px;
 }
 
 .select-button:hover {
@@ -86,7 +126,8 @@ body {
 
 .select-dropdown-item {
     margin: 4px 0 0 0;
-    padding: 2px;
+    padding-left: 5px;
+    padding-right: 3px;
     color: #999;
     user-select: none;
 }
@@ -144,10 +185,16 @@ body {
     padding-right: 20px;
 }
 
+.editor-lang-label {
+    user-select: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.7rem;
+    color: #999;
+}
+
 #main-container {
     display: flex;
     height: 90vh;
-    margin-top: 5px;
 }
 
 #codemirror-wrapper {
