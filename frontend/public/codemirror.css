@@ -5,8 +5,7 @@
   font-family: monospace;
   height: 100%;
   width: 100%;
-  border: 1px solid;
-  color: black;
+  color: #999;
   direction: ltr;
   box-sizing: border-box;
 }

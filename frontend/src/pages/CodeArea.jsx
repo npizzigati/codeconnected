@@ -13,7 +13,6 @@ import 'codemirror/addon/edit/closebrackets.js';
 import 'codemirror/mode/ruby/ruby.js';
 import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/mode/sql/sql.js';
-import 'codemirror/theme/material.css';
 
 import { Terminal } from 'xterm';
 
@@ -43,8 +42,9 @@ function CodeArea () {
   const initialX = useRef(null);
   const [cmWidth, setCmWidth] = useState('50%');
   const [termWidth, setTermWidth] = useState('50%');
-  const [minCmWidth, minTermWidth] = [200, 200];
+  const [minCmWidth, minTermWidth] = [300, 200];
   const [replTitle, setReplTitle] = useState('');
+  const [cmTitle, setCmTitle] = useState('');
   const cmContainerDOMRef = useRef(null);
 
   useEffect(() => {
@@ -57,21 +57,29 @@ function CodeArea () {
   // in the DOM in order to attach to it
   return (
     <>
-      <button onClick={executeContent}>Run</button>
-      <select id='language-chooser' value={language} onChange={switchLanguage}>
-        <option value='ruby'>Ruby</option>
-        <option value='javascript'>Node.js</option>
-        <option value='sql'>PostgreSQL</option>
-      </select>
       <div id='main-container'>
         <div
           ref={cmContainerDOMRef}
           id='codemirror-container'
           style={{ width: cmWidth }}
         >
-          <textarea
-            ref={codeAreaDOMRef}
-          />
+          <div className='title-row'>
+            <div className='editor-and-repl-title'>{cmTitle}</div>
+            <Select
+              options={[{ value: 'ruby', label: 'Ruby' },
+                        { value: 'javascript', label: 'Node.js' },
+                        { value: 'sql', label: 'PostgreSQL' }]}
+              title='Language'
+              callback={switchLanguage}
+              config={{ staticTitle: true }}
+            />
+            <button id='run-button' onClick={executeContent}>Run</button>
+          </div>
+          <div id='codemirror-wrapper'>
+            <textarea
+              ref={codeAreaDOMRef}
+            />
+          </div>
         </div>
         <div
           ref={resizeBarDOMRef}
@@ -79,15 +87,15 @@ function CodeArea () {
           onPointerDown={startResize}
           onPointerUp={stopResize}
         >
-          <div id='resizer-decoration' />
+          <div id='resizer-handle' />
         </div>
         <div
           id='terminal-container'
           ref={termContainerDomRef}
           style={{ width: termWidth }}
         >
-          <div id='term-title-row'>
-            <div id='repl-title'>{replTitle}</div>
+          <div className='title-row'>
+            <div className='editor-and-repl-title'>{replTitle}</div>
             <Select
               options={[{ value: 'clear', label: 'Clear' },
                         { value: 'reset', label: 'Reset' }]}
@@ -105,8 +113,8 @@ function CodeArea () {
     </>
   );
 
-  function executeReplAction (action) {
-    switch (action) {
+  function executeReplAction (ev) {
+    switch (ev.target.dataset.value) {
     case 'clear':
       setTerminalClearFlag();
       break;
@@ -169,7 +177,7 @@ function CodeArea () {
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
     setLanguage(initialLang);
-    showReplTitle(initialLang);
+    showTitles(initialLang);
     term.current = new Terminal();
     term.current.open(termDomRef.current);
     term.current.write(initialHist);
@@ -182,7 +190,8 @@ function CodeArea () {
       mode: initialLang,
       value: '',
       lineNumbers: true,
-      autoCloseBrackets: true
+      autoCloseBrackets: true,
+      theme: 'tomorrow-night-bright'
     });
 
     cm.setSize('100%', '100%');
@@ -268,23 +277,26 @@ function CodeArea () {
     }
   }
 
-  function showReplTitle (lang) {
+  function showTitles (lang) {
     switch (lang) {
     case 'javascript':
       setReplTitle('Node.js REPL');
+      setCmTitle('Code Editor: Node.js');
       break;
     case 'ruby':
       setReplTitle('Ruby REPL (Pry)');
+      setCmTitle('Code Editor: Ruby');
       break;
     case 'sql':
       setReplTitle('psql');
+      setCmTitle('Code Editor: PostgreSQL');
       break;
     }
   }
 
   function switchLanguage (ev) {
     console.log('switching language');
-    const lang = ev.target.value;
+    const lang = ev.target.dataset.value;
     codeOptions.current.set('language', lang);
 
     const options = {
@@ -297,7 +309,7 @@ function CodeArea () {
       .then(response => {
         console.log(response);
         termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
-        showReplTitle(lang);
+        showTitles(lang);
       });
   }
 

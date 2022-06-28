@@ -1,17 +1,27 @@
 :root {
   --main-bg-color: #202020;
+  --code-titlebar-width: 25px;
 }
 
 body {
     background-color: var(--main-bg-color);
 }
 
-button {
+#run-button {
     background-color: var(--main-bg-color);
-    color: lightgray;
-    border: 1px #005252 solid;
+    color: white;
     border-radius: 5px;
-    background-color: #005252;
+    border: none;
+    background-color: #3cb73c;
+    margin-left: 20px;
+}
+
+#run-button:hover {
+    background-color: #48db48;
+}
+
+#run-button:active {
+    color: #dcdcdc;
 }
 
 .select {
@@ -27,13 +37,13 @@ button {
     font-family: 'Roboto', sans-serif;
     font-size: 0.7rem;
     background-color: inherit;
-    color: #777;
+    color: #999;
     user-select: none;
     display: flex;
 }
 
 .select-button:hover {
-    color: #888;
+    color: #ebebeb;
 }
 
 .select-title {
@@ -77,12 +87,12 @@ button {
 .select-dropdown-item {
     margin: 4px 0 0 0;
     padding: 2px;
-    color: #777;
+    color: #999;
 }
 
 .select-dropdown-item:hover {
-    background-color: #777;
-    color: #333;
+    background-color: #8537d3;
+    color: #ebebeb;
 }
 
 /* Disable xterm.js scrollbar The built in scrollbar is hard to
@@ -116,26 +126,21 @@ button {
     /* padding: 5px 5px 5px 5px; */
 }
 
-#term-title-row {
+.title-row {
+    box-sizing: border-box;
     display: flex;
     background-color: #222;
     padding: 3px 3px 3px 3px;
     align-items: center;
+    height: var(--code-titlebar-width);
 }
 
-#term-title-row > select {
-    font-size: 0.7rem;
-}
-
-#repl-title {
+.editor-and-repl-title {
+    user-select: none;
     font-family: 'Roboto', sans-serif;
     font-size: 0.7rem;
-    color: #777;
+    color: #999;
     padding-right: 20px;
-}
-
-#language-chooser {
-    margin-left: 5px;
 }
 
 #main-container {
@@ -144,7 +149,15 @@ button {
     margin-top: 5px;
 }
 
+#codemirror-wrapper {
+    box-sizing: border-box;
+    border: 2px #333 solid;
+    height: calc(100% - var(--code-titlebar-width));
+}
+
 #codemirror-container {
+    box-sizing: border-box;
+    margin: 0 0 0 5px;
     height: 100%;
     width: 50%;
 }
@@ -179,7 +192,7 @@ button {
     align-items: center;
 }
 
-#resizer-decoration{
+#resizer-handle{
     height: 25px;
     width: 2px;
     border-right: 2px gray dotted;
@@ -195,9 +208,8 @@ button {
 /* Works on Chrome, Edge, and Safari */
  /* width */
 ::-webkit-scrollbar {
-    height: 5px;
-    /* Disable vertical scrollbar because in Chrome it doesn't
-     * correctly scroll */
+    height: 3px;
+    width: 3px;
 }
 
 #terminal-wrapper::-webkit-scrollbar {
@@ -213,10 +225,11 @@ button {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #222;
+  background: #444;
+  border-radius: 2px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: #666;
 }

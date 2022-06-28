@@ -1,107 +1,72 @@
-/* node_modules/codemirror/theme/material.css */
-.cm-s-material.CodeMirror {
-  background-color: #263238;
-  color: #EEFFFF;
+/* node_modules/codemirror/theme/tomorrow-night-bright.css */
+.cm-s-tomorrow-night-bright.CodeMirror {
+  background: #000000;
+  color: #eaeaea;
 }
-.cm-s-material .CodeMirror-gutters {
-  background: #263238;
-  color: #546E7A;
-  border: none;
+.cm-s-tomorrow-night-bright div.CodeMirror-selected {
+  background: #424242;
 }
-.cm-s-material .CodeMirror-guttermarker,
-.cm-s-material .CodeMirror-guttermarker-subtle,
-.cm-s-material .CodeMirror-linenumber {
-  color: #546E7A;
+.cm-s-tomorrow-night-bright .CodeMirror-gutters {
+  background: #000000;
+  border-right: 0px;
 }
-.cm-s-material .CodeMirror-cursor {
-  border-left: 1px solid #FFCC00;
+.cm-s-tomorrow-night-bright .CodeMirror-guttermarker {
+  color: #e78c45;
 }
-.cm-s-material.cm-fat-cursor .CodeMirror-cursor {
-  background-color: #5d6d5c80 !important;
+.cm-s-tomorrow-night-bright .CodeMirror-guttermarker-subtle {
+  color: #777;
 }
-.cm-s-material .cm-animate-fat-cursor {
-  background-color: #5d6d5c80 !important;
+.cm-s-tomorrow-night-bright .CodeMirror-linenumber {
+  color: #424242;
 }
-.cm-s-material div.CodeMirror-selected {
-  background: rgba(128, 203, 196, 0.2);
+.cm-s-tomorrow-night-bright .CodeMirror-cursor {
+  border-left: 1px solid #6A6A6A;
 }
-.cm-s-material.CodeMirror-focused div.CodeMirror-selected {
-  background: rgba(128, 203, 196, 0.2);
+.cm-s-tomorrow-night-bright span.cm-comment {
+  color: #d27b53;
 }
-.cm-s-material .CodeMirror-line::selection,
-.cm-s-material .CodeMirror-line > span::selection,
-.cm-s-material .CodeMirror-line > span > span::selection {
-  background: rgba(128, 203, 196, 0.2);
+.cm-s-tomorrow-night-bright span.cm-atom {
+  color: #a16a94;
 }
-.cm-s-material .CodeMirror-line::-moz-selection,
-.cm-s-material .CodeMirror-line > span::-moz-selection,
-.cm-s-material .CodeMirror-line > span > span::-moz-selection {
-  background: rgba(128, 203, 196, 0.2);
+.cm-s-tomorrow-night-bright span.cm-number {
+  color: #a16a94;
 }
-.cm-s-material .CodeMirror-activeline-background {
-  background: rgba(0, 0, 0, 0.5);
+.cm-s-tomorrow-night-bright span.cm-property,
+.cm-s-tomorrow-night-bright span.cm-attribute {
+  color: #99cc99;
 }
-.cm-s-material .cm-keyword {
-  color: #C792EA;
+.cm-s-tomorrow-night-bright span.cm-keyword {
+  color: #d54e53;
 }
-.cm-s-material .cm-operator {
-  color: #89DDFF;
+.cm-s-tomorrow-night-bright span.cm-string {
+  color: #e7c547;
 }
-.cm-s-material .cm-variable-2 {
-  color: #EEFFFF;
+.cm-s-tomorrow-night-bright span.cm-variable {
+  color: #b9ca4a;
 }
-.cm-s-material .cm-variable-3,
-.cm-s-material .cm-type {
-  color: #f07178;
+.cm-s-tomorrow-night-bright span.cm-variable-2 {
+  color: #7aa6da;
 }
-.cm-s-material .cm-builtin {
-  color: #FFCB6B;
+.cm-s-tomorrow-night-bright span.cm-def {
+  color: #e78c45;
 }
-.cm-s-material .cm-atom {
-  color: #F78C6C;
+.cm-s-tomorrow-night-bright span.cm-bracket {
+  color: #eaeaea;
 }
-.cm-s-material .cm-number {
-  color: #FF5370;
+.cm-s-tomorrow-night-bright span.cm-tag {
+  color: #d54e53;
 }
-.cm-s-material .cm-def {
-  color: #82AAFF;
+.cm-s-tomorrow-night-bright span.cm-link {
+  color: #a16a94;
 }
-.cm-s-material .cm-string {
-  color: #C3E88D;
+.cm-s-tomorrow-night-bright span.cm-error {
+  background: #d54e53;
+  color: #6A6A6A;
 }
-.cm-s-material .cm-string-2 {
-  color: #f07178;
+.cm-s-tomorrow-night-bright .CodeMirror-activeline-background {
+  background: #2a2a2a;
 }
-.cm-s-material .cm-comment {
-  color: #546E7A;
-}
-.cm-s-material .cm-variable {
-  color: #f07178;
-}
-.cm-s-material .cm-tag {
-  color: #FF5370;
-}
-.cm-s-material .cm-meta {
-  color: #FFCB6B;
-}
-.cm-s-material .cm-attribute {
-  color: #C792EA;
-}
-.cm-s-material .cm-property {
-  color: #C792EA;
-}
-.cm-s-material .cm-qualifier {
-  color: #DECB6B;
-}
-.cm-s-material .cm-variable-3,
-.cm-s-material .cm-type {
-  color: #DECB6B;
-}
-.cm-s-material .cm-error {
-  color: rgba(255, 255, 255, 1.0);
-  background-color: #FF5370;
-}
-.cm-s-material .CodeMirror-matchingbracket {
+.cm-s-tomorrow-night-bright .CodeMirror-matchingbracket {
   text-decoration: underline;
   color: white !important;
 }
