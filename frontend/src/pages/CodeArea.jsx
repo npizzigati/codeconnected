@@ -118,6 +118,9 @@ function CodeArea () {
     case 'clear':
       setTerminalClearFlag();
       break;
+    case 'reset':
+      switchLanguage(language);
+      break;
     }
   }
 
@@ -294,9 +297,7 @@ function CodeArea () {
     }
   }
 
-  function switchLanguage (ev) {
-    console.log('switching language');
-    const lang = ev.target.dataset.value;
+  function switchLanguage (lang) {
     codeOptions.current.set('language', lang);
 
     const options = {
@@ -317,7 +318,6 @@ function CodeArea () {
     flags.current.set('signal', 'clearTerminal');
   }
 
-  // TODO: Also implement reset
   // TODO: Make this work for Ctrl-L too
   function clearTerminal () {
     term.current.clear();
