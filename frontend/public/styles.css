@@ -1,5 +1,5 @@
 :root {
-  --main-bg-color: #202020;
+  --main-bg-color: #1c1b22;
   --code-titlebar-width: 25px;
 }
 
@@ -88,6 +88,7 @@ body {
     margin: 4px 0 0 0;
     padding: 2px;
     color: #999;
+    user-select: none;
 }
 
 .select-dropdown-item:hover {
@@ -129,7 +130,7 @@ body {
 .title-row {
     box-sizing: border-box;
     display: flex;
-    background-color: #222;
+    background-color: #1c1b22;
     padding: 3px 3px 3px 3px;
     align-items: center;
     height: var(--code-titlebar-width);
