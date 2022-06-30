@@ -63,9 +63,8 @@ function CodeArea () {
           <Link id='header-logo' to='/' />
         </div>
         <div id='header-right-side'>
-          <img id='avatar' src='./blank_avatar.png' alt='avatar' />
+          <UserDashboard />
         </div>
-        <UserDashboard />
       </div>
       <div id='main-container'>
         <div

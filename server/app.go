@@ -796,7 +796,7 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	type responseModel struct {
 		Auth     bool   `json:"auth"`
-		UserName string `json:"userName"`
+		Username string `json:"username"`
 		Email    string `json:"email"`
 	}
 
@@ -833,7 +833,7 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	response := &responseModel{
 		Auth:     true,
 		Email:    email,
-		UserName: username,
+		Username: username,
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {

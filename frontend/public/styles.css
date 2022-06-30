@@ -47,6 +47,21 @@ body {
     margin-top: 5px;
 }
 
+#user-dashboard {
+    position: absolute;
+    top: 40px;
+    right: 15px;
+    min-width: 150px;
+    height: 200px;
+    border-radius: 5px;
+    background: #999;
+    z-index: 1000;
+    box-sizing: border-box;
+    padding: 5px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.7rem;
+}
+
 #run-button {
     background-color: var(--main-bg-color);
     color: white;
