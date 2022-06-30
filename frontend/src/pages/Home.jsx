@@ -14,9 +14,8 @@ function Home () {
   useEffect(() => {
     console.log('Checking user authentication');
     (async () => {
-      const serverAuth = await isAuth();
-      setAuth(serverAuth);
-      console.log('auth in useEffect: ' + serverAuth);
+      const userInfo = await getUserInfo();
+      setAuth(userInfo.auth);
     })();
   });
 
@@ -48,16 +47,15 @@ function Home () {
     );
   }
 
-  async function isAuth () {
+  async function getUserInfo () {
     const options = {
       method: 'GET',
       mode: 'cors'
     };
 
     try {
-      const response = await fetch('/api/check-auth', options);
-      const json = await response.json();
-      return json.auth;
+      const response = await fetch('/api/get-user-info', options);
+      return await response.json();
     } catch (error) {
       console.log('Error fetching auth status: ' + error);
       return false;
