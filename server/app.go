@@ -748,9 +748,9 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	emailFound := true
 	signedIn := false
-	var encryptedPW string
-	query := "SELECT encrypted_pw FROM users WHERE email = $1"
-	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW); err != nil {
+	var encryptedPW, username string
+	query := "SELECT encrypted_pw, username FROM users WHERE email = $1"
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW, &username); err != nil {
 		// Will throw error if no records found
 		emailFound = false
 		fmt.Println("select query error: ", err)
@@ -762,6 +762,7 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		signedIn = true
 		session.Values["auth"] = true
 		session.Values["email"] = cm.Email
+		session.Values["username"] = username
 		if err = session.Save(r, w); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -786,8 +787,7 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write(jsonResp)
 }
 
-func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	fmt.Println("checking auth on server")
+func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	session, err := store.Get(r, "session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -808,6 +808,7 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		jsonResp, err := json.Marshal(response)
 		if err != nil {
 			fmt.Println("err in marshaling: ", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -823,17 +824,11 @@ func checkAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if email, ok = session.Values["email"].(string); !ok {
 		fmt.Println("Email not found")
 	}
-
-	// Get username
-	// TODO: Extract this to a method
-	query := "SELECT username FROM users WHERE email = $1"
-	if err := pool.QueryRow(context.Background(), query, email).Scan(&username); err != nil {
-		fmt.Println("username select query error: ", err)
+	if username, ok = session.Values["username"].(string); !ok {
+		fmt.Println("Username not found")
 	}
 
-	fmt.Printf("Server: User logged in as %s, with email: %s", username, email)
-
-	session.Values["username"] = username
+	fmt.Println("username and email: ", username, email)
 
 	response := &responseModel{
 		Auth:     true,
@@ -1339,7 +1334,7 @@ func main() {
 	router.POST("/api/activateuser", activateUser)
 	router.GET("/api/does-room-exist", doesRoomExist)
 	router.GET("/api/getlangandhist", getLangAndHist)
-	router.GET("/api/check-auth", checkAuth)
+	router.GET("/api/get-user-info", getUserInfo)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
 	router.POST("/api/sign-up", signUp)
