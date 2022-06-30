@@ -130,6 +130,7 @@ body {
     transition: opacity .5s;
     opacity: 1;
     padding-bottom: 4px;
+    min-width: 100%;
 }
 
 .select-dropdown-hidden {
