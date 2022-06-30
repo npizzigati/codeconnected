@@ -32,10 +32,11 @@ body {
 
 #header-logo {
     margin-left: 5px;
-    height: 30px;
-    width: 30px;
+    margin-top: 5px;
+    height: 20px;
+    width: 20px;
     background-image: url('./codeconnected.png');
-    background-size: 30px 30px;
+    background-size: 20px 20px;
     background-repeat: no-repeat;
 }
 
