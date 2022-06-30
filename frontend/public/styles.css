@@ -234,7 +234,7 @@ body {
     background: var(--main-bg-color);
     cursor: col-resize;
     height: 100%;
-    width: 15px;
+    width: auto;
     display: flex;
     justify-content: center;
     align-items: center;
