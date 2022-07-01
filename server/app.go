@@ -723,6 +723,20 @@ func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	w.Write([]byte("Successfully cleared history"))
 }
 
+func signOut(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// Delete cookie by sending an immediately expiring cookie with
+	// the same name
+	cookie := &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		Path:   "/api",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, cookie)
+
+	sendStringJsonResponse(w, map[string]string{"status": "success"})
+}
+
 func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	session, err := store.Get(r, "session")
 	if err != nil {
@@ -1339,6 +1353,7 @@ func main() {
 	router.POST("/api/runfile", runFile)
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
+	router.POST("/api/sign-out", signOut)
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
