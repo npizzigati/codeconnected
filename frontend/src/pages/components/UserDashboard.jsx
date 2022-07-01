@@ -38,9 +38,10 @@ function UserDashboard ({ options, title, callback, config }) {
       />
       {showDashboard &&
         <div id='user-dashboard'>
-          <p>{username}</p>
-          <p>{email}</p>
+          <p className='username'>{username}</p>
+          <p className='email'>{email}</p>
           <button
+            className='sign-out'
             onPointerDown={signOut}
           >
             Sign out

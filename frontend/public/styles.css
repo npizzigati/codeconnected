@@ -50,11 +50,11 @@ body {
 #user-dashboard {
     position: absolute;
     top: 40px;
-    right: 15px;
-    min-width: 150px;
-    height: 200px;
+    right: 10px;
+    min-width: 100px;
+    min-height: 75px;
     border-radius: 5px;
-    background: #999;
+    background: #45554f;
     z-index: 1000;
     box-sizing: border-box;
     padding: 5px;
@@ -62,8 +62,31 @@ body {
     font-size: 0.7rem;
 }
 
+#user-dashboard .username {
+    font-size: 0.8rem;
+    color: #e0e0e0;
+}
+
+#user-dashboard .email {
+    font-size: 0.6rem;
+    color: #e0e0e0;
+}
+
+#user-dashboard .sign-out {
+    display: block;
+    margin: 10px auto;
+    color: white;
+    border-radius: 5px;
+    border: solid 1px white;
+    background-color: inherit;
+
+}
+
+#user-dashboard .sign-out:hover {
+    border: solid 1px #e04033;
+}
+
 #run-button {
-    background-color: var(--main-bg-color);
     color: white;
     border-radius: 5px;
     border: none;
