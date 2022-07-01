@@ -74,7 +74,7 @@ function CodeArea () {
         >
           <div className='title-row'>
             <div className='editor-and-repl-title'>Code Editor</div>
-            <span className='editor-lang-label'>Language:</span>
+            <span className='editor-lang-label'>Language:&nbsp;</span>
             <Select
               options={[{ value: 'ruby', label: 'Ruby' },
                         { value: 'javascript', label: 'Node.js' },

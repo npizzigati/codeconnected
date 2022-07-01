@@ -95,7 +95,6 @@ body {
     color: #999;
     user-select: none;
     display: flex;
-    padding: 5px;
 }
 
 .select-button:hover {
