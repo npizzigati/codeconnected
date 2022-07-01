@@ -54,12 +54,13 @@ body {
     min-width: 100px;
     min-height: 75px;
     border-radius: 5px;
-    background: #45554f;
+    background: #647b9f;
     z-index: 1000;
     box-sizing: border-box;
     padding: 5px;
     font-family: 'Roboto', sans-serif;
     font-size: 0.7rem;
+    transition: opacity .5s;
 }
 
 #user-dashboard .username {
@@ -77,13 +78,13 @@ body {
     margin: 10px auto;
     color: white;
     border-radius: 5px;
-    border: solid 1px white;
-    background-color: inherit;
+    border: none;
+    background-color: #2888c8;
 
 }
 
 #user-dashboard .sign-out:hover {
-    border: solid 1px #e04033;
+    background-color: #2b95db;
 }
 
 #run-button {
