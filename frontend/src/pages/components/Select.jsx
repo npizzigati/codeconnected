@@ -29,9 +29,10 @@ function Select ({ options, title, callback, config }) {
 
   function hideDropdown () {
     setDisplayDropdown(false);
-    dropdown.current.className = 'select-dropdown-hidden';
-    arrow.current.className = 'select-arrow-down';
-    console.log(arrow);
+    if (dropdown.current && arrow.current) {
+      dropdown.current.className = 'select-dropdown-hidden';
+      arrow.current.className = 'select-arrow-down';
+    }
   }
 
   function showDropdown () {

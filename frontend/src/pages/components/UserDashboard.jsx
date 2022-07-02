@@ -13,10 +13,13 @@ function UserDashboard ({ options, title, callback, config }) {
 
   useEffect(() => {
     document.addEventListener('pointerdown', (ev) => {
-      if (ev.target !== avatar.current
-          // && ev.target !== dashboard.current) {
-          && ev.target !== dashboard.current
-          && !(Array.from(dashboard.current.children).includes(ev.target))) {
+      if (!dashboard.current) {
+        return;
+      }
+      const isPointerOutsideDashboard = ev.target !== avatar.current
+        && ev.target !== dashboard.current
+        && !(Array.from(dashboard.current.children).includes(ev.target));
+      if (isPointerOutsideDashboard) {
         hideDashboard();
       }
     });
