@@ -67,28 +67,28 @@ function CodeArea () {
           <UserDashboard />
         </div>
       </div>
+      <div className='title-row'>
+        <span className='editor-and-repl-title'>Code Editor</span>
+        <span className='editor-lang-label'>Language:&nbsp;</span>
+        <Select
+          options={[{ value: 'ruby', label: 'Ruby' },
+                    { value: 'javascript', label: 'Node.js' },
+                    { value: 'sql', label: 'PostgreSQL' }]}
+          title={cmTitle}
+          callback={(ev) => {
+            const lang = ev.target.dataset.value;
+            switchLanguage(lang);
+          }}
+          config={{ staticTitle: true }}
+        />
+        <button id='run-button' onClick={executeContent}>Run</button>
+      </div>
       <div id='main-container'>
         <div
           ref={cmContainerDOMRef}
           id='codemirror-container'
           style={{ width: cmWidth }}
         >
-          <div className='title-row'>
-            <div className='editor-and-repl-title'>Code Editor</div>
-            <span className='editor-lang-label'>Language:&nbsp;</span>
-            <Select
-              options={[{ value: 'ruby', label: 'Ruby' },
-                        { value: 'javascript', label: 'Node.js' },
-                        { value: 'sql', label: 'PostgreSQL' }]}
-              title={cmTitle}
-              callback={(ev) => {
-                const lang = ev.target.dataset.value;
-                switchLanguage(lang);
-              }}
-              config={{ staticTitle: true }}
-            />
-            <button id='run-button' onClick={executeContent}>Run</button>
-          </div>
           <div id='codemirror-wrapper'>
             <textarea
               ref={codeAreaDOMRef}
@@ -108,8 +108,8 @@ function CodeArea () {
           ref={termContainerDomRef}
           style={{ width: termWidth }}
         >
-          <div className='title-row'>
-            <div className='editor-and-repl-title'>{replTitle}</div>
+          <div className='title-row repl'>
+            <span className='editor-and-repl-title'>{replTitle}</span>
             <Select
               options={[{ value: 'clear', label: 'Clear' },
                         { value: 'reset', label: 'Reset' }]}
