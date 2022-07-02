@@ -63,23 +63,34 @@ body {
     min-width: 100px;
     min-height: 75px;
     border-radius: 5px;
-    background: #647b9f;
+    background: #e5e7eb;
     z-index: 1000;
     box-sizing: border-box;
-    padding: 5px;
+    padding: 5px 10px;
     font-family: 'Roboto', sans-serif;
     font-size: 0.7rem;
+}
+
+#user-dashboard.hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+#user-dashboard.visible {
+    visibility: visible;
     transition: opacity .5s;
+    opacity: 1;
 }
 
 #user-dashboard .username {
     font-size: 0.8rem;
-    color: #e0e0e0;
+    color: #040e45;
+    margin-bottom: 5px;
 }
 
 #user-dashboard .email {
     font-size: 0.6rem;
-    color: #e0e0e0;
+    color: #040e45;
 }
 
 #user-dashboard .sign-out {

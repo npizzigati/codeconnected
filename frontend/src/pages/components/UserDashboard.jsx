@@ -8,12 +8,15 @@ function UserDashboard ({ options, title, callback, config }) {
   const [email, setEmail] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const avatar = useRef(null);
+  const dashboard = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     document.addEventListener('pointerdown', (ev) => {
-      if (ev.target !== avatar.current) {
-        console.log('should hide dashboard');
+      if (ev.target !== avatar.current
+          // && ev.target !== dashboard.current) {
+          && ev.target !== dashboard.current
+          && !(Array.from(dashboard.current.children).includes(ev.target))) {
         hideDashboard();
       }
     });
@@ -21,7 +24,6 @@ function UserDashboard ({ options, title, callback, config }) {
     let userInfo;
     (async () => {
       userInfo = await getUserInfo();
-      console.log(JSON.stringify(userInfo));
       setUsername(userInfo.username);
       setEmail(userInfo.email);
     })();
@@ -36,17 +38,20 @@ function UserDashboard ({ options, title, callback, config }) {
         ref={avatar}
         onPointerDown={toggleDashboard}
       />
-      {showDashboard &&
-        <div id='user-dashboard'>
-          <p className='username'>{username}</p>
-          <p className='email'>{email}</p>
-          <button
-            className='sign-out'
-            onPointerDown={signOut}
-          >
-            Sign out
-          </button>
-        </div>}
+      <div
+        id='user-dashboard'
+        ref={dashboard}
+        className={showDashboard ? 'visible' : 'hidden'}
+      >
+        <p className='username'>{username}</p>
+        <p className='email'>{email}</p>
+        <button
+          className='sign-out'
+          onPointerDown={signOut}
+        >
+          Sign out
+        </button>
+      </div>
     </>
   );
 
@@ -59,7 +64,7 @@ function UserDashboard ({ options, title, callback, config }) {
 
     try {
       const response = await fetch('/api/sign-out', options);
-      console.log( await response.json());
+      console.log(await response.json());
     } catch (error) {
       console.error('Error fetching json:', error, ' May not be signed out.');
     }
