@@ -47,6 +47,10 @@ body {
     margin-top: 5px;
 }
 
+#avatar:hover {
+    cursor: pointer;
+}
+
 #code-area.hidden {
     opacity: 0;
 }
@@ -106,9 +110,12 @@ body {
 
 #user-dashboard .sign-out:hover {
     background-color: #7a96c1;
+    cursor: pointer;
 }
 
 #run-button {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.7rem;
     color: white;
     border-radius: 5px;
     border: none;
@@ -118,6 +125,7 @@ body {
 
 #run-button:hover {
     background-color: #48db48;
+    cursor: pointer;
 }
 
 #run-button:active {
@@ -144,6 +152,7 @@ body {
 
 .select-button:hover {
     color: #ebebeb;
+    cursor: pointer;
 }
 
 .select-title {
@@ -195,6 +204,7 @@ body {
 .select-dropdown-item:hover {
     background-color: #8537d3;
     color: #ebebeb;
+    cursor: pointer;
 }
 
 /* Disable xterm.js scrollbar The built in scrollbar is hard to
