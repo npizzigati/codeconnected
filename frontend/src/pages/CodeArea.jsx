@@ -46,6 +46,7 @@ function CodeArea () {
   const [minCmWidth, minTermWidth] = [300, 200];
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
+  const [showMain, setShowMain] = useState(false);
   const cmContainerDOMRef = useRef(null);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ function CodeArea () {
   // Use a React ref for the code area since CodeMirror needs to see it
   // in the DOM in order to attach to it
   return (
-    <>
+    <div id='code-area' className={showMain ? 'visible' : 'hidden'}>
       <div id='header-bar'>
         <div id='header-left-side'>
           <Link id='header-logo' to='/' />
@@ -123,7 +124,7 @@ function CodeArea () {
           />
         </div>
       </div>
-    </>
+    </div>
   );
 
   function executeReplAction (ev) {
@@ -258,6 +259,7 @@ function CodeArea () {
       console.log('now online');
       location.reload();
     });
+    setShowMain(true);
   }
 
   async function getInitialLangAndHist (roomID) {

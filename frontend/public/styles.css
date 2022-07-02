@@ -47,6 +47,15 @@ body {
     margin-top: 5px;
 }
 
+#code-area.hidden {
+    opacity: 0;
+}
+
+#code-area.visible {
+    opacity: 1;
+    transition: opacity .5s;
+}
+
 #user-dashboard {
     position: absolute;
     top: 40px;
