@@ -99,12 +99,13 @@ body {
     color: white;
     border-radius: 5px;
     border: none;
-    background-color: #2888c8;
+    padding: 5px;
+    background-color: #647b9f;
 
 }
 
 #user-dashboard .sign-out:hover {
-    background-color: #2b95db;
+    background-color: #7a96c1;
 }
 
 #run-button {
