@@ -35,7 +35,7 @@ function UserDashboard ({ options, title, callback, config }) {
   return (
     <>
       <img
-        id='avatar'
+        className='avatar'
         src='./blank_avatar.png'
         alt='avatar'
         ref={avatar}
@@ -46,8 +46,20 @@ function UserDashboard ({ options, title, callback, config }) {
         ref={dashboard}
         className={showDashboard ? 'visible' : 'hidden'}
       >
-        <p className='username'>{username}</p>
-        <p className='email'>{email}</p>
+        <div>
+          <img
+            className='avatar inline'
+            src='./blank_avatar.png'
+          />
+          <span className='username'>{username}</span>
+        </div>
+        <div>
+          <img
+            className='email-icon'
+            src='./mail.png'
+          />
+          <span className='email'>{email}</span>
+        </div>
         <button
           className='sign-out'
           onPointerDown={signOut}
