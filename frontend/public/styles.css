@@ -88,29 +88,31 @@ body {
 }
 
 #user-dashboard .username {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #d3d7d1;
     margin-bottom: 5px;
 }
 
 #user-dashboard .email {
     font-size: 0.6rem;
+    font-style: italic;
     color: #d3d7d1;
 }
 
 #user-dashboard .sign-out {
     display: block;
     margin: 10px auto;
-    color: black;
-    border-radius: 5px;
-    border: none;
+    color: white;
+    border-radius: 15px;
+    border: 2px solid #727471;
     padding: 5px;
-    background-color: #e73a3a;
+    background-color: #5f615e;
 
 }
 
 #user-dashboard .sign-out:hover {
-    background-color: #ff4040;
+    background-color: #727471;
+    border: 2px solid #727471;
     cursor: pointer;
 }
 
