@@ -180,10 +180,12 @@ body {
     z-index: 1000;
     background-color: #333;
     border-radius: 4px;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     transition: opacity .5s;
     opacity: 1;
-    padding-bottom: 4px;
+    padding: 4px 0;
     min-width: 100%;
     cursor: pointer;
 }
@@ -196,9 +198,7 @@ body {
 }
 
 .select-dropdown-item {
-    margin: 4px 0 0 0;
-    padding-left: 5px;
-    padding-right: 5px;
+    padding: 5px 5px;
     color: #999;
     user-select: none;
 }
