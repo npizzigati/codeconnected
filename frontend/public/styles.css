@@ -68,7 +68,7 @@ body {
     min-width: 100px;
     min-height: 75px;
     border-radius: 5px;
-    background: #c9bdc9;
+    background: #5f615e;
     z-index: 1000;
     box-sizing: border-box;
     padding: 5px 10px;
@@ -89,28 +89,28 @@ body {
 
 #user-dashboard .username {
     font-size: 0.8rem;
-    color: #040e45;
+    color: #d3d7d1;
     margin-bottom: 5px;
 }
 
 #user-dashboard .email {
     font-size: 0.6rem;
-    color: #040e45;
+    color: #d3d7d1;
 }
 
 #user-dashboard .sign-out {
     display: block;
     margin: 10px auto;
-    color: white;
+    color: black;
     border-radius: 5px;
     border: none;
     padding: 5px;
-    background-color: #647b9f;
+    background-color: #e73a3a;
 
 }
 
 #user-dashboard .sign-out:hover {
-    background-color: #7a96c1;
+    background-color: #ff4040;
     cursor: pointer;
 }
 
