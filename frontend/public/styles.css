@@ -309,6 +309,7 @@ body {
 
 #main-container {
     display: flex;
+    min-height: 100px;
     height: calc(95vh - (var(--code-headerbar-height) + var(--code-titlebar-height)));
 }
 
