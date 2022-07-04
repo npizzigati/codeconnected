@@ -131,8 +131,8 @@ body {
 .user-dashboard.sign-out-button,
 .user-dashboard.sign-in-button {
     color: white;
-    border: 2px solid #727471;
-    padding: 5px;
+    border: none;
+    padding: 7px;
     background-color: gray;
     width: 100%;
 }
@@ -145,7 +145,7 @@ body {
 .user-dashboard.sign-out-button:hover,
 .user-dashboard.sign-in-button:hover {
     background-color: #727471;
-    border: 2px solid #727471;
+    border: none;
     cursor: pointer;
 }
 
