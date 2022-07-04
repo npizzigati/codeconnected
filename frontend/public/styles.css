@@ -48,24 +48,6 @@ body {
     margin-top: 5px;
 }
 
-.user-dashboard.avatar.inline {
-    height: 10px;
-    width: 10px;
-    margin: 0 8px 0 1px;
-}
-
-.user-dashboard.email-icon {
-    height: 12px;
-    width: 12px;
-    margin: 0 8px 0 0;
-    position: relative;
-    top: 3px;
-}
-
-.user-dashboard.item {
-    margin: 7px 10px 5px 5px;
-}
-
 .avatar:not(.inline):hover {
     cursor: pointer;
 }
@@ -85,6 +67,9 @@ body {
 
 .user-dashboard.main {
     position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     top: 40px;
     right: 10px;
     min-width: 100px;
@@ -110,10 +95,32 @@ body {
     transition: visibility .3s, height .3s ease-in;
 }
 
+.user-dashboard.avatar.inline {
+    height: 10px;
+    width: 10px;
+    margin: 0 8px 0 1px;
+}
+
+.user-dashboard.email-icon {
+    height: 12px;
+    width: 12px;
+    margin: 0 8px 0 0;
+    position: relative;
+    top: 3px;
+}
+
+.user-dashboard.item1 {
+    margin: 10px 10px 0px 5px;
+}
+
+.user-dashboard.item2 {
+    margin: 7px 10px 23px 5px;
+}
+
+
 .user-dashboard.username {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #d3d7d1;
-    margin-bottom: 5px;
 }
 
 .user-dashboard.email {
@@ -121,17 +128,22 @@ body {
     color: #d3d7d1;
 }
 
-.user-dashboard.sign-out {
-    display: block;
-    margin: 10px auto;
+.user-dashboard.sign-out-button,
+.user-dashboard.sign-in-button {
     color: white;
-    border-radius: 15px;
     border: 2px solid #727471;
     padding: 5px;
-    background-color: #5f615e;
+    background-color: gray;
+    width: 100%;
 }
 
-.user-dashboard.sign-out:hover {
+.user-dashboard.sign-out-button.hidden,
+.user-dashboard.sign-in-button.hidden {
+    display: none;
+}
+
+.user-dashboard.sign-out-button:hover,
+.user-dashboard.sign-in-button:hover {
     background-color: #727471;
     border: 2px solid #727471;
     cursor: pointer;

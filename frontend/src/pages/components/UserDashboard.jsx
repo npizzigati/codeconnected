@@ -44,14 +44,14 @@ function UserDashboard ({ options, title, callback, config }) {
         ref={dashboard}
         className={'user-dashboard main ' + (showDashboard ? 'visible' : 'hidden')}
       >
-        <div className='user-dashboard item'>
+        <div className='user-dashboard item1'>
           <img
             className='user-dashboard avatar inline'
             src='./blank_avatar.png'
           />
           <span className='user-dashboard username'>{username}</span>
         </div>
-        <div className='user-dashboard item'>
+        <div className='user-dashboard item2'>
           <img
             className='user-dashboard email-icon'
             src='./mail.png'
