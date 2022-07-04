@@ -48,18 +48,22 @@ body {
     margin-top: 5px;
 }
 
-.avatar.inline {
+.user-dashboard.avatar.inline {
     height: 10px;
     width: 10px;
     margin: 0 3px 0 1px;
 }
 
-.email-icon {
+.user-dashboard.email-icon {
     height: 12px;
     width: 12px;
     margin: 0 3px 0 0;
     position: relative;
     top: 3px;
+}
+
+.user-dashboard.item {
+    margin: 5px 0;
 }
 
 .avatar:not(.inline):hover {
@@ -75,7 +79,7 @@ body {
     transition: opacity .5s;
 }
 
-#user-dashboard {
+.user-dashboard.main {
     position: absolute;
     top: 40px;
     right: 10px;
@@ -90,30 +94,29 @@ body {
     font-size: 0.7rem;
 }
 
-#user-dashboard.hidden {
+.user-dashboard.main.hidden {
     visibility: hidden;
     opacity: 0;
 }
 
-#user-dashboard.visible {
+.user-dashboard.main.visible {
     visibility: visible;
     transition: opacity .5s;
     opacity: 1;
 }
 
-#user-dashboard .username {
+.user-dashboard.username {
     font-size: 0.9rem;
     color: #d3d7d1;
     margin-bottom: 5px;
 }
 
-#user-dashboard .email {
+.user-dashboard.email {
     font-size: 0.6rem;
-    font-style: italic;
     color: #d3d7d1;
 }
 
-#user-dashboard .sign-out {
+.user-dashboard.sign-out {
     display: block;
     margin: 10px auto;
     color: white;
@@ -121,10 +124,9 @@ body {
     border: 2px solid #727471;
     padding: 5px;
     background-color: #5f615e;
-
 }
 
-#user-dashboard .sign-out:hover {
+.user-dashboard.sign-out:hover {
     background-color: #727471;
     border: 2px solid #727471;
     cursor: pointer;

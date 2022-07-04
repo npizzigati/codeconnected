@@ -17,8 +17,7 @@ function UserDashboard ({ options, title, callback, config }) {
         return;
       }
       const isPointerOutsideDashboard = ev.target !== avatar.current
-        && ev.target !== dashboard.current
-        && !(Array.from(dashboard.current.children).includes(ev.target));
+            && !ev.target.classList.contains('user-dashboard');
       if (isPointerOutsideDashboard) {
         hideDashboard();
       }
@@ -42,26 +41,25 @@ function UserDashboard ({ options, title, callback, config }) {
         onPointerDown={toggleDashboard}
       />
       <div
-        id='user-dashboard'
         ref={dashboard}
-        className={showDashboard ? 'visible' : 'hidden'}
+        className={'user-dashboard main ' + (showDashboard ? 'visible' : 'hidden')}
       >
-        <div>
+        <div className='user-dashboard item'>
           <img
-            className='avatar inline'
+            className='user-dashboard avatar inline'
             src='./blank_avatar.png'
           />
-          <span className='username'>{username}</span>
+          <span className='user-dashboard username'>{username}</span>
         </div>
-        <div>
+        <div className='user-dashboard item'>
           <img
-            className='email-icon'
+            className='user-dashboard email-icon'
             src='./mail.png'
           />
-          <span className='email'>{email}</span>
+          <span className='user-dashboard email'>{email}</span>
         </div>
         <button
-          className='sign-out'
+          className='user-dashboard sign-out'
           onPointerDown={signOut}
         >
           Sign out
