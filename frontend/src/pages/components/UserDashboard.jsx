@@ -4,9 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function UserDashboard ({ options, title, callback, config }) {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('Anonymous');
+  const [email, setEmail] = useState('---------------------');
   const [showDashboard, setShowDashboard] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const avatar = useRef(null);
   const dashboard = useRef(null);
   const navigate = useNavigate();
@@ -26,6 +27,10 @@ function UserDashboard ({ options, title, callback, config }) {
     let userInfo;
     (async () => {
       userInfo = await getUserInfo();
+      if (userInfo.auth === false) {
+        return;
+      }
+      setSignedIn(true);
       setUsername(userInfo.username);
       setEmail(userInfo.email);
     })();
@@ -59,14 +64,24 @@ function UserDashboard ({ options, title, callback, config }) {
           <span className='user-dashboard email'>{email}</span>
         </div>
         <button
-          className='user-dashboard sign-out'
+          className={'user-dashboard sign-out-button' + (signedIn ? '' : ' hidden')}
           onPointerDown={signOut}
         >
           Sign out
         </button>
+        <button
+          className={'user-dashboard sign-in-button' + (signedIn ? ' hidden' : '')}
+          onPointerDown={signOut}
+        >
+          Sign in
+        </button>
       </div>
     </>
   );
+
+  function signIn () {
+    navigate('/');
+  }
 
   async function signOut () {
     const options = {
