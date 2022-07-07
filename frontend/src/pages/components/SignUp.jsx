@@ -246,7 +246,7 @@ function SignUp () {
       .then(response => response.json())
       .then(json => {
         if (json.emailUsed) {
-          setErrorMessage(emailInput.current, 'Email used. Try signing in?');
+          setErrorMessage(emailInput.current, 'Email already taken. Try signing in?');
           emailInput.current.classList.add('invalid');
         } else {
           setDisplayVerifyMessage(true);
