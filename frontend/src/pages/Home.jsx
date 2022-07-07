@@ -33,7 +33,7 @@ function Home () {
         <div className='home'>
           <div id='header-bar'>
             <div id='header-left-side'>
-              <div className='home header-logo' />
+              <div className='header-logo' />
               <div className='logo-text'>
                 <span className='site-name'>Code Connected</span>
                 <span className='tagline'>Collaborative code editor, runner and REPL</span>
