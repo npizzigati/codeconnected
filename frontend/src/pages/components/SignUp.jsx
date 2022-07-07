@@ -46,7 +46,6 @@ function SignUp () {
             value={username}
             placeholder='Choose a username'
             ref={usernameInput}
-            autoComplete='off'
             data-validation='Username'
             required
             onChange={handleChange}
@@ -72,7 +71,6 @@ function SignUp () {
             value={email}
             placeholder='Email'
             ref={emailInput}
-            autoComplete='off'
             data-validation='Email'
             required
             onChange={handleChange}
