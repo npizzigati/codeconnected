@@ -124,7 +124,6 @@ function SignUp () {
             placeholder='Repeat password'
             data-validation='Repeated password'
             required
-            minLength='6'
             onChange={handleChange}
           />
         </p>
