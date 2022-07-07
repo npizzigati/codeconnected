@@ -4,14 +4,22 @@ import React, { useState, useEffect } from 'react';
 
 import { useNavigate, Link } from 'react-router-dom';
 
+import UserDashboard from './components/UserDashboard.jsx';
+import Auth from './components/Auth.jsx';
+
 const defaultLanguage = 'javascript';
 
 function Home () {
   const [language, setLanguage] = useState(defaultLanguage);
   const [auth, setAuth] = useState(false);
+  const [fontsReady, setFontsReady] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.fonts.ready.then(() => {
+      setFontsReady(true);
+    });
+
     console.log('Checking user authentication');
     (async () => {
       const userInfo = await getUserInfo();
@@ -19,33 +27,43 @@ function Home () {
     })();
   });
 
-  if (auth) {
-    return (
-      <>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Choose the language for your coding session:
-            <select
-              value={language}
-              onChange={ev => setLanguage(ev.target.value)}
-            >
-              <option value='javascript'>Javascript(Node)</option>
-              <option value='ruby'>Ruby</option>
-              <option value='sql'>PostgreSQL</option>
-            </select>
-          </label>
-          <input type='submit' value='Start Session' />
-        </form>
-      </>
-    );
-  } else {
-    return (
-      <>
-        <div><Link to='/sign-up'>Sign up</Link></div>
-        <div><Link to='/sign-in'>Sign in</Link></div>
-      </>
-    );
-  }
+  return (
+    <>
+      {fontsReady &&
+        <div className='home'>
+          <div id='header-bar'>
+            <div id='header-left-side'>
+              <div className='home header-logo' />
+              <div className='logo-text'>
+                <span className='site-name'>Code Connected</span>
+                <span className='tagline'>Collaborative code editor, runner and REPL</span>
+              </div>
+            </div>
+            <div id='header-right-side'>
+              <UserDashboard />
+            </div>
+          </div>
+          <div className={'home language-chooser' + (auth ? '' : ' hidden')}>
+            <form onSubmit={handleSubmit}>
+              <label>
+                Choose the language for your coding session:
+                <select
+                  value={language}
+                  onChange={ev => setLanguage(ev.target.value)}
+                >
+                  <option value='javascript'>Javascript(Node)</option>
+                  <option value='ruby'>Ruby</option>
+                  <option value='sql'>PostgreSQL</option>
+                </select>
+              </label>
+              <input type='submit' value='Start Session' />
+            </form>
+          </div>
+          {!auth &&
+            <Auth />}
+        </div>}
+    </>
+  );
 
   async function getUserInfo () {
     const options = {

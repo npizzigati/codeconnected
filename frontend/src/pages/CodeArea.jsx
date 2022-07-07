@@ -61,7 +61,7 @@ function CodeArea () {
     <div id='code-area' className={showMain ? 'visible' : 'hidden'}>
       <div id='header-bar'>
         <div id='header-left-side'>
-          <Link id='header-logo' to='/' />
+          <Link className='code-page header-logo' to='/' />
         </div>
         <div id='header-right-side'>
           <UserDashboard />
