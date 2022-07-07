@@ -168,16 +168,16 @@ function SignUp () {
     }
 
     input.classList.add('invalid');
-    let errorMsg = 'Invalid input';
+    let errorMsg = 'Invalid input.';
     const field = input.dataset.validation;
     if (!passwordCheckPass) {
-      errorMsg = 'Passwords must match';
+      errorMsg = 'Passwords must match.';
     } else if (input.validity.tooShort) {
-      errorMsg = `${field} must be at least ${input.minLength} characters`;
+      errorMsg = `${field} must be at least ${input.minLength} characters.`;
     } else if (input.validity.valueMissing) {
-      errorMsg = `${field} is required`;
+      errorMsg = `${field} is required.`;
     } else if (input.validity.typeMismatch) {
-      errorMsg = `Please enter a valid ${field.toLowerCase()}`;
+      errorMsg = `Please enter a valid ${field.toLowerCase()}.`;
     }
 
     setErrorMessage(input, errorMsg);
