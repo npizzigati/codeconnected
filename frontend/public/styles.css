@@ -108,7 +108,7 @@ body {
     width: .7em;
 }
 
-.home.language-chooser.hidden {
+.home .language-chooser.hidden {
     display: none;
 }
 

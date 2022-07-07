@@ -43,7 +43,7 @@ function Home () {
               <UserDashboard />
             </div>
           </div>
-          <div className={'home language-chooser' + (auth ? '' : ' hidden')}>
+          <div className={'language-chooser' + (auth ? '' : ' hidden')}>
             <form onSubmit={handleSubmit}>
               <label>
                 Choose the language for your coding session:
