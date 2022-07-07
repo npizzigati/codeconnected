@@ -7,7 +7,6 @@ function SignUp () {
   const [password, setPassword] = useState('');
   const [passwordDup, setPasswordDup] = useState('');
   const [username, setUsername] = useState('');
-  const [emailUsed, setEmailUsed] = useState(false);
   const [displayVerifyMessage, setDisplayVerifyMessage] = useState(false);
   const [emailValidationError, setEmailValidationError] = useState('');
   const [usernameValidationError, setUsernameValidationError] = useState('');
@@ -20,12 +19,6 @@ function SignUp () {
   const form = useRef(null);
   const inputFieldSize = '20';
   const inputs = [usernameInput, emailInput, passwordInput, passwordDupInput];
-
-  useEffect(() => {
-    if (emailUsed === true) {
-      emailInput.current.focus();
-    }
-  }, [emailUsed]);
 
   return (
     <>
@@ -137,7 +130,6 @@ function SignUp () {
         </p>
       </form>
 
-      {emailUsed ? 'That email has already been used.' : ''}
       {displayVerifyMessage ? 'Please check your email to verify and complete registration.' : ''}
     </>
   );
@@ -254,13 +246,13 @@ function SignUp () {
       .then(response => response.json())
       .then(json => {
         if (json.emailUsed) {
-          setEmailUsed(true);
+          setErrorMessage(emailInput.current, 'Email used. Try signing in?');
+          emailInput.current.classList.add('invalid');
         } else {
           setDisplayVerifyMessage(true);
         }
       });
   }
-
 }
 
 export { SignUp as default };
