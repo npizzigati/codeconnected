@@ -20,7 +20,7 @@ function Home () {
       const userInfo = await getUserInfo();
       setAuth(userInfo.auth);
     })();
-  });
+  }, []);
 
   return (
     <>
