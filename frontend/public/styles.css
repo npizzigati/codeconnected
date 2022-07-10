@@ -106,6 +106,7 @@ body {
     top: .08em;
     height: .7em;
     width: .7em;
+    padding-right: .3em;
 }
 
 .home .language-chooser.hidden {
@@ -403,6 +404,8 @@ body {
 .auth-modal {
     --modal-background-color: #777;
     margin: 15vh auto 0;
+    min-width: 16em;
+    min-height: 11em;
     background-color: var(--modal-background-color);
     border-radius: 5px;
     font-family: 'Montserrat', sans-serif;
@@ -441,7 +444,8 @@ body {
     font-size: 1rem;
 }
 
-.auth-modal label {
+.auth-modal .sign-up label,
+.auth-modal .sign-in label {
     display: table-cell;
 }
 
@@ -450,7 +454,8 @@ body {
     font-weight: 600;
     font-size: 1.6rem;
     color: #3b3a38;
-    margin: .6em 0;
+    display: block;
+    margin: 1em auto 0;
     padding: 0 .5em;
     border: none;
     border-radius: 5px;
@@ -496,15 +501,74 @@ body {
     display: table-cell;
 }
 
-.auth-modal .forgot-password:link,
-.auth-modal .forgot-password:visited {
+.auth-modal .forgot-password {
     font-size: .9rem;
     color: white;
     text-decoration: none;
+    display: block;
+    text-align: center;
+    margin-top: 2em;
 }
 
 .auth-modal .forgot-password:hover {
     color: lightgray;
+}
+
+.activation p {
+    text-align: center;
+}
+
+.activation .message {
+    text-align: center;
+    font-size: 1rem;
+}
+
+.activation .email {
+    text-align: center;
+    font-size: 1.3rem;
+}
+
+.activation .code-field {
+    margin: 1em 0;
+    text-align: center;
+}
+
+.activation .bottom-link {
+    display: block;
+    margin: 2em 0;
+    text-align: center;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.activation .bottom-link:hover {
+    cursor: pointer;
+    color: lightgray;
+}
+
+
+.activation-success .message {
+    display: block;
+    margin: 2em 0;
+    text-align: center;
+    font-size: 1.3rem;
+}
+
+
+.code-field label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.2em;
+}
+
+.activation .error {
+    margin-top: 0.2em;
+    font-size: .9rem;
+}
+
+.activation input {
+    text-align: center;
 }
 
 #resizer{
