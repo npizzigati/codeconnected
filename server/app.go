@@ -1181,8 +1181,8 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	if !emailUsed {
-		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry) VALUES($1, $2, $3, $4, $5)"
-		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry); err != nil {
+		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry, code_resends) VALUES($1, $2, $3, $4, $5, $6)"
+		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0); err != nil {
 			fmt.Println("unable to insert activation request: ", err)
 		}
 
@@ -1203,6 +1203,69 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
+}
+
+func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type contentModel struct {
+		Email string `json:"email"`
+	}
+	var cm contentModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, &cm)
+	if err != nil {
+		panic(err)
+	}
+
+	status := "success"
+	var reason string
+
+	// Check/update code resends
+	var codeResends int
+	query := "SELECT code_resends FROM pending_activations WHERE email = $1"
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&codeResends); err != nil {
+		fmt.Println("select query error: ", err)
+	}
+
+	if codeResends > 2 {
+		status = "failure"
+		reason = "code resend limit exceeded"
+	}
+
+	if status == "failure" {
+		fmt.Println("Code resend limit exceeded")
+		sendStringJsonResponse(w, map[string]string{"status": status, "reason": reason})
+		return
+	}
+
+	query = "UPDATE pending_activations SET code_resends = $1 WHERE email = $2"
+	if _, err := pool.Exec(context.Background(), query, codeResends+1, cm.Email); err != nil {
+		fmt.Println("Unable to update code_resends: ", err)
+		status = "failure"
+		reason = "database error"
+	}
+
+	var activationCode string
+	query = "SELECT activation_code FROM pending_activations WHERE email = $1"
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&activationCode); err != nil {
+		fmt.Println("select query error: ", err)
+		status = "failure"
+		reason = "database error"
+	}
+
+	// Update expiry
+	expiry := time.Now().Add(activationTimeout * time.Minute).Unix()
+	query = "UPDATE pending_activations SET expiry = $1 WHERE email = $2"
+	if _, err := pool.Exec(context.Background(), query, expiry, cm.Email); err != nil {
+		fmt.Println("Unable to update expiry: ", err)
+		status = "failure"
+		reason = "database error"
+	}
+
+	sendVerificationEmail(activationCode)
+	sendStringJsonResponse(w, map[string]string{"status": status, "reason": reason})
 }
 
 func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1354,6 +1417,7 @@ func main() {
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
 	router.POST("/api/sign-out", signOut)
+	router.POST("/api/resend-verification-email", resendVerificationEmail)
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)

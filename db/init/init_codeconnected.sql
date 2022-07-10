@@ -15,7 +15,8 @@ CREATE TABLE pending_activations (
   email VARCHAR(50) NOT NULL,
   encrypted_pw VARCHAR(100) NOT NULL,
   activation_code VARCHAR(100) NOT NULL,
-  expiry BIGINT NOT NULL
+  expiry BIGINT NOT NULL,
+  code_resends INT NOT NULL
 );
 
 CREATE TABLE password_reset_requests (
