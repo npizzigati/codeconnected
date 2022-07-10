@@ -4,7 +4,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import CodeArea from './pages/CodeArea.jsx';
-import Activate from './pages/Activate.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 
@@ -16,7 +15,6 @@ function App () {
           <Route path='/' element={<Home />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
           <Route path='/reset-password' element={<ResetPassword />} />
-          <Route path='/activate' element={<Activate />} />
           <Route path='/:roomID' element={<CodeArea />} />
         </Routes>
       </BrowserRouter>
