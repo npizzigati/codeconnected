@@ -87,6 +87,8 @@ var initialPrompts = map[string][]byte{
 var pool *pgxpool.Pool
 var sesCli *sesv2.Client
 
+const activationTimeout = 10
+
 // const dbURL = "postgres://postgres@db/"
 
 func initDBConnectionPool() {
@@ -113,10 +115,9 @@ func sendPasswordResetEmail(baseURL, resetCode string) {
 	sendEmail(subject, body, fromAddr)
 }
 
-func sendVerificationEmail(baseURL, activationCode string) {
-	activationURL := fmt.Sprintf("%s/activate?code=%s", baseURL, activationCode)
-	subject := "Verify your email address"
-	body := fmt.Sprintf("Verify your email address by visiting the following URL: %s", activationURL)
+func sendVerificationEmail(activationCode string) {
+	subject := "Verify email address"
+	body := fmt.Sprintf("Your activation code is: %s", activationCode)
 	fromAddr := "noreply@codeconnected.dev"
 	sendEmail(subject, body, fromAddr)
 }
@@ -937,8 +938,10 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 }
 
 func generateRandomCode() string {
+	max := 999999
+	min := 100000
 	rand.Seed(time.Now().UnixNano())
-	return strconv.Itoa(rand.Int())
+	return strconv.Itoa(rand.Intn(max-min) + min)
 }
 
 // TODO: Use this where appropriate
@@ -1120,8 +1123,9 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	// TODO: Remove the baseURL stuff from here and js request --
+	// we are no longer sending a link... just the code
 	// Activation timeout in minutes
-	const activationTimeout = 10
 	type contentModel struct {
 		BaseURL     string `json:"baseURL"`
 		Username    string `json:"username"`
@@ -1186,7 +1190,7 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			fmt.Println("unable to insert activation request: ", err)
 		}
 
-		sendVerificationEmail(cm.BaseURL, code)
+		sendVerificationEmail(code)
 	}
 
 	type responseModel struct {
