@@ -48,14 +48,8 @@ function SignIn () {
             onChange={handleChange}
           />
         </p>
-        <p>
-          <span className='col-placeholder' />
-          <button className='submit-button' type='submit'>Sign me in!</button>
-        </p>
-        <p>
-          <span className='col-placeholder' />
-          <Link className='forgot-password 'to='/forgot-password'>Forgot your password?</Link>
-        </p>
+        <button className='submit-button' type='submit'>Sign me in!</button>
+        <Link className='forgot-password' to='/forgot-password'>Forgot your password?</Link>
       </form>
     </>
   );
