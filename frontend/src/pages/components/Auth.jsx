@@ -5,7 +5,7 @@ import SignIn from './SignIn.jsx';
 import SignUp from './SignUp.jsx';
 
 function Auth () {
-  const [selectedTab, setSelectedTab] = useState('signIn');
+  const [selectedTab, setSelectedTab] = useState('signUp');
   return (
     <div className='auth-modal'>
       <div className='tabs'>
