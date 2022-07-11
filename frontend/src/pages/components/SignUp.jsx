@@ -199,7 +199,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
             className='bottom-link'
             onPointerDown={goBackToSignUp}
           >
-            Go back to sign-up form to try again
+            Go back to sign-up form
           </span>
         </div>}
     </>
