@@ -559,6 +559,8 @@ body {
     --v-padding: 0.3em;
     padding: var(--v-padding) 0.2em;
     margin-top: var(--m-top);
+    /* Use negative bottom margin so that popup does not increase
+       spacing between elements */
     margin-bottom: calc(0px - var(--f-size) - var(--m-top) - (var(--v-padding) * 2));
     margin-left: auto;
     margin-right: auto;
@@ -586,7 +588,8 @@ body {
     margin-bottom: 0.2em;
 }
 
-.activation .error {
+.activation .error,
+.sign-in .error {
     margin-top: 0.2em;
     font-size: .9rem;
 }
