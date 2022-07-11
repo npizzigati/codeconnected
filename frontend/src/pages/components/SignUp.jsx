@@ -1,8 +1,8 @@
 'use strict';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-function SignUp () {
+function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordDup, setPasswordDup] = useState('');
@@ -12,7 +12,7 @@ function SignUp () {
   const [passwordValidationError, setPasswordValidationError] = useState('');
   const [passwordDupValidationError, setPasswordDupValidationError] = useState('');
   const [codeValidationError, setCodeValidationError] = useState('');
-  const [activationStatus, setActivationStatus] = useState('pre');
+  const [activationStatus, setActivationStatus] = useState(savedActivationStatus);
   const [activationCode, setActivationCode] = useState('');
   const usernameInput = useRef(null);
   const emailInput = useRef(null);
@@ -22,6 +22,14 @@ function SignUp () {
   const form = useRef(null);
   const inputFieldSize = '20';
   const inputs = [usernameInput, emailInput, passwordInput, passwordDupInput];
+
+  // Update activation status saved in Auth component so that the
+  // same information is displayed if the user switches back and
+  // forth from the sign-up to the sign-in tabs, regardless of
+  // user's stage in the sign up process
+  useEffect(() => {
+    setSavedActivationStatus(activationStatus);
+  }, [activationStatus]);
 
   return (
     <>

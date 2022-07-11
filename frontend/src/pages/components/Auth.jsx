@@ -6,6 +6,7 @@ import SignUp from './SignUp.jsx';
 
 function Auth () {
   const [selectedTab, setSelectedTab] = useState('signUp');
+  const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   return (
     <div className='auth-modal'>
       <div className='tabs'>
@@ -24,7 +25,12 @@ function Auth () {
           Sign in
         </div>
       </div>
-      {selectedTab === 'signIn' ? <SignIn /> : <SignUp />}
+      {selectedTab === 'signIn'
+        ? <SignIn />
+        : <SignUp
+            savedActivationStatus={savedActivationStatus}
+            setSavedActivationStatus={setSavedActivationStatus}
+          />}
     </div>
   );
 
