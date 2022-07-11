@@ -405,7 +405,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
       .then(response => response.json())
       .then(json => {
         if (json.emailUsed) {
-          setErrorMessage(emailInput.current, 'Email already taken. Try signing in?');
+          setErrorMessage(emailInput.current, 'Email in use or pending activation.');
           emailInput.current.classList.add('invalid');
         } else {
           setActivationStatus('underway');
