@@ -533,7 +533,8 @@ body {
     text-align: center;
 }
 
-.activation .bottom-link {
+.activation .bottom-link,
+.activation-failure .bottom-link {
     display: block;
     margin: 2em 0;
     text-align: center;
@@ -542,7 +543,8 @@ body {
     cursor: pointer;
 }
 
-.activation .bottom-link:hover {
+.activation .bottom-link:hover,
+.activation-failure .bottom-link:hover {
     cursor: pointer;
     color: lightgray;
 }
