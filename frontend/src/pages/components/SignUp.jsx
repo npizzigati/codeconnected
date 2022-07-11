@@ -247,8 +247,26 @@ function SignUp () {
       break;
     }
 
+    // Validate input if it was invalid before key entered (to
+    // provide message to user to help enter correct value)
     if (ev.target.classList.contains('invalid')) {
       validate(ev.target);
+    }
+
+    // Do no other validation unless field is password or
+    // password duplicate
+    if (ev.target !== passwordInput.current &&
+        ev.target !== passwordDupInput.current) {
+      return;
+    }
+
+    // Validate both password fields if either password field
+    // was invalid before key entered, since the validation of
+    // one depends on the other (they must match)
+    if (passwordInput.current.classList.contains('invalid') ||
+        passwordDupInput.current.classList.contains('invalid')) {
+      validate(passwordInput.current);
+      validate(passwordDupInput.current);
     }
   }
 
