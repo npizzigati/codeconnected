@@ -547,8 +547,30 @@ body {
     color: lightgray;
 }
 
+.activation .popup:empty {
+    opacity: 0;
+}
 
-.activation-success .message {
+.activation .popup:not(:empty) {
+    --m-top: 0.4em;
+    --f-size: 0.9rem;
+    --v-padding: 0.3em;
+    padding: var(--v-padding) 0.2em;
+    margin-top: var(--m-top);
+    margin-bottom: calc(0px - var(--f-size) - var(--m-top) - (var(--v-padding) * 2));
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
+    font-size: var(--f-size);
+    color: white;
+    background-color: #ff2a9c;
+    border-radius: 4px;
+    opacity: 0.8;
+    transition: opacity .5s;
+}
+
+.activation-success .message,
+.activation-failure .message {
     display: block;
     margin: 2em 0;
     text-align: center;

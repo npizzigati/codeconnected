@@ -1230,16 +1230,18 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	var codeResends int
 	query := "SELECT code_resends FROM pending_activations WHERE email = $1"
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&codeResends); err != nil {
-		fmt.Println("select query error: ", err)
-	}
-
-	if codeResends > 2 {
+		// Will throw error if no record found (i.e., activation
+		// request expired and deleted)
+		fmt.Println("Select query error: ", err)
 		status = "failure"
-		reason = "code resend limit exceeded"
+		reason = "expired"
+	} else if codeResends > 2 {
+		status = "failure"
+		reason = "exceeded"
 	}
 
 	if status == "failure" {
-		fmt.Println("Code resend limit exceeded")
+		fmt.Println(reason)
 		sendStringJsonResponse(w, map[string]string{"status": status, "reason": reason})
 		return
 	}

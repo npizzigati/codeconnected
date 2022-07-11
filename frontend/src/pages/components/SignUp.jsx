@@ -14,6 +14,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
   const [codeValidationError, setCodeValidationError] = useState('');
   const [activationStatus, setActivationStatus] = useState(savedActivationStatus);
   const [activationCode, setActivationCode] = useState('');
+  const [resendPopupMessage, setResendPopupMessage] = useState('');
   const usernameInput = useRef(null);
   const emailInput = useRef(null);
   const passwordInput = useRef(null);
@@ -168,6 +169,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
               <div className='error'>{codeValidationError}</div>
             </div>
             <button className='submit-button' type='submit'>Complete Registration</button>
+            <div className='popup'>{resendPopupMessage}</div>
             <span
               className='bottom-link'
               onPointerDown={resendEmail}
@@ -285,6 +287,13 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
     setActivationStatus('pre');
   }
 
+  function showResendPopup (message) {
+    setResendPopupMessage(message);
+    setTimeout(() => {
+      setResendPopupMessage('');
+    }, 5000);
+  }
+
   function resendEmail () {
     const body = JSON.stringify({ email });
     const options = {
@@ -299,11 +308,17 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
       .then(json => {
         console.log(json);
         if (json.status === 'success') {
-          // TODO: show 'email resent' popup
+          showResendPopup('A new code was sent to your email');
           console.log('email resent');
         } else {
           // TODO: show 'resend failed' popup
           console.log('email NOT resent');
+          console.log('reason: ' + json.reason);
+          if (json.reason === 'expired') {
+            setActivationStatus('failure');
+          } else if (json.reason === 'exceeded') {
+            showResendPopup('Code resent maximum number of times');
+          }
         }
       });
   }
