@@ -1044,9 +1044,9 @@ func deleteRequestRec(code string) string {
 	return "success"
 }
 
-func deleteActivationRec(code string) string {
-	query := "DELETE FROM pending_activations WHERE activation_code = $1"
-	if _, err := pool.Exec(context.Background(), query, code); err != nil {
+func deleteActivationRec(email string) string {
+	query := "DELETE FROM pending_activations WHERE email = $1"
+	if _, err := pool.Exec(context.Background(), query, email); err != nil {
 		fmt.Println("unable to delete activation record: ", err)
 		return "failure"
 	}
@@ -1160,7 +1160,7 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		for {
 			time.Sleep(1 * time.Minute)
 			if time.Now().Unix() > expiry {
-				deleteActivationRec(code)
+				deleteActivationRec(cm.Email)
 				break
 			}
 		}
