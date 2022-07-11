@@ -88,7 +88,7 @@ var pool *pgxpool.Pool
 var sesCli *sesv2.Client
 
 // Timeout in minutes
-const activationTimeout = 1
+const activationTimeout = 5
 
 // const dbURL = "postgres://postgres@db/"
 
