@@ -1251,10 +1251,11 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 		reason = "database error"
 	}
 
-	var activationCode string
-	query = "SELECT activation_code FROM pending_activations WHERE email = $1"
-	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&activationCode); err != nil {
-		fmt.Println("select query error: ", err)
+	// Update activation code
+	activationCode := generateRandomCode()
+	query = "UPDATE pending_activations SET activation_code = $1 WHERE email = $2"
+	if _, err := pool.Exec(context.Background(), query, activationCode, cm.Email); err != nil {
+		fmt.Println("Unable to update activation code: ", err)
 		status = "failure"
 		reason = "database error"
 	}
