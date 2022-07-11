@@ -549,11 +549,13 @@ body {
     color: lightgray;
 }
 
-.activation .popup:empty {
+.activation .popup:empty,
+.sign-in .popup:empty {
     opacity: 0;
 }
 
-.activation .popup:not(:empty) {
+.activation .popup:not(:empty),
+.sign-in .popup:not(:empty) {
     --m-top: 0.4em;
     --f-size: 0.9rem;
     --v-padding: 0.3em;
@@ -571,6 +573,19 @@ body {
     border-radius: 4px;
     opacity: 0.8;
     transition: opacity .5s;
+}
+
+.sign-in .popup:not(:empty) {
+    --m-top: -1.6em;
+    --f-size: 1.2rem;
+    --v-padding: 0.5em;
+    padding: var(--v-padding) 0.5em;
+    margin-top: var(--m-top);
+    width: auto;
+    text-align: center;
+    /* Use negative bottom margin so that popup does not increase
+       spacing between elements */
+    margin-bottom: calc(0px - var(--f-size) - var(--m-top) - (var(--v-padding) * 2));
 }
 
 .activation-success .message,

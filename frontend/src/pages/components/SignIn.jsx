@@ -8,6 +8,7 @@ function SignIn () {
   const [password, setPassword] = useState('');
   const [emailValidationError, setEmailValidationError] = useState('');
   const [passwordValidationError, setPasswordValidationError] = useState('');
+  const [popupMessage, setPopupMessage] = useState('');
   const emailInput = useRef(null);
   const passwordInput = useRef(null);
   const inputs = [emailInput, passwordInput];
@@ -17,6 +18,7 @@ function SignIn () {
   return (
     <>
       <form noValidate className='sign-in' onSubmit={handleSubmit}>
+        <div className='popup'>{popupMessage}</div>
         <p>
           <label htmlFor='email'>
             <img
@@ -88,15 +90,6 @@ function SignIn () {
     }
   }
 
-  function resetValidation (ev) {
-    setEmailValidationError('');
-    setPasswordValidationError('');
-    for (let i = 0; i < inputs.length; i++) {
-      const input = inputs[i].current;
-      input.classList.remove('invalid');
-    }
-  }
-
   function setErrorMessage (input, errorMsg) {
     switch (input.name) {
     case 'email':
@@ -132,6 +125,13 @@ function SignIn () {
     return false;
   }
 
+  function showPopup (message) {
+    setPopupMessage(message);
+    setTimeout(() => {
+      setPopupMessage('');
+    }, 5000);
+  }
+
   function handleSubmit (ev) {
     ev.preventDefault();
     let allFieldsValid = true;
@@ -163,6 +163,8 @@ function SignIn () {
         console.log(json);
         if (json.signedIn === true) {
           navigate('/');
+        } else {
+          showPopup('Username and/or password incorrect');
         }
       });
   }
