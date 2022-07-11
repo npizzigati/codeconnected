@@ -87,7 +87,8 @@ var initialPrompts = map[string][]byte{
 var pool *pgxpool.Pool
 var sesCli *sesv2.Client
 
-const activationTimeout = 10
+// Timeout in minutes
+const activationTimeout = 1
 
 // const dbURL = "postgres://postgres@db/"
 

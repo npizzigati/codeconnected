@@ -191,6 +191,17 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
             <button className='submit-button' type='submit'>Get started!</button>
           </form>
         </div>}
+
+      {activationStatus === 'failure' &&
+        <div className='activation-failure'>
+          <span className='message'>Your activation request has timed out.</span>
+          <span
+            className='bottom-link'
+            onPointerDown={goBackToSignUp}
+          >
+            Go back to sign-up form to try again
+          </span>
+        </div>}
     </>
   );
 
