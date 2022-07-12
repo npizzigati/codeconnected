@@ -444,8 +444,8 @@ body {
     font-size: 1rem;
 }
 
-.auth-modal .sign-up label,
-.auth-modal .sign-in label {
+.sign-up label,
+.sign-in label {
     display: table-cell;
 }
 
@@ -549,43 +549,34 @@ body {
     color: lightgray;
 }
 
-.activation .popup:empty,
+.sign-up .popup-container,
+.sign-in .popup-container {
+    position: relative;
+    top: -3em;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.sign-up .popup:empty,
 .sign-in .popup:empty {
     opacity: 0;
 }
 
-.activation .popup:not(:empty),
+.sign-up .popup:not(:empty),
 .sign-in .popup:not(:empty) {
-    --m-top: 0.4em;
-    --f-size: 0.9rem;
+    --f-size: 1.2rem;
     --v-padding: 0.3em;
-    padding: var(--v-padding) 0.2em;
-    margin-top: var(--m-top);
-    /* Use negative bottom margin so that popup does not increase
-       spacing between elements */
-    margin-bottom: calc(0px - var(--f-size) - var(--m-top) - (var(--v-padding) * 2));
-    margin-left: auto;
-    margin-right: auto;
-    width: fit-content;
+    padding: var(--v-padding) 0.4em;
     font-size: var(--f-size);
     color: white;
     background-color: #ff2a9c;
     border-radius: 4px;
     opacity: 0.8;
     transition: opacity .5s;
-}
-
-.sign-in .popup:not(:empty) {
-    --m-top: -1.6em;
-    --f-size: 1.2rem;
-    --v-padding: 0.5em;
-    padding: var(--v-padding) 0.5em;
-    margin-top: var(--m-top);
-    width: auto;
-    text-align: center;
     /* Use negative bottom margin so that popup does not increase
        spacing between elements */
-    margin-bottom: calc(0px - var(--f-size) - var(--m-top) - (var(--v-padding) * 2));
+    margin-bottom: calc(0px - var(--f-size) - (var(--v-padding) * 2));
 }
 
 .activation-success .message,

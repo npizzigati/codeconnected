@@ -16,9 +16,11 @@ function SignIn () {
   const inputFieldSize = '20';
 
   return (
-    <>
-      <form noValidate className='sign-in' onSubmit={handleSubmit}>
+    <div className='sign-in'>
+      <div className='popup-container'>
         <div className='popup'>{popupMessage}</div>
+      </div>
+      <form noValidate className='sign-in' onSubmit={handleSubmit}>
         <p>
           <label htmlFor='email'>
             <img
@@ -72,7 +74,7 @@ function SignIn () {
         <button className='submit-button' type='submit'>Sign me in!</button>
         <Link className='forgot-password' to='/forgot-password'>Forgot your password?</Link>
       </form>
-    </>
+    </div>
   );
 
   function handleChange (ev) {

@@ -33,9 +33,12 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
   }, [activationStatus]);
 
   return (
-    <>
+    <div className='sign-up'>
+      <div className='popup-container'>
+        <div className='popup'>{resendPopupMessage}</div>
+      </div>
       {activationStatus === 'pre' &&
-        <form noValidate className='sign-up' ref={form} onSubmit={handleSubmit}>
+        <form noValidate ref={form} onSubmit={handleSubmit}>
           <p>
             <label htmlFor='username'>
               <img
@@ -169,7 +172,6 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
               <div className='error'>{codeValidationError}</div>
             </div>
             <button className='submit-button' type='submit'>Complete Registration</button>
-            <div className='popup'>{resendPopupMessage}</div>
             <span
               className='bottom-link'
               onPointerDown={resendEmail}
@@ -202,7 +204,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
             Go back to sign-up form
           </span>
         </div>}
-    </>
+    </div>
   );
 
   function handleGetStartedSubmit (ev) {
