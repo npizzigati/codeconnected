@@ -82,6 +82,38 @@ body {
     cursor: pointer;
 }
 
+.language-chooser-container {
+    width: 75%;
+    margin: 15vh auto 0;
+}
+
+.language-chooser {
+    display: flex;
+    justify-content: center;
+}
+
+.language-chooser > * {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 3.5em;
+    width: 7em;
+    margin: 0 0.3em;
+    color: white;
+    background-color: #a51002;
+}
+
+.language-chooser > *:hover {
+    background-color: #b21002;
+    cursor: pointer;
+}
+
+.language-chooser-container .heading-text {
+    color: white;
+    font-size: 1.3rem;
+    text-align: center;
+    margin: 0 0 1.5em;
+}
 
 .sign-in .email-icon,
 .sign-up .email-icon {

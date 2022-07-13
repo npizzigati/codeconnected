@@ -7,10 +7,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import UserDashboard from './components/UserDashboard.jsx';
 import Auth from './components/Auth.jsx';
 
-const defaultLanguage = 'javascript';
-
 function Home () {
-  const [language, setLanguage] = useState(defaultLanguage);
   const [auth, setAuth] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
@@ -42,8 +39,22 @@ function Home () {
               </div>}
           </div>
           {auth &&
-            <div className='language-chooser'>
-              <form onSubmit={handleSubmit}>
+            <div className='language-chooser-container'>
+              <div className='heading-text'>
+                Choose a language to start coding:
+              </div>
+              <div className='language-chooser'>
+                <div onPointerDown={() => launch('ruby')}>
+                  Ruby
+                </div>
+                <div onPointerDown={() => launch('node')}>
+                  Node.js
+                </div>
+                <div onPointerDown={() => launch('postgres')}>
+                  PostgreSQL
+                </div>
+              </div>
+              {/* <form onSubmit={handleSubmit}>
                 <label>
                   Choose the language for your coding session:
                   <select
@@ -56,7 +67,7 @@ function Home () {
                   </select>
                 </label>
                 <input type='submit' value='Start Session' />
-              </form>
+                </form> */}
             </div>}
           {!auth &&
             <Auth />}
@@ -79,9 +90,8 @@ function Home () {
     }
   }
 
-  async function handleSubmit (ev) {
-    ev.preventDefault();
-    const roomID = await requestRoom();
+  async function launch (language) {
+    const roomID = await requestRoom(language);
     if (roomID === null) {
       console.log('Could not create room');
       // TODO: Handle this problem / try again
@@ -91,7 +101,7 @@ function Home () {
     navigate(`/${roomID}`);
   }
 
-  async function requestRoom () {
+  async function requestRoom (language) {
     console.log(`Starting ${language} room`);
 
     const body = JSON.stringify({ language });
