@@ -109,10 +109,6 @@ body {
     padding-right: .3em;
 }
 
-.home .language-chooser.hidden {
-    display: none;
-}
-
 #code-area.hidden {
     opacity: 0;
 }

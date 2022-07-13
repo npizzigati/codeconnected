@@ -12,6 +12,7 @@ const defaultLanguage = 'javascript';
 function Home () {
   const [language, setLanguage] = useState(defaultLanguage);
   const [auth, setAuth] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,44 +20,47 @@ function Home () {
     (async () => {
       const userInfo = await getUserInfo();
       setAuth(userInfo.auth);
+      setAuthChecked(true);
     })();
   }, []);
 
   return (
     <>
-      <div className='home'>
-        <div id='header-bar'>
-          <div id='header-left-side'>
-            <div className='header-logo' />
-            <div className='logo-text'>
-              <span className='site-name'>Code Connected</span>
-              <span className='tagline'>Collaborative code editor, runner and REPL</span>
+      {authChecked &&
+        <div className='home'>
+          <div id='header-bar'>
+            <div id='header-left-side'>
+              <div className='header-logo' />
+              <div className='logo-text'>
+                <span className='site-name'>Code Connected</span>
+                <span className='tagline'>Collaborative code editor, runner and REPL</span>
+              </div>
             </div>
+            {auth &&
+              <div id='header-right-side'>
+                <UserDashboard />
+              </div>}
           </div>
           {auth &&
-            <div id='header-right-side'>
-              <UserDashboard />
+            <div className={'language-chooser' + (auth ? '' : ' hidden')}>
+              <form onSubmit={handleSubmit}>
+                <label>
+                  Choose the language for your coding session:
+                  <select
+                    value={language}
+                    onChange={ev => setLanguage(ev.target.value)}
+                  >
+                    <option value='javascript'>Javascript(Node)</option>
+                    <option value='ruby'>Ruby</option>
+                    <option value='sql'>PostgreSQL</option>
+                  </select>
+                </label>
+                <input type='submit' value='Start Session' />
+              </form>
             </div>}
-        </div>
-        <div className={'language-chooser' + (auth ? '' : ' hidden')}>
-          <form onSubmit={handleSubmit}>
-            <label>
-              Choose the language for your coding session:
-              <select
-                value={language}
-                onChange={ev => setLanguage(ev.target.value)}
-              >
-                <option value='javascript'>Javascript(Node)</option>
-                <option value='ruby'>Ruby</option>
-                <option value='sql'>PostgreSQL</option>
-              </select>
-            </label>
-            <input type='submit' value='Start Session' />
-          </form>
-        </div>
-        {!auth &&
-          <Auth />}
-      </div>
+          {!auth &&
+            <Auth />}
+        </div>}
     </>
   );
 
