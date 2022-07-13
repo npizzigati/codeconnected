@@ -54,20 +54,6 @@ function Home () {
                   PostgreSQL
                 </div>
               </div>
-              {/* <form onSubmit={handleSubmit}>
-                <label>
-                  Choose the language for your coding session:
-                  <select
-                    value={language}
-                    onChange={ev => setLanguage(ev.target.value)}
-                  >
-                    <option value='javascript'>Javascript(Node)</option>
-                    <option value='ruby'>Ruby</option>
-                    <option value='sql'>PostgreSQL</option>
-                  </select>
-                </label>
-                <input type='submit' value='Start Session' />
-                </form> */}
             </div>}
           {!auth &&
             <Auth />}
@@ -86,7 +72,7 @@ function Home () {
       return await response.json();
     } catch (error) {
       console.log('Error fetching auth status: ' + error);
-      return false;
+      return { auth: false };
     }
   }
 
