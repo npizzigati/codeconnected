@@ -543,8 +543,9 @@ body {
 
 .sign-up .popup-container,
 .sign-in .popup-container {
-    position: relative;
-    top: -3em;
+    position: fixed;
+    left: 0;
+    top: 10vh;
     display: flex;
     width: 100%;
     justify-content: center;
@@ -557,18 +558,13 @@ body {
 
 .sign-up .popup:not(:empty),
 .sign-in .popup:not(:empty) {
-    --f-size: 1.2rem;
-    --v-padding: 0.3em;
-    padding: var(--v-padding) 0.4em;
-    font-size: var(--f-size);
+    padding: 0.3em 0.4em;
+    font-size: 1.2rem;
     color: white;
     background-color: #ff2a9c;
     border-radius: 4px;
     opacity: 0.8;
     transition: opacity .5s;
-    /* Use negative bottom margin so that popup does not increase
-       spacing between elements */
-    margin-bottom: calc(0px - var(--f-size) - (var(--v-padding) * 2));
 }
 
 .activation-success .message,
