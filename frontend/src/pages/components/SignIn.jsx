@@ -167,6 +167,7 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
                 ref={newPasswordInput}
                 data-validation='Password'
                 required
+                minLength='6'
                 onChange={handlePasswordResetChange}
               />
             </p>
@@ -190,8 +191,9 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
                 value={newPasswordDup}
                 placeholder='Repeat new password'
                 ref={newPasswordDupInput}
-                data-validation='Password'
+                data-validation='Repeat password'
                 required
+                minLength='6'
                 onChange={handlePasswordResetChange}
               />
             </p>
@@ -316,7 +318,9 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
     input.classList.add('invalid');
     let errorMsg = 'Invalid input.';
     const field = input.dataset.validation;
-    if (input.validity.tooShort) {
+    if (!passwordCheckPass) {
+      errorMsg = 'Passwords must match.';
+    } else if (input.validity.tooShort) {
       errorMsg = `${field} must be at least ${input.minLength} characters.`;
     } else if (input.validity.valueMissing) {
       errorMsg = `${field} is required.`;
@@ -345,8 +349,8 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
       return;
     }
 
-    console.log('"' + email + '"');
-    const body = JSON.stringify({ email, code: resetCode, newPlaintextPW: newPassword });
+    console.log('"' + forgotPasswordEmail + '"');
+    const body = JSON.stringify({ email: forgotPasswordEmail, code: resetCode, newPlaintextPW: newPassword });
     const options = {
       method: 'POST',
       mode: 'cors',
@@ -363,6 +367,7 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
         if (json.status === 'success') {
           console.log('Password changed successfully');
         } else {
+          showPopup('Incorrect or expired reset code');
           console.log('Password could not be changed because: ' + json.reason);
         }
       });

@@ -985,6 +985,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		panic(err)
 	}
 	fmt.Println("reset code received: ", cm.Code)
+	fmt.Println("reset email received: '", cm.Email, "'")
 
 	// Find reset code in db
 	query := "SELECT p.user_id, p.expiry FROM password_reset_requests AS p INNER JOIN users AS u ON p.user_id = u.id WHERE p.reset_code = $1 AND u.email = $2"
