@@ -227,6 +227,16 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
             </span>
           </form>
         </div>}
+      {status === 'success' &&
+        <div className='password-reset-success'>
+          <span className='message'>Password successfully reset!</span>
+          <span
+            className='bottom-link'
+            onPointerDown={goBackToSignIn}
+          >
+            Go to sign-in form
+          </span>
+        </div>}
     </div>
   );
 
@@ -366,6 +376,7 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
         console.log(json);
         if (json.status === 'success') {
           console.log('Password changed successfully');
+          setStatus('success');
         } else {
           showPopup('Incorrect or expired reset code');
           console.log('Password could not be changed because: ' + json.reason);
