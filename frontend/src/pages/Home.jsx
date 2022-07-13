@@ -42,7 +42,7 @@ function Home () {
               </div>}
           </div>
           {auth &&
-            <div className={'language-chooser' + (auth ? '' : ' hidden')}>
+            <div className='language-chooser'>
               <form onSubmit={handleSubmit}>
                 <label>
                   Choose the language for your coding session:
