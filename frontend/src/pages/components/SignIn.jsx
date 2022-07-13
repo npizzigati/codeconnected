@@ -1,7 +1,6 @@
 'use strict';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
   const [email, setEmail] = useState('');
@@ -25,7 +24,6 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
   const newPasswordDupInput = useRef(null);
   const resetCodeInput = useRef(null);
   const inputs = [emailInput, passwordInput];
-  const navigate = useNavigate();
   const inputFieldSize = '20';
 
   // Update status saved in Auth component so that the
@@ -443,7 +441,7 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
       .then(json => {
         console.log(json);
         if (json.signedIn === true) {
-          navigate('/');
+          window.location.reload();
         } else {
           showPopup('Username and/or password incorrect');
         }
