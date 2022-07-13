@@ -155,7 +155,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
               {email}
             </div>
             <div className='code-field'>
-              <label htmlFor='username'>
+              <label htmlFor='activationCode'>
                 Enter code:
               </label>
               <input
@@ -293,6 +293,7 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
     }
   }
 
+  // FIXME: Is this ev arg really necessary here, along with the preventDefault?
   function goBackToSignUp (ev) {
     ev.preventDefault();
     setActivationCode('');

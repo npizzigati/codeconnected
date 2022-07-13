@@ -108,10 +108,9 @@ func initSesClient() {
 	sesCli = sesv2.NewFromConfig(cfg)
 }
 
-func sendPasswordResetEmail(baseURL, resetCode string) {
-	resetURL := fmt.Sprintf("%s/reset-password?code=%s", baseURL, resetCode)
+func sendPasswordResetEmail(resetCode string) {
 	subject := "Reset your password"
-	body := fmt.Sprintf("Reset your password by visiting the following link: %s", resetURL)
+	body := fmt.Sprintf("Your password reset code is: %s", resetCode)
 	fromAddr := "noreply@codeconnected.dev"
 	sendEmail(subject, body, fromAddr)
 }
@@ -871,8 +870,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	// Reset timeout in minutes
 	const resetTimeout = 10
 	type contentModel struct {
-		Email   string `json:"email"`
-		BaseURL string `json:"baseURL`
+		Email string `json:"email"`
 	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
@@ -926,7 +924,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		}
 	}()
 
-	sendPasswordResetEmail(cm.BaseURL, code)
+	sendPasswordResetEmail(code)
 
 	successResp, err := json.Marshal(
 		map[string]string{
