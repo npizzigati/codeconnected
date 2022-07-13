@@ -33,9 +33,10 @@ function Home () {
               <span className='tagline'>Collaborative code editor, runner and REPL</span>
             </div>
           </div>
-          <div id='header-right-side'>
-            <UserDashboard />
-          </div>
+          {auth &&
+            <div id='header-right-side'>
+              <UserDashboard />
+            </div>}
         </div>
         <div className={'language-chooser' + (auth ? '' : ' hidden')}>
           <form onSubmit={handleSubmit}>
