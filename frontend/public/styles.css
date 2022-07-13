@@ -542,8 +542,8 @@ body {
     cursor: pointer;
 }
 
-.activation .bottom-link:hover,
-.activation-failure .bottom-link:hover {
+.bottom-link:hover,
+.bottom-link:hover {
     cursor: pointer;
     color: lightgray;
 }
