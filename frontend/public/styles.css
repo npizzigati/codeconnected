@@ -106,6 +106,18 @@ body {
     background-repeat: no-repeat;
 }
 
+#code-area .header-logo {
+    margin-top: 0.4em;
+    margin-left: 0.2em;
+    margin-right: 0.5em;
+    height: 1.5em;
+    width: 1.5em;
+    background-image: url('./codeconnected.png');
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+
+}
+
 .logo-text {
     margin-top: .5em;
 }

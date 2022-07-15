@@ -67,7 +67,7 @@ function CodeArea () {
         <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} />}
       <div id='header-bar'>
         <div id='header-left-side'>
-          <Link className='code-page header-logo' to='/' />
+          <Link className='header-logo' to='/' />
         </div>
         <div id='header-right-side'>
           {timeLeftDisplay !== null &&
