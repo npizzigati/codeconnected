@@ -407,7 +407,6 @@ body {
     display: flex;
     align-items: flex-start;
     padding-bottom: 5px;
-    border: 2px #333 solid;
 }
 
 #terminal-container {
@@ -420,7 +419,14 @@ body {
     flex: 1 1 auto;
     margin: 0 5px 0px 0;
     position: relative;
-    /* padding: 5px 5px 5px 5px; */
+    border: 2px #333 solid;
+}
+
+.terminal-expired {
+    width: 20em;
+    margin: 10em auto;
+    color: white;
+    text-align: center;
 }
 
 .title-row {

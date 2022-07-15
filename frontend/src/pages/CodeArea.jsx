@@ -49,6 +49,7 @@ function CodeArea () {
   const [cmTitle, setCmTitle] = useState('');
   const [showMain, setShowMain] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [username, setUsername] = useState(null);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
@@ -80,19 +81,22 @@ function CodeArea () {
       </div>
       <div className='title-row'>
         <span className='editor-and-repl-title'>Code Editor</span>
-        <span className='editor-lang-label'>Language:&nbsp;</span>
-        <Select
-          options={[{ value: 'ruby', label: 'Ruby' },
-                    { value: 'node', label: 'Node.js' },
-                    { value: 'postgres', label: 'PostgreSQL' }]}
-          title={cmTitle}
-          callback={(ev) => {
-            const lang = ev.target.dataset.value;
-            switchLanguage(lang);
-          }}
-          config={{ staticTitle: true }}
-        />
-        <button id='run-button' onClick={executeContent}>Run</button>
+        {termEnabled &&
+          <>
+            <span className='editor-lang-label'>Language:&nbsp;</span>
+            <Select
+              options={[{ value: 'ruby', label: 'Ruby' },
+                        { value: 'node', label: 'Node.js' },
+                        { value: 'postgres', label: 'PostgreSQL' }]}
+              title={cmTitle}
+              callback={(ev) => {
+                const lang = ev.target.dataset.value;
+                switchLanguage(lang);
+              }}
+              config={{ staticTitle: true }}
+            />
+            <button id='run-button' onClick={executeContent}>Run</button>
+          </>}
       </div>
       <div id='main-container'>
         <div
@@ -119,20 +123,27 @@ function CodeArea () {
           ref={termContainerDomRef}
           style={{ width: termWidth }}
         >
-          <div className='title-row repl'>
-            <span className='editor-and-repl-title'>{replTitle}</span>
-            <Select
-              options={[{ value: 'clear', label: 'Clear' },
-                        { value: 'reset', label: 'Reset' }]}
-              title='Actions'
-              callback={executeReplAction}
-              config={{ staticTitle: true }}
-            />
-          </div>
-          <div
-            ref={termDomRef}
-            id='terminal-wrapper'
-          />
+          {termEnabled &&
+            <>
+              <div className='title-row repl'>
+                <span className='editor-and-repl-title'>{replTitle}</span>
+                <Select
+                  options={[{ value: 'clear', label: 'Clear' },
+                            { value: 'reset', label: 'Reset' }]}
+                  title='Actions'
+                  callback={executeReplAction}
+                  config={{ staticTitle: true }}
+                />
+              </div>
+              <div
+                ref={termDomRef}
+                id='terminal-wrapper'
+              />
+            </>}
+          {!termEnabled &&
+            <div className='terminal-expired'>
+              Terminal has expired.
+            </div>}
         </div>
       </div>
     </div>
@@ -164,8 +175,13 @@ function CodeArea () {
       }
       if (updatedSecondsToExpiry <= 0) {
         clearInterval(interval);
+        disableTerminal();
       }
     }, 250);
+  }
+
+  function disableTerminal () {
+    setTermEnabled(false);
   }
 
   function displayTimeLeft (secondsToExpiry) {
