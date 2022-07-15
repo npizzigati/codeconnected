@@ -61,8 +61,6 @@ function CodeArea () {
     })();
   }, []);
 
-  // Use a React ref for the code area since CodeMirror needs to see it
-  // in the DOM in order to attach to it
   return (
     <div id='code-area' className={showMain ? 'visible' : 'hidden'}>
       {showAuth &&
