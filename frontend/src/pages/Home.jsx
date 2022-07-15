@@ -95,6 +95,10 @@ function Home () {
     }
   }
 
+  function closePreLaunchDialog () {
+    setShowPreLaunchDialog(false);
+  }
+
   function continueAnyway () {
     setShowPreLaunchDialog(false);
     launch(preLaunchLanguage);
