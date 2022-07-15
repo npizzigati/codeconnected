@@ -77,10 +77,14 @@ function CodeArea () {
           {authed && <UserDashboard />}
         </div>
       </div>
-      <div className='title-row'>
-        <span className='editor-and-repl-title'>Code Editor</span>
-        {termEnabled &&
-          <>
+      <div id='main-container'>
+        <div
+          ref={cmContainerDOMRef}
+          id='codemirror-container'
+          style={{ width: cmWidth }}
+        >
+          <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
+            <span className='editor-and-repl-title'>Code Editor</span>
             <span className='editor-lang-label'>Language:&nbsp;</span>
             <Select
               options={[{ value: 'ruby', label: 'Ruby' },
@@ -121,23 +125,21 @@ function CodeArea () {
           ref={termContainerDomRef}
           style={{ width: termWidth }}
         >
+          <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
+            <span className='editor-and-repl-title'>{replTitle}</span>
+            <Select
+              options={[{ value: 'clear', label: 'Clear' },
+                        { value: 'reset', label: 'Reset' }]}
+              title='Actions'
+              callback={executeReplAction}
+              config={{ staticTitle: true }}
+            />
+          </div>
           {termEnabled &&
-            <>
-              <div className='title-row repl'>
-                <span className='editor-and-repl-title'>{replTitle}</span>
-                <Select
-                  options={[{ value: 'clear', label: 'Clear' },
-                            { value: 'reset', label: 'Reset' }]}
-                  title='Actions'
-                  callback={executeReplAction}
-                  config={{ staticTitle: true }}
-                />
-              </div>
-              <div
-                ref={termDomRef}
-                id='terminal-wrapper'
-              />
-            </>}
+            <div
+              ref={termDomRef}
+              id='terminal-wrapper'
+            />}
           {!termEnabled &&
             <div className='terminal-expired'>
               Terminal has expired.
@@ -321,7 +323,8 @@ function CodeArea () {
       console.log('now online');
       location.reload();
     });
-    setShowMain(true);
+
+    setRunnerReady(true);
   }
 
   async function getUserInfo () {

@@ -1,7 +1,6 @@
 :root {
     font-size: calc(0.5em + 1vh);
     --main-bg-color: #1c1b22;
-    --code-titlebar-height: 1.8em;
     --code-headerbar-height: 2em;
 }
 
@@ -23,10 +22,8 @@ body {
 
 #header-bar {
     height: var(--code-headerbar-height);
-    margin-left: 5px;
-    margin-top: 5px;
+    margin: 0.3em 0.5em 2em 0.3em;
     display: flex;
-    margin-right: 8px;
 }
 
 #header-left-side {
@@ -233,7 +230,7 @@ body {
     right: 10px;
     min-width: 100px;
     border-radius: 5px;
-    background: #5f615e;
+    background-color: #5f615e;
     z-index: 1000;
     box-sizing: border-box;
     font-family: 'Roboto', sans-serif;
@@ -310,7 +307,7 @@ body {
 
 #run-button {
     font-family: 'Roboto', sans-serif;
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: white;
     border-radius: 5px;
     border: none;
@@ -338,7 +335,7 @@ body {
 .select-button {
     text-align: center;
     font-family: 'Roboto', sans-serif;
-    font-size: 0.7rem;
+    font-size: 1rem;
     background-color: inherit;
     color: #999;
     user-select: none;
@@ -368,7 +365,7 @@ body {
 
 .select-dropdown {
     font-family: 'Roboto', sans-serif;
-    font-size: 0.7rem;
+    font-size: 1rem;
     position: absolute;
     top: 22px;
     z-index: 1000;
@@ -425,7 +422,6 @@ body {
     --term-background: black;
     background: var(--term-background);
     box-sizing: border-box;
-    overflow: hidden;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -443,25 +439,30 @@ body {
 }
 
 .title-row {
+    opacity: 1;
+    position: absolute;
+    top: -1.7em;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    background-color: #1c1b22;
     padding: 3px 3px 3px 3px;
-    height: var(--code-titlebar-height);
-    margin-left: 5px;
+    height: 1.5em;
+    color: #999;
+    transition: opacity .5s;
 }
 
-.title-row.repl {
-    position: absolute;
-    top: calc(-1 * var(--code-titlebar-height));
-    margin-left: 0;
+.title-row.hidden {
+    opacity: 0;
+}
+
+#terminal-container .title-row {
+    top: -1.8em;
 }
 
 .editor-and-repl-title {
     user-select: none;
     font-family: 'Roboto', sans-serif;
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: #999;
     padding-right: 20px;
 }
@@ -469,14 +470,14 @@ body {
 .editor-lang-label {
     user-select: none;
     font-family: 'Roboto', sans-serif;
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: #999;
 }
 
 #main-container {
     display: flex;
     min-height: 100px;
-    height: calc(95vh - (var(--code-headerbar-height) + var(--code-titlebar-height)));
+    height: calc(95vh - var(--code-headerbar-height));
 }
 
 #codemirror-wrapper {
@@ -487,10 +488,12 @@ body {
 }
 
 #codemirror-container {
+    position: relative;
     box-sizing: border-box;
     margin: 0 0 0 5px;
     height: 100%;
     width: 50%;
+    background-color: black;
 }
 
 .reset-password-form {
