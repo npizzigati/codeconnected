@@ -9,16 +9,16 @@ body {
     background-color: var(--main-bg-color);
 }
 
-.auth-modal .closeButton {
+.closeButton {
     position: absolute;
+    cursor: pointer;
+    background-image: url('./close_button.png');
+    background-repeat: no-repeat;
     top: -1em;
     right: -1em;
     height: 1em;
     width: 1em;
-    cursor: pointer;
-    background-image: url('./close_button.png');
     background-size: 1em;
-    background-repeat: no-repeat;
 }
 
 #header-bar {

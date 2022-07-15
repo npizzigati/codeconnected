@@ -36,6 +36,7 @@ function Home () {
             />}
           {showPreLaunchDialog &&
             <div className='pre-launch-dialog'>
+              <div className='closeButton' onPointerDown={closePreLaunchDialog} />
               <div className='message'>
                 Rooms created by unregistered users have a 15-minute time limit.
               </div>
