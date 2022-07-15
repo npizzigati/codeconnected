@@ -437,7 +437,7 @@ body {
 
 .terminal-expired {
     width: 20em;
-    margin: 10em auto;
+    margin: 20% auto 0;
     color: white;
     text-align: center;
 }
