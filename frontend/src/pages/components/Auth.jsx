@@ -4,20 +4,14 @@ import React, { useState } from 'react';
 import SignIn from './SignIn.jsx';
 import SignUp from './SignUp.jsx';
 
-function Auth () {
-  const [selectedTab, setSelectedTab] = useState('signUp');
+function Auth ({ setShowAuth, setAuthed, config }) {
+  const [selectedTab, setSelectedTab] = useState('signIn');
   const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
   return (
     <div className='auth-modal'>
+      <div className='closeButton' onPointerDown={closeAuth} />
       <div className='tabs'>
-        <div
-          id='sign-up-tab'
-          className={((selectedTab === 'signUp') ? ' selected' : '')}
-          onPointerDown={handleTabClick}
-        >
-          Sign up
-        </div>
         <div
           id='sign-in-tab'
           className={((selectedTab === 'signIn') ? ' selected' : '')}
@@ -25,18 +19,35 @@ function Auth () {
         >
           Sign in
         </div>
+        <div
+          id='sign-up-tab'
+          className={((selectedTab === 'signUp') ? ' selected' : '')}
+          onPointerDown={handleTabClick}
+        >
+          Sign up
+        </div>
       </div>
       {selectedTab === 'signIn'
         ? <SignIn
+            setShowAuth={setShowAuth}
+            setAuthed={setAuthed}
             savedSignInStatus={savedSignInStatus}
             setSavedSignInStatus={setSavedSignInStatus}
+            config={config}
           />
         : <SignUp
+            setShowAuth={setShowAuth}
+            setAuthed={setAuthed}
             savedActivationStatus={savedActivationStatus}
             setSavedActivationStatus={setSavedActivationStatus}
+            config={config}
           />}
     </div>
   );
+
+  function closeAuth () {
+    setShowAuth(false);
+  }
 
   function handleTabClick (ev) {
     switch (ev.target.id) {

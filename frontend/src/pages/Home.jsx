@@ -9,7 +9,10 @@ import Auth from './components/Auth.jsx';
 
 function Home () {
   const [auth, setAuth] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [showPreLaunchDialog, setShowPreLaunchDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +28,24 @@ function Home () {
     <>
       {authChecked &&
         <div className='home'>
+          {showAuth &&
+            <Auth
+              setShowAuth={setShowAuth}
+              setAuthed={setAuth}
+              config={{ successCallback: () => launch(preLaunchLanguage) }}
+            />}
+          {showPreLaunchDialog &&
+            <div className='pre-launch-dialog'>
+              <div className='message'>
+                Rooms created by unregistered users have a 15-minute time limit.
+              </div>
+              <div className='option' onPointerDown={preLaunchSignIn}>
+                Sign in to remove time limit
+              </div>
+              <div className='option' onPointerDown={continueAnyway}>
+                Continue to time-limited room
+              </div>
+            </div>}
           <div id='header-bar'>
             <div id='header-left-side'>
               <div className='header-logo' />
@@ -38,25 +59,22 @@ function Home () {
                 <UserDashboard />
               </div>}
           </div>
-          {auth &&
-            <div className='language-chooser-container'>
-              <div className='heading-text'>
-                Choose a language to start coding:
+          <div className='language-chooser-container'>
+            <div className='heading-text'>
+              Choose a language to start coding:
+            </div>
+            <div className='language-chooser'>
+              <div onPointerDown={() => preLaunch('ruby')}>
+                Ruby
               </div>
-              <div className='language-chooser'>
-                <div onPointerDown={() => launch('ruby')}>
-                  Ruby
-                </div>
-                <div onPointerDown={() => launch('node')}>
-                  Node.js
-                </div>
-                <div onPointerDown={() => launch('postgres')}>
-                  PostgreSQL
-                </div>
+              <div onPointerDown={() => preLaunch('node')}>
+                Node.js
               </div>
-            </div>}
-          {!auth &&
-            <Auth />}
+              <div onPointerDown={() => preLaunch('postgres')}>
+                PostgreSQL
+              </div>
+            </div>
+          </div>
         </div>}
     </>
   );
@@ -74,6 +92,26 @@ function Home () {
       console.log('Error fetching auth status: ' + error);
       return { auth: false };
     }
+  }
+
+  function continueAnyway () {
+    setShowPreLaunchDialog(false);
+    launch(preLaunchLanguage);
+  }
+
+  function preLaunchSignIn () {
+    setShowPreLaunchDialog(false);
+    setShowAuth(true);
+  }
+
+  function preLaunch (language) {
+    if (auth) {
+      launch(language);
+      return;
+    }
+
+    setPreLaunchLanguage(language);
+    setShowPreLaunchDialog(true);
   }
 
   async function launch (language) {
@@ -107,6 +145,11 @@ function Home () {
       const json = await response.json();
       console.log(JSON.stringify(json));
       const roomID = json.roomID;
+      // Expiry in seconds
+      const expiry = parseInt(json.expiry, 10);
+      // Date gives value in ms
+      const secondsToExpiry = expiry - (Math.round(Date.now() / 1000));
+      console.log('room expires in: ' + secondsToExpiry + ' seconds');
       if (roomID === undefined) {
         console.error('Error fetching room ID');
         return null;

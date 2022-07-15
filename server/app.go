@@ -57,6 +57,7 @@ type room struct {
 	container        *containerDetails
 	eventSubscribers map[string]func(eventConfig)
 	termHist         []byte
+	expiry           int64
 }
 
 func (r *room) emit(event string, config eventConfig) {
@@ -80,15 +81,16 @@ var cli *client.Client
 var rooms = make(map[string]*room)
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESS_STORE_SECRET")))
 var initialPrompts = map[string][]byte{
-	"ruby":       []byte("[1] pry(main)> "),
-	"javascript": []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n> "),
-	"sql":        []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
+	"ruby":     []byte("[1] pry(main)> "),
+	"node":     []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n> "),
+	"postgres": []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
 }
 var pool *pgxpool.Pool
 var sesCli *sesv2.Client
 
-// Timeout in minutes
+// Timeouts in minutes
 const activationTimeout = 5
+const anonRoomTimeout = 1
 
 // const dbURL = "postgres://postgres@db/"
 
@@ -165,19 +167,22 @@ func generateRoomID() string {
 	return strconv.FormatInt(int64ID, 10)
 }
 
-func getLangAndHist(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
 	lang := rooms[roomID].lang
 	hist := rooms[roomID].termHist
+	expiry := rooms[roomID].expiry
 
 	type responseModel struct {
 		Language string `json:"language"`
 		History  string `json:"history"`
+		Expiry   int64  `json:"expiry"`
 	}
 	response := &responseModel{
 		Language: lang,
 		History:  string(hist),
+		Expiry:   expiry,
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
@@ -190,6 +195,12 @@ func getLangAndHist(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 }
 
 func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	type roomModel struct {
 		Language string
 	}
@@ -202,6 +213,7 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err != nil {
 		fmt.Println("err while trying to unmarshal: ", err)
 	}
+
 	fmt.Println("*************rm.Language: ", rm.Language)
 	roomID := generateRoomID()
 	fmt.Println("************roomID: ", roomID)
@@ -210,10 +222,45 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		lang:      rm.Language,
 		container: &containerDetails{},
 	}
+
 	rooms[roomID] = &room
 	startContainer(rm.Language, roomID)
 
-	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
+	var expiry int64
+	if auth, ok := session.Values["auth"].(bool); !ok || !auth {
+		fmt.Println("Unauthed user")
+		expiry = time.Now().Add(anonRoomTimeout * time.Minute).Unix()
+	} else {
+		expiry = -1
+	}
+	room.expiry = expiry
+
+	if expiry != -1 {
+		// Close room when it expires
+		ticker := time.NewTicker(1 * time.Second)
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					currentTime := time.Now().Unix()
+					if currentTime >= expiry {
+						ticker.Stop()
+						fmt.Println("!!!!!Room Expired!!!!")
+						closeContainerConnection(room.container.connection)
+						err := stopAndRemoveContainer(room.container.ID)
+						if err != nil {
+							fmt.Println("error in stopping/removing container: ", err)
+						}
+						delete(rooms, roomID)
+						return
+					}
+				}
+			}
+		}()
+	}
+
+	expiryString := strconv.FormatInt(expiry, 10)
+	sendStringJsonResponse(w, map[string]string{"roomID": roomID, "expiry": expiryString})
 }
 
 // Ping/pong to detect when people leave room (websockets stop
@@ -547,7 +594,7 @@ func startContainer(lang, roomID string) {
 	// Sql container needs a slight pause to create user
 	// This will give openLanguageConnection a better chance of
 	// correctly opening the connection on the first try
-	if lang == "sql" {
+	if lang == "postgres" {
 		time.Sleep(2 * time.Second)
 	}
 	err = openLanguageConnection(lang, roomID)
@@ -636,18 +683,17 @@ func closeContainerConnection(connection types.HijackedResponse) {
 }
 
 func attemptLangConn(lang, roomID string) {
+	fmt.Println("Attempting lang connection, lang: '", lang, "' ", "roomID: '", roomID, "'")
 	room := rooms[roomID]
 	cn := room.container
 	var cmd []string
 	switch lang {
-	case "javascript":
+	case "node":
 		cmd = []string{"custom-node-launcher"}
 	case "ruby":
 		cmd = []string{"pry"}
-	case "sql":
+	case "postgres":
 		cmd = []string{"psql"}
-	case "bash":
-		cmd = []string{"bash"}
 	}
 
 	ctx := context.Background()
@@ -686,10 +732,10 @@ func displayInitialPrompt(roomID string) {
 	switch lang {
 	case "ruby":
 		message = initialPrompts["ruby"]
-	case "javascript":
-		message = initialPrompts["javascript"]
-	case "sql":
-		message = initialPrompts["sql"]
+	case "node":
+		message = initialPrompts["node"]
+	case "postgres":
+		message = initialPrompts["postgres"]
 	}
 	resetTerminal(roomID)
 	writeToWebsockets(message, roomID)
@@ -1317,7 +1363,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			room.removeEventListener("startOutput")
 			room.echo = true
 		})
-	case "sql":
+	case "postgres":
 		cn.runner.Write([]byte("\\i code.sql\n"))
 		room.setEventListener("newline", func(config eventConfig) {
 			if config.count == 1 {
@@ -1325,7 +1371,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 				room.removeEventListener("newline")
 			}
 		})
-	case "javascript":
+	case "node":
 		cn.runner.Write([]byte(".runUserCode code.js\n"))
 
 		// Turn echo back on right before output begins
@@ -1417,7 +1463,7 @@ func main() {
 	router.POST("/api/createroom", createRoom)
 	router.POST("/api/activateuser", activateUser)
 	router.GET("/api/does-room-exist", doesRoomExist)
-	router.GET("/api/getlangandhist", getLangAndHist)
+	router.GET("/api/get-initial-room-data", getInitialRoomData)
 	router.GET("/api/get-user-info", getUserInfo)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)

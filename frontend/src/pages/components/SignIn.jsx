@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 
-function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
+function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStatus, config }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
@@ -441,7 +441,11 @@ function SignIn ({ savedSignInStatus, setSavedSignInStatus }) {
       .then(json => {
         console.log(json);
         if (json.signedIn === true) {
-          window.location.reload();
+          setShowAuth(false);
+          setAuthed(true);
+          if (config.successCallback) {
+            config.successCallback();
+          }
         } else {
           showPopup('Username and/or password incorrect');
         }

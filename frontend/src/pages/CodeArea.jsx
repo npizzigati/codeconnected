@@ -18,6 +18,7 @@ import { Terminal } from 'xterm';
 
 import Select from './components/Select.jsx';
 import UserDashboard from './components/UserDashboard.jsx';
+import Auth from './components/Auth.jsx';
 
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
@@ -47,6 +48,10 @@ function CodeArea () {
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
   const [showMain, setShowMain] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [username, setUsername] = useState(null);
+  const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const cmContainerDOMRef = useRef(null);
 
   useEffect(() => {
@@ -59,12 +64,18 @@ function CodeArea () {
   // in the DOM in order to attach to it
   return (
     <div id='code-area' className={showMain ? 'visible' : 'hidden'}>
+      {showAuth &&
+        <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} />}
       <div id='header-bar'>
         <div id='header-left-side'>
           <Link className='code-page header-logo' to='/' />
         </div>
         <div id='header-right-side'>
-          <UserDashboard />
+          {timeLeftDisplay !== null &&
+            <div className='time-remaining'>
+              Time remaining: {timeLeftDisplay}
+            </div>}
+          {authed && <UserDashboard />}
         </div>
       </div>
       <div className='title-row'>
@@ -72,8 +83,8 @@ function CodeArea () {
         <span className='editor-lang-label'>Language:&nbsp;</span>
         <Select
           options={[{ value: 'ruby', label: 'Ruby' },
-                    { value: 'javascript', label: 'Node.js' },
-                    { value: 'sql', label: 'PostgreSQL' }]}
+                    { value: 'node', label: 'Node.js' },
+                    { value: 'postgres', label: 'PostgreSQL' }]}
           title={cmTitle}
           callback={(ev) => {
             const lang = ev.target.dataset.value;
@@ -138,6 +149,31 @@ function CodeArea () {
     }
   }
 
+  function openAuth () {
+    console.log('opening auth');
+    setShowAuth(true);
+  }
+
+  function expiryCountDown (expiry) {
+    let secondsToExpiry = expiry - (Math.round(Date.now() / 1000));
+    const interval = setInterval(() => {
+      const updatedSecondsToExpiry = expiry - (Math.round(Date.now() / 1000));
+      if (updatedSecondsToExpiry >= 0 && updatedSecondsToExpiry !== secondsToExpiry) {
+        secondsToExpiry = updatedSecondsToExpiry;
+        displayTimeLeft(secondsToExpiry);
+      }
+      if (updatedSecondsToExpiry <= 0) {
+        clearInterval(interval);
+      }
+    }, 250);
+  }
+
+  function displayTimeLeft (secondsToExpiry) {
+    const minutes = (Math.trunc(secondsToExpiry / 60)).toString().padStart(2, '0');
+    const seconds = (secondsToExpiry % 60).toString().padStart(2, '0');
+    setTimeLeftDisplay(`${minutes}:${seconds}`);
+  }
+
   function resize (event, startEvent) {
     const initialCmWidth = cmContainerDOMRef.current.offsetWidth;
     const initialTermWidth = termContainerDomRef.current.offsetWidth;
@@ -190,9 +226,21 @@ function CodeArea () {
 
     // TODO: Set spinner while waiting, maybe
     // Get initial lang and terminal history from server
-    const initialVars = await getInitialLangAndHist(roomID);
+    const initialVars = await getInitialRoomData(roomID);
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
+    const expiry = initialVars.expiry;
+    if (expiry !== -1) {
+      expiryCountDown(expiry);
+    }
+
+    const userInfo = await getUserInfo();
+    if (userInfo.auth === true) {
+      setAuthed(true);
+      setUsername(userInfo.username);
+      console.log('signed in as: ' + userInfo.username);
+    }
+
     setLanguage(initialLang);
     showTitles(initialLang);
     term.current = new Terminal();
@@ -262,7 +310,23 @@ function CodeArea () {
     setShowMain(true);
   }
 
-  async function getInitialLangAndHist (roomID) {
+  async function getUserInfo () {
+    const options = {
+      method: 'GET',
+      mode: 'cors'
+    };
+
+    try {
+      const response = await fetch('/api/get-user-info', options);
+      const json = await response.json();
+      return json;
+    } catch (error) {
+      console.log('Error fetching auth status: ' + error);
+      return false;
+    }
+  }
+
+  async function getInitialRoomData (roomID) {
     const options = {
       method: 'GET',
       mode: 'cors'
@@ -270,7 +334,7 @@ function CodeArea () {
 
     // TODO: Check if successful (status code 200) before processing
     try {
-      const response = await fetch(`/api/getlangandhist?roomID=${roomID}`, options);
+      const response = await fetch(`/api/get-initial-room-data?roomID=${roomID}`, options);
       return await response.json();
     } catch (error) {
       console.error('Error fetching json:', error);
@@ -297,7 +361,7 @@ function CodeArea () {
 
   function showTitles (lang) {
     switch (lang) {
-    case 'javascript':
+    case 'node':
       setReplTitle('Node.js REPL');
       setCmTitle('Node.js');
       break;
@@ -305,7 +369,7 @@ function CodeArea () {
       setReplTitle('Ruby REPL (Pry)');
       setCmTitle('Ruby');
       break;
-    case 'sql':
+    case 'postgres':
       setReplTitle('psql');
       setCmTitle('PostgreSQL');
       break;
@@ -443,10 +507,10 @@ function CodeArea () {
     case ('ruby'):
       filename = 'code.rb';
       break;
-    case ('javascript'):
+    case ('node'):
       filename = 'code.js';
       break;
-    case ('sql'):
+    case ('postgres'):
       filename = 'code.sql';
       break;
     }

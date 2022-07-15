@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 
-function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
+function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActivationStatus, config }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordDup, setPasswordDup] = useState('');
@@ -189,8 +189,8 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
       {activationStatus === 'success' &&
         <div className='activation-success'>
           <form noValidate onSubmit={handleGetStartedSubmit}>
-            <span className='message'>Activation successful!</span>
-            <button className='submit-button' type='submit'>Get started!</button>
+            <span className='message'>You are now registered and signed in!</span>
+            <button className='submit-button' type='submit'>Continue</button>
           </form>
         </div>}
 
@@ -209,7 +209,11 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
 
   function handleGetStartedSubmit (ev) {
     ev.preventDefault();
-    window.location.reload();
+    setShowAuth(false);
+    setAuthed(true);
+    if (config.successCallback) {
+      config.successCallback();
+    }
   }
 
   function handleCodeChange (ev) {
@@ -441,8 +445,6 @@ function SignUp ({ savedActivationStatus, setSavedActivationStatus }) {
         }
       });
   }
-
-
 }
 
 export { SignUp as default };

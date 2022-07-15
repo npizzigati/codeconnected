@@ -9,6 +9,18 @@ body {
     background-color: var(--main-bg-color);
 }
 
+.auth-modal .closeButton {
+    position: absolute;
+    top: -1em;
+    right: -1em;
+    height: 1em;
+    width: 1em;
+    cursor: pointer;
+    background-image: url('./close_button.png');
+    background-size: 1em;
+    background-repeat: no-repeat;
+}
+
 #header-bar {
     height: var(--code-headerbar-height);
     margin-left: 5px;
@@ -38,6 +50,49 @@ body {
 
 .home #header-right-side {
     width: 20%;
+}
+
+.home .pre-launch-dialog {
+    position: fixed;
+    z-index: 1001;
+    margin: 15vh auto 0;
+    padding: 1em;
+    top: 10vh;
+    width: 20em;
+    left: 0;
+    right: 0;
+    color: white;
+    background-color: #555;
+    border-radius: 5px;
+    user-select: none;
+}
+
+.home .pre-launch-dialog .message {
+    text-align: center;
+    font-size: 1.1em;
+    line-height: 1.2em;
+    margin-bottom: 1em;
+    user-select: none;
+}
+
+.home .pre-launch-dialog .option {
+    text-align: center;
+    margin: 0 auto 0.5em;
+    width: 80%;
+    background-color: #420202;
+    padding: 0.5em;
+    border-radius: 0.4em;
+    cursor: pointer;
+    user-select: none;
+}
+
+#header-right-side .time-remaining {
+    color: white;
+}
+
+#header-right-side .time-remaining .sign-in-link {
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .home .header-logo {
@@ -426,7 +481,11 @@ body {
 
 .auth-modal {
     --modal-background-color: #777;
+    position: fixed;
+    z-index: 1001;
     margin: 15vh auto 0;
+    left: 0;
+    right: 0;
     min-width: 16em;
     min-height: 11em;
     background-color: var(--modal-background-color);
