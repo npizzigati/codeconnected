@@ -413,6 +413,7 @@ body {
     --term-background: black;
     background: var(--term-background);
     box-sizing: border-box;
+    overflow: hidden;
     height: 100%;
     display: flex;
     flex-direction: column;
