@@ -5,6 +5,13 @@
     --headerbar-bottom-margin: 2em;
 }
 
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+
 body {
     background-color: var(--main-bg-color);
 }
@@ -534,7 +541,7 @@ body {
 }
 
 .auth-modal {
-    --modal-background-color: #777;
+    --modal-background-color: #7c70ff;
     position: fixed;
     z-index: 1001;
     margin: 15vh auto 0;
@@ -543,7 +550,7 @@ body {
     min-width: 16em;
     min-height: 11em;
     background-color: var(--modal-background-color);
-    border-radius: 5px;
+    border-radius: 0.7rem;
     font-family: 'Montserrat', sans-serif;
     font-size: 1.8rem;
     color: white;
@@ -569,10 +576,13 @@ body {
 .auth-modal input {
     display: table-cell;
     font-size: 1.5rem;
+    border: none;
+    border-radius: 0.2em;
+    color: #696a68
 }
 
 .auth-modal input.invalid {
-    border: 2px red dashed;
+    border: 0.1em #ba137a dashed;
 }
 
 .auth-modal input::placeholder {
@@ -589,27 +599,27 @@ body {
     font-family: 'Saira Condensed', sans-serif;
     font-weight: 600;
     font-size: 1.6rem;
-    color: #3b3a38;
+    color: white;
     display: block;
     margin: 1em auto 0;
     padding: 0 .5em;
     border: none;
-    border-radius: 5px;
-    background-color: #999;
+    border-radius: 0.3em;
+    background-color: #6258d7;
 }
 
 .auth-modal .submit-button:hover,
 .auth-modal .submit-button:active {
     cursor: pointer;
-    background-color: lightgray;
+    background-color: #5c52ca;
 }
 
 .auth-modal .tabs {
     font-family: 'Saira Condensed', sans-serif;
     font-weight: 600;
-    background-color: #444;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    background-color: #524e8a;
+    border-top-left-radius: 0.7rem;
+    border-top-right-radius: 0.7rem;
 }
 
 .auth-modal #sign-in-tab,
@@ -620,10 +630,10 @@ body {
     height: 1.2em;
     padding-top: .2em;
     text-align: center;
-    color: #999;
-    background-color: #444;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    color: #827bd9;
+    background-color: #524e8a;
+    border-top-left-radius: 0.7rem;
+    border-top-right-radius: 0.7rem;
     user-select: none;
 }
 

@@ -9,39 +9,41 @@ function Auth ({ setShowAuth, setAuthed, config }) {
   const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
   return (
-    <div className='auth-modal'>
-      <div className='closeButton' onPointerDown={closeAuth} />
-      <div className='tabs'>
-        <div
-          id='sign-in-tab'
-          className={((selectedTab === 'signIn') ? ' selected' : '')}
-          onPointerDown={handleTabClick}
-        >
-          Sign in
+    <div className='auth-modal-container'>
+      <div className='backdrop' onPointerDown={closeAuth} />
+      <div className='auth-modal'>
+        <div className='tabs'>
+          <div
+            id='sign-in-tab'
+            className={((selectedTab === 'signIn') ? ' selected' : '')}
+            onPointerDown={handleTabClick}
+          >
+            Sign in
+          </div>
+          <div
+            id='sign-up-tab'
+            className={((selectedTab === 'signUp') ? ' selected' : '')}
+            onPointerDown={handleTabClick}
+          >
+            Sign up
+          </div>
         </div>
-        <div
-          id='sign-up-tab'
-          className={((selectedTab === 'signUp') ? ' selected' : '')}
-          onPointerDown={handleTabClick}
-        >
-          Sign up
-        </div>
+        {selectedTab === 'signIn'
+          ? <SignIn
+              setShowAuth={setShowAuth}
+              setAuthed={setAuthed}
+              savedSignInStatus={savedSignInStatus}
+              setSavedSignInStatus={setSavedSignInStatus}
+              config={config}
+            />
+          : <SignUp
+              setShowAuth={setShowAuth}
+              setAuthed={setAuthed}
+              savedActivationStatus={savedActivationStatus}
+              setSavedActivationStatus={setSavedActivationStatus}
+              config={config}
+            />}
       </div>
-      {selectedTab === 'signIn'
-        ? <SignIn
-            setShowAuth={setShowAuth}
-            setAuthed={setAuthed}
-            savedSignInStatus={savedSignInStatus}
-            setSavedSignInStatus={setSavedSignInStatus}
-            config={config}
-          />
-        : <SignUp
-            setShowAuth={setShowAuth}
-            setAuthed={setAuthed}
-            savedActivationStatus={savedActivationStatus}
-            setSavedActivationStatus={setSavedActivationStatus}
-            config={config}
-          />}
     </div>
   );
 
