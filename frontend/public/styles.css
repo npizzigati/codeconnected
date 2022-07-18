@@ -183,7 +183,7 @@ body {
 }
 
 .language-chooser {
-    width: 15em;
+    width: 100%;
 }
 
 .language-chooser li {
