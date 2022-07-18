@@ -49,6 +49,8 @@ function CodeArea () {
   const [cmTitle, setCmTitle] = useState('');
   const [showMain, setShowMain] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [showCodeMirror, setShowCodeMirror] = useState(false);
+  const [runnerReady, setRunnerReady] = useState(false);
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [username, setUsername] = useState(null);
@@ -98,18 +100,12 @@ function CodeArea () {
               config={{ staticTitle: true }}
             />
             <button id='run-button' onClick={executeContent}>Run</button>
-          </>}
-      </div>
-      <div id='main-container'>
-        <div
-          ref={cmContainerDOMRef}
-          id='codemirror-container'
-          style={{ width: cmWidth }}
-        >
+          </div>
           <div id='codemirror-wrapper'>
-            <textarea
-              ref={codeAreaDOMRef}
-            />
+            {showCodeMirror &&
+              <textarea
+                ref={codeAreaDOMRef}
+              />}
           </div>
         </div>
         <div
@@ -233,6 +229,30 @@ function CodeArea () {
     elem.releasePointerCapture(event.pointerId);
   }
 
+  async function prepareRoom (roomID) {
+    const body = JSON.stringify({ roomID });
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
+    };
+
+    try {
+      const response = await fetch('/api/prepare-room', options);
+      const json = await response.json();
+      console.log(JSON.stringify(json));
+      const status = json.status;
+      if (status === 'ready') {
+        console.log('Room successfully prepared');
+      } else {
+        console.error('Error preparing room.');
+      }
+    } catch (error) {
+      console.error('Error preparing room: ', error);
+    }
+  }
+
   async function setup () {
     if (!(await roomExists(roomID))) {
       console.log('room does not exist');
@@ -240,7 +260,21 @@ function CodeArea () {
       return;
     }
 
-    // TODO: Set spinner while waiting, maybe
+    // Get room status. If room isn't ready (connected to
+    // container), send request for it to be made ready.
+    setShowMain(true);
+    const { status } = await getRoomStatus(roomID);
+    console.log(status);
+    if (status === 'created') {
+      console.log('Will prepare room');
+      await prepareRoom(roomID);
+    } else if (status === 'preparing') {
+      console.log('Room is being prepared');
+      // TODO: Show modal message that room is being prepared and
+      // maybe retry at intervals
+      return;
+    }
+
     // Get initial lang and terminal history from server
     const initialVars = await getInitialRoomData(roomID);
     const initialLang = initialVars.language;
@@ -249,6 +283,18 @@ function CodeArea () {
     if (expiry !== -1) {
       expiryCountDown(expiry);
     }
+
+    setShowCodeMirror(true);
+
+    const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
+      mode: initialLang,
+      value: '',
+      lineNumbers: true,
+      autoCloseBrackets: true,
+      theme: 'tomorrow-night-bright'
+    });
+
+    cm.setSize('100%', '100%');
 
     const userInfo = await getUserInfo();
     if (userInfo.auth === true) {
@@ -266,16 +312,6 @@ function CodeArea () {
       ws.current.send(data.toString());
     });
     ws.current = openWs(roomID);
-
-    const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      mode: initialLang,
-      value: '',
-      lineNumbers: true,
-      autoCloseBrackets: true,
-      theme: 'tomorrow-night-bright'
-    });
-
-    cm.setSize('100%', '100%');
 
     // Collaborative editing
     // Code editor
@@ -340,6 +376,21 @@ function CodeArea () {
     } catch (error) {
       console.log('Error fetching auth status: ' + error);
       return false;
+    }
+  }
+
+  async function getRoomStatus (roomID) {
+    const options = {
+      method: 'GET',
+      mode: 'cors'
+    };
+
+    try {
+      const response = await fetch(`/api/get-room-status?roomID=${roomID}`, options);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching json:', error);
+      return null;
     }
   }
 

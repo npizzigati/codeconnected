@@ -1,7 +1,8 @@
 :root {
     font-size: calc(0.5em + 1vh);
     --main-bg-color: #1c1b22;
-    --code-headerbar-height: 2em;
+    --headerbar-height: 2em;
+    --headerbar-bottom-margin: 2em;
 }
 
 body {
@@ -13,74 +14,104 @@ body {
     cursor: pointer;
     background-image: url('./close_button.png');
     background-repeat: no-repeat;
-    top: -1em;
-    right: -1em;
-    height: 1em;
-    width: 1em;
-    background-size: 1em;
+    top: -2em;
+    right: -2em;
+    height: 2em;
+    width: 2em;
+    background-size: 2em;
 }
 
 #header-bar {
-    height: var(--code-headerbar-height);
-    margin: 0.3em 0.5em 2em 0.3em;
+    height: var(--headerbar-height);
+    margin: 0.3em 0.5em var(--headerbar-bottom-margin) 0.3em;
     display: flex;
 }
 
-#header-left-side {
-    width: 50%;
+#header-bar .nav-right {
+    margin-left: auto;
+    margin-top: 0.5em;
+    margin-right: 0.5em;
+}
+
+#header-bar .sign-in {
+    color: white;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.3em;
+    text-decoration: underline;
+}
+
+#header-bar .sign-in:hover {
+    color: #d22eff;
+    cursor: pointer;
+}
+
+.backdrop {
+    position: fixed;
+    z-index: 999;
+    top: 0;
+    right: 0;
     height: 100%;
-    display: flex;
-    justify-content: flex-start;
+    width: 100%;
+    opacity: 0.6;
+    background-color: black;
 }
 
-#header-right-side {
-    width: 50%;
-    height: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.home #header-left-side {
-    width: 80%;
-}
-
-.home #header-right-side {
-    width: 20%;
+.home .pre-launch-dialog-container {
 }
 
 .home .pre-launch-dialog {
+    z-index: 1000;
     position: fixed;
-    z-index: 1001;
     margin: 15vh auto 0;
     padding: 1em;
     top: 10vh;
-    width: 20em;
+    width: 25em;
     left: 0;
     right: 0;
-    color: white;
-    background-color: #555;
+    color: black;
+    background-color: white;
     border-radius: 5px;
     user-select: none;
 }
 
-.home .pre-launch-dialog .message {
-    text-align: center;
-    font-size: 1.1em;
+.home .pre-launch-dialog .message-container {
+    display: flex;
+    width: 95%;
+    margin: 0 auto 1em;
+}
+
+.home .pre-launch-dialog .message-container .attention-image {
+    width: 4.5em;
+    background-image: url('./attention.png');
+    background-size: 2em;
+    background-repeat: no-repeat;
+    background-position: center top 0.8em;
+}
+
+.home .pre-launch-dialog .message-container .message {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.7em;
     line-height: 1.2em;
-    margin-bottom: 1em;
+    margin-left: 0.5em;
     user-select: none;
 }
 
 .home .pre-launch-dialog .option {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.3em;
+    color: #e1edff;
     text-align: center;
     margin: 0 auto 0.5em;
-    width: 80%;
-    background-color: #420202;
+    width: 75%;
+    background-color: #277ec0;
     padding: 0.5em;
     border-radius: 0.4em;
     cursor: pointer;
     user-select: none;
+}
+
+.home .pre-launch-dialog .option:hover {
+    background-color: #2e98e4
 }
 
 #header-right-side .time-remaining {
@@ -120,7 +151,7 @@ body {
 }
 
 .site-name {
-    font-family: 'Amatic SC', cursive;
+    font-family: 'Saira Condensed', sans-serif;
     font-size: 2.5rem;
     color: white;
     user-select: none;
@@ -147,36 +178,37 @@ body {
 }
 
 .language-chooser-container {
-    width: 75%;
+    width: 35em;
     margin: 15vh auto 0;
 }
 
 .language-chooser {
-    display: flex;
-    justify-content: center;
+    width: 15em;
 }
 
-.language-chooser > * {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 3.5em;
-    width: 7em;
-    margin: 0 0.3em;
+.language-chooser li {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2rem;
     color: white;
-    background-color: #a51002;
+    height: 2em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 0.2em;
+    margin-left: 0.5em;
 }
 
 .language-chooser > *:hover {
-    background-color: #b21002;
     cursor: pointer;
+    color: #d22eff
 }
 
 .language-chooser-container .heading-text {
+    font-family: 'Lato', sans-serif;
     color: white;
-    font-size: 1.3rem;
-    text-align: center;
-    margin: 0 0 1.5em;
+    font-size: 2rem;
+    margin: 0 0 0.5em 0.3em;
+    padding-left: 0.2em;
 }
 
 .sign-in .email-icon,
@@ -420,7 +452,7 @@ body {
 
 #terminal-container {
     --term-background: black;
-    background: var(--term-background);
+    background-color: var(--term-background);
     box-sizing: border-box;
     height: 100%;
     display: flex;
@@ -477,7 +509,7 @@ body {
 #main-container {
     display: flex;
     min-height: 100px;
-    height: calc(95vh - var(--code-headerbar-height));
+    height: calc(95vh - var(--headerbar-height) - var(--headerbar-bottom-margin));
 }
 
 #codemirror-wrapper {

@@ -35,46 +35,55 @@ function Home () {
               config={{ successCallback: () => launch(preLaunchLanguage) }}
             />}
           {showPreLaunchDialog &&
-            <div className='pre-launch-dialog'>
-              <div className='closeButton' onPointerDown={closePreLaunchDialog} />
-              <div className='message'>
-                Rooms created by unregistered users have a 15-minute time limit.
-              </div>
-              <div className='option' onPointerDown={preLaunchSignIn}>
-                Sign in to remove time limit
-              </div>
-              <div className='option' onPointerDown={continueAnyway}>
-                Continue to time-limited room
+            <div className='pre-launch-dialog-container'>
+              <div className='backdrop' onPointerDown={closePreLaunchDialog} />
+              <div className='pre-launch-dialog'>
+                <div className='message-container'>
+                  <div className='attention-image' />
+                  <div className='message'>
+                    Rooms created by unregistered users have a 15-minute time limit.
+                  </div>
+                </div>
+                <div className='option' onPointerDown={preLaunchSignIn}>
+                  Sign in to remove time limit
+                </div>
+                <div className='option' onPointerDown={continueAnyway}>
+                  Continue to time-limited room
+                </div>
               </div>
             </div>}
           <div id='header-bar'>
-            <div id='header-left-side'>
-              <div className='header-logo' />
-              <div className='logo-text'>
-                <span className='site-name'>Code Connected</span>
-                <span className='tagline'>Collaborative code editor, runner and REPL</span>
-              </div>
+            <div className='header-logo' />
+            <div className='logo-text'>
+              <span className='site-name'>Code Connected</span>
+              <span className='tagline'>Collaborative code editor, runner and REPL</span>
             </div>
-            {auth &&
-              <div id='header-right-side'>
-                <UserDashboard />
-              </div>}
+            <div className='nav-right'>
+              <div
+                className='sign-in'
+                onPointerDown={() => setShowAuth(true)}
+              >
+                Sign in
+              </div>
+              {auth &&
+                <UserDashboard />}
+            </div>
           </div>
           <div className='language-chooser-container'>
             <div className='heading-text'>
               Choose a language to start coding:
             </div>
-            <div className='language-chooser'>
-              <div onPointerDown={() => preLaunch('ruby')}>
-                Ruby
-              </div>
-              <div onPointerDown={() => preLaunch('node')}>
-                Node.js
-              </div>
-              <div onPointerDown={() => preLaunch('postgres')}>
-                PostgreSQL
-              </div>
-            </div>
+            <ul className='language-chooser'>
+              <li onPointerDown={() => preLaunch('ruby')}>
+                &gt; Ruby
+              </li>
+              <li onPointerDown={() => preLaunch('node')}>
+                &gt; Node.js
+              </li>
+              <li onPointerDown={() => preLaunch('postgres')}>
+                &gt; PostgreSQL
+              </li>
+            </ul>
           </div>
         </div>}
     </>
@@ -150,11 +159,6 @@ function Home () {
       const json = await response.json();
       console.log(JSON.stringify(json));
       const roomID = json.roomID;
-      // Expiry in seconds
-      const expiry = parseInt(json.expiry, 10);
-      // Date gives value in ms
-      const secondsToExpiry = expiry - (Math.round(Date.now() / 1000));
-      console.log('room expires in: ' + secondsToExpiry + ' seconds');
       if (roomID === undefined) {
         console.error('Error fetching room ID');
         return null;

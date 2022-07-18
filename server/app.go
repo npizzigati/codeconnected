@@ -57,6 +57,7 @@ type room struct {
 	container        *containerDetails
 	eventSubscribers map[string]func(eventConfig)
 	termHist         []byte
+	status           string
 	expiry           int64
 }
 
@@ -90,7 +91,7 @@ var sesCli *sesv2.Client
 
 // Timeouts in minutes
 const activationTimeout = 5
-const anonRoomTimeout = 1
+const anonRoomTimeout = 15
 
 // const dbURL = "postgres://postgres@db/"
 
@@ -195,12 +196,6 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 }
 
 func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	session, err := store.Get(r, "session")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	type roomModel struct {
 		Language string
 	}
@@ -221,10 +216,64 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	room := room{
 		lang:      rm.Language,
 		container: &containerDetails{},
+		status:    "created",
 	}
 
 	rooms[roomID] = &room
-	startContainer(rm.Language, roomID)
+	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
+}
+
+func getRoomStatus(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	queryValues := r.URL.Query()
+	roomID := queryValues.Get("roomID")
+
+	status := rooms[roomID].status
+	resp, err := json.Marshal(
+		map[string]string{
+			"status": status,
+		})
+	if err != nil {
+		fmt.Println("err in marshaling: ", err)
+	}
+	sendJsonResponse(w, resp)
+}
+
+func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type roomModel struct {
+		RoomID string
+	}
+	var rm roomModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("err reading json: ", err)
+	}
+	err = json.Unmarshal(body, &rm)
+	if err != nil {
+		fmt.Println("err while trying to unmarshal: ", err)
+	}
+
+	roomID := rm.RoomID
+	room := rooms[roomID]
+
+	// Room can only be prepared once. If the link is shared before
+	// room is prepared, this request could be made by a second
+	// user. Guard against that.
+	if room.status == "preparing" {
+		sendStringJsonResponse(w, map[string]string{"status": room.status})
+		return
+	}
+
+	room.status = "preparing"
+
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("*************rm.RoomID: ", rm.RoomID)
+
+	startContainer(room.lang, roomID)
 
 	var expiry int64
 	if auth, ok := session.Values["auth"].(bool); !ok || !auth {
@@ -259,8 +308,8 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}()
 	}
 
-	expiryString := strconv.FormatInt(expiry, 10)
-	sendStringJsonResponse(w, map[string]string{"roomID": roomID, "expiry": expiryString})
+	room.status = "ready"
+	sendStringJsonResponse(w, map[string]string{"status": "ready"})
 }
 
 // Ping/pong to detect when people leave room (websockets stop
@@ -1461,9 +1510,11 @@ func main() {
 	// FIXME: Should this be a POST (is it really idempotent)?
 	router.GET("/api/openws", openWs)
 	router.POST("/api/createroom", createRoom)
+	router.POST("/api/prepare-room", prepareRoom)
 	router.POST("/api/activateuser", activateUser)
 	router.GET("/api/does-room-exist", doesRoomExist)
 	router.GET("/api/get-initial-room-data", getInitialRoomData)
+	router.GET("/api/get-room-status", getRoomStatus)
 	router.GET("/api/get-user-info", getUserInfo)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
