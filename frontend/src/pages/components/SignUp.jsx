@@ -21,7 +21,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
   const passwordDupInput = useRef(null);
   const codeInput = useRef(null);
   const form = useRef(null);
-  const inputFieldSize = '20';
+  const inputFieldSize = '25';
   const inputs = [usernameInput, emailInput, passwordInput, passwordDupInput];
 
   // Update activation status saved in Auth component so that the

@@ -24,7 +24,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
   const newPasswordDupInput = useRef(null);
   const resetCodeInput = useRef(null);
   const inputs = [emailInput, passwordInput];
-  const inputFieldSize = '20';
+  const inputFieldSize = '25';
 
   // Update status saved in Auth component so that the
   // same information is displayed if the user switches back and

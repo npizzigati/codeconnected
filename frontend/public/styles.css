@@ -618,7 +618,9 @@ body {
 
 .auth-modal input {
     display: table-cell;
+    font-family: 'Roboto', sans-serif;
     font-size: 1.5rem;
+    width: 14.5em;
     border: none;
     border-radius: 0.2em;
     color: #696a68
