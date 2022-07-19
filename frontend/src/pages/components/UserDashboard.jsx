@@ -45,24 +45,26 @@ function UserDashboard ({ setAuthed }) {
       />
       <div
         ref={dashboard}
-        className={'user-dashboard main ' + (showDashboard ? 'visible' : 'hidden')}
+        className={'main ' + (showDashboard ? 'visible' : 'hidden')}
       >
-        <div className='user-dashboard item1'>
-          <img
-            className='user-dashboard avatar inline'
-            src='./blank_avatar.png'
-          />
-          <span className='user-dashboard username'>{username}</span>
-        </div>
-        <div className='user-dashboard item2'>
-          <img
-            className='user-dashboard email-icon'
-            src='./mail.png'
-          />
-          <span className='user-dashboard email'>{email}</span>
+        <div className='items'>
+          <p>
+            <img
+              className='user-icon'
+              src='./blank_avatar.png'
+            />
+            <span className='username-text'>{username}</span>
+          </p>
+          <p>
+            <img
+              className='email-icon'
+              src='./mail.png'
+            />
+            <span className='email-text'>{email}</span>
+          </p>
         </div>
         <button
-          className={'user-dashboard sign-out-button' + (signedIn ? '' : ' hidden')}
+          className={'sign-out-button' + (signedIn ? '' : ' hidden')}
           onPointerDown={signOut}
         >
           Sign out
