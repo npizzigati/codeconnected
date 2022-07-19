@@ -32,7 +32,7 @@ function Home () {
             <Auth
               setShowAuth={setShowAuth}
               setAuthed={setAuth}
-              config={{ successCallback: () => launch(preLaunchLanguage) }}
+              config={preLaunchLanguage === null ? {} : { successCallback: () => launch(preLaunchLanguage) }}
             />}
           {showPreLaunchDialog &&
             <div className='pre-launch-dialog-container'>
