@@ -59,6 +59,7 @@ function Home () {
                 <span className='color1'>code</span>
                 <span className='color2'>connected</span>
               </span>
+              <span className='tagline'>Collaborative code editor, runner and REPL</span>
             </div>
             <div className='nav-right'>
               <div
@@ -68,7 +69,7 @@ function Home () {
                 Sign in
               </div>
               {auth &&
-                <UserDashboard />}
+               <UserDashboard />}
             </div>
           </div>
           <div className='language-chooser-container'>
