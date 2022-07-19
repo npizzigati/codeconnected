@@ -55,8 +55,10 @@ function Home () {
           <div id='header-bar'>
             <div className='header-logo' />
             <div className='logo-text'>
-              <span className='site-name'>Code Connected</span>
-              <span className='tagline'>Collaborative code editor, runner and REPL</span>
+              <span className='site-name'>
+                <span className='color1'>code</span>
+                <span className='color2'>connected</span>
+              </span>
             </div>
             <div className='nav-right'>
               <div
@@ -71,6 +73,7 @@ function Home () {
           </div>
           <div className='language-chooser-container'>
             <div className='heading-text'>
+              <div className='arrow-image' />
               Choose a language to start coding:
             </div>
             <ul className='language-chooser'>

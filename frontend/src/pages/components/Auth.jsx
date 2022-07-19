@@ -10,8 +10,9 @@ function Auth ({ setShowAuth, setAuthed, config }) {
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
   return (
     <div className='auth-modal-container'>
-      <div className='backdrop' onPointerDown={closeAuth} />
+      <div className='backdrop' />
       <div className='auth-modal'>
+        <div className='close-button' onPointerDown={closeAuth} />
         <div className='tabs'>
           <div
             id='sign-in-tab'
@@ -28,21 +29,23 @@ function Auth ({ setShowAuth, setAuthed, config }) {
             Sign up
           </div>
         </div>
-        {selectedTab === 'signIn'
-          ? <SignIn
-              setShowAuth={setShowAuth}
-              setAuthed={setAuthed}
-              savedSignInStatus={savedSignInStatus}
-              setSavedSignInStatus={setSavedSignInStatus}
-              config={config}
-            />
-          : <SignUp
-              setShowAuth={setShowAuth}
-              setAuthed={setAuthed}
-              savedActivationStatus={savedActivationStatus}
-              setSavedActivationStatus={setSavedActivationStatus}
-              config={config}
-            />}
+        <div className='content'>
+          {selectedTab === 'signIn'
+            ? <SignIn
+                setShowAuth={setShowAuth}
+                setAuthed={setAuthed}
+                savedSignInStatus={savedSignInStatus}
+                setSavedSignInStatus={setSavedSignInStatus}
+                config={config}
+              />
+            : <SignUp
+                setShowAuth={setShowAuth}
+                setAuthed={setAuthed}
+                savedActivationStatus={savedActivationStatus}
+                setSavedActivationStatus={setSavedActivationStatus}
+                config={config}
+              />}
+        </div>
       </div>
     </div>
   );

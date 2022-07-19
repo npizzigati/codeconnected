@@ -1,8 +1,8 @@
 :root {
     font-size: calc(0.5em + 1vh);
     --main-bg-color: #1c1b22;
-    --headerbar-height: 2em;
-    --headerbar-bottom-margin: 2em;
+    --header-bar-height: 2em;
+    --header-bar-bottom-margin: 0em;
 }
 
 input:focus,
@@ -12,32 +12,35 @@ button:focus {
     outline: none;
 }
 
+.home {
+    /* blue */
+    background-color: var(--main-bg-color);
+    height: 100vh;
+}
+
 body {
     background-color: var(--main-bg-color);
 }
 
-.closeButton {
+.close-button {
     position: absolute;
     cursor: pointer;
     background-image: url('./close_button.png');
     background-repeat: no-repeat;
-    top: -2em;
-    right: -2em;
-    height: 2em;
-    width: 2em;
-    background-size: 2em;
 }
 
 #header-bar {
-    height: var(--headerbar-height);
-    margin: 0.3em 0.5em var(--headerbar-bottom-margin) 0.3em;
+    width: 100%
+    margin: 0 0.5em var(--header-bar-bottom-margin) 0.3em;
     display: flex;
+    border-bottom: 1px solid #777;
 }
 
 #header-bar .nav-right {
     margin-left: auto;
-    margin-top: 0.5em;
-    margin-right: 0.5em;
+    margin-top: 0.8em;
+    margin-right: 0.8em;
+    user-select: none;
 }
 
 #header-bar .sign-in {
@@ -131,9 +134,7 @@ body {
 }
 
 .home .header-logo {
-    margin-top: 0.4em;
-    margin-left: 0.2em;
-    margin-right: 0.5em;
+    margin: 0.8em 0.5em 0 0.2em;
     height: 5.5em;
     width: 5.5em;
     background-image: url('./codeconnected.png');
@@ -154,7 +155,7 @@ body {
 }
 
 .logo-text {
-    margin-top: .5em;
+    margin-top: .8em;
 }
 
 .site-name {
@@ -162,6 +163,14 @@ body {
     font-size: 2.5rem;
     color: white;
     user-select: none;
+}
+
+.site-name .color1 {
+    color: #ec19ff;
+}
+
+.site-name .color2 {
+    color: white;
 }
 
 .tagline {
@@ -185,12 +194,14 @@ body {
 }
 
 .language-chooser-container {
-    width: 35em;
-    margin: 15vh auto 0;
+    position: relative;
+    margin: 15vh 20% 0;
+    border-left: 3px solid #777;
+    user-select: none;
 }
 
 .language-chooser {
-    width: 100%;
+    width: 50%;
 }
 
 .language-chooser li {
@@ -207,15 +218,30 @@ body {
 
 .language-chooser > *:hover {
     cursor: pointer;
-    color: #d22eff
+    color: #d22eff;
+}
+
+.language-chooser-container .arrow-image {
+    position: absolute;
+    background-image: url('./hand_drawn_arrow.png');
+    background-repeat: no-repeat;
+    top: -0.2em;
+    left: -5em;
+    height: 4em;
+    width: 4em;
+    background-size: 4em;
 }
 
 .language-chooser-container .heading-text {
+    background-color: #333;
+    border-radius: 0.3em;
     font-family: 'Lato', sans-serif;
+    padding: 0.1em .3em 0.3em;
     color: white;
     font-size: 2rem;
     margin: 0 0 0.5em 0.3em;
     padding-left: 0.2em;
+    width: max-content;
 }
 
 .sign-in .email-icon,
@@ -516,7 +542,7 @@ body {
 #main-container {
     display: flex;
     min-height: 100px;
-    height: calc(95vh - var(--headerbar-height) - var(--headerbar-bottom-margin));
+    height: calc(95vh - var(--header-bar-height) - var(--header-bar-bottom-margin));
 }
 
 #codemirror-wrapper {
@@ -541,7 +567,9 @@ body {
 }
 
 .auth-modal {
-    --modal-background-color: #7c70ff;
+    --modal-background-color: #222;
+    --unselected-tab-bkg-color: #444;
+    --modal-border: 1px solid #555;
     position: fixed;
     z-index: 1001;
     margin: 15vh auto 0;
@@ -555,6 +583,21 @@ body {
     font-size: 1.8rem;
     color: white;
     display: table;
+}
+
+.auth-modal .close-button {
+    top: -1em;
+    right: -1em;
+    height: 1em;
+    width: 1em;
+    background-size: 1em;
+}
+
+.auth-modal .content {
+    border-bottom: var(--modal-border);
+    border-right: var(--modal-border);
+    border-left: var(--modal-border);
+    border-radius: 0 0 0.7rem 0.7rem;
 }
 
 .auth-modal form {
@@ -615,9 +658,10 @@ body {
 }
 
 .auth-modal .tabs {
+    display: flex;
     font-family: 'Saira Condensed', sans-serif;
     font-weight: 600;
-    background-color: #524e8a;
+    background-color: var(--unselected-tab-bkg-color);
     border-top-left-radius: 0.7rem;
     border-top-right-radius: 0.7rem;
 }
@@ -626,21 +670,31 @@ body {
 .auth-modal #sign-up-tab {
     border: none;
     display: inline-block;
-    width: 50%;
     height: 1.2em;
     padding-top: .2em;
     text-align: center;
-    color: #827bd9;
-    background-color: #524e8a;
+    color: #777;
+    background-color: var(--unselected-tab-bkg-color);
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: var(--modal-border);
     border-top-left-radius: 0.7rem;
     border-top-right-radius: 0.7rem;
     user-select: none;
+    flex-grow: 1;
+    flex-basis: 0;
 }
 
 .auth-modal #sign-in-tab.selected,
 .auth-modal #sign-up-tab.selected {
     background-color: var(--modal-background-color);
     color: white;
+    border-top: var(--modal-border);
+    border-left: var(--modal-border);
+    border-right: var(--modal-border);
+    border-bottom: none;
+    width: auto;
 }
 
 .auth-modal .col-placeholder {
