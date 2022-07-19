@@ -283,6 +283,15 @@ body {
     user-select: none;
 }
 
+.user-dashboard .account-circle {
+    height: 2em;
+    width: 2em;
+    margin-right: .5em;
+    margin-top: .5em;
+    cursor: pointer;
+    user-select: none;
+}
+
 /* TODO: These compound styles should probably be descendent*/
 /* combinators (separated by a space, after modifying the html
    accordingly) */
@@ -306,14 +315,11 @@ body {
 
 .user-dashboard.main.hidden {
     visibility: hidden;
-    height: 0px;
-    transition: visibility .3s, height .3s ease-out;
 }
 
 .user-dashboard.main.visible {
     visibility: visible;
-    height: 95px;
-    transition: visibility .3s, height .3s ease-in;
+    transition: visibility .5s;
 }
 
 .user-dashboard.avatar.inline {

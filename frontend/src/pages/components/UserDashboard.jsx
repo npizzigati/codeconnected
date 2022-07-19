@@ -37,11 +37,11 @@ function UserDashboard ({ options, title, callback, config }) {
   }, []);
 
   return (
-    <>
+    <div className='user-dashboard'>
       <img
-        className='avatar'
-        src='./blank_avatar.png'
-        alt='avatar'
+        className='account-circle'
+        src='./account_circle.png'
+        alt='account circle'
         ref={avatar}
         onPointerDown={toggleDashboard}
       />
