@@ -142,7 +142,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
           </p>
           <p>
             <span className='col-placeholder' />
-            <button className='submit-button' type='submit'>Sign me up!</button>
+            <button className='submit-button' type='submit'>Sign up</button>
           </p>
         </form>}
       {activationStatus === 'underway' &&

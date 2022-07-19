@@ -91,7 +91,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             <span className='col-placeholder' />
             <span>{passwordValidationError}</span>
           </p>
-          <button className='submit-button' type='submit'>Sign me in!</button>
+          <button className='submit-button' type='submit'>Sign in</button>
           <span
             className='bottom-link'
             onPointerDown={showForgotPassword}

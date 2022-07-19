@@ -654,8 +654,7 @@ body {
 }
 
 .auth-modal .submit-button {
-    font-family: 'Saira Condensed', sans-serif;
-    font-weight: 600;
+    font-family: 'Lato', sans-serif;
     font-size: 1.6rem;
     color: white;
     display: block;
@@ -674,8 +673,8 @@ body {
 
 .auth-modal .tabs {
     display: flex;
-    font-family: 'Saira Condensed', sans-serif;
-    font-weight: 600;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.5rem;
     background-color: var(--unselected-tab-bkg-color);
     border-top-left-radius: 0.7rem;
     border-top-right-radius: 0.7rem;
