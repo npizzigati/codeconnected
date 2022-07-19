@@ -63,7 +63,7 @@ function Home () {
             </div>
             <div className='nav-right'>
               {auth
-                ? <UserDashboard />
+                ? <UserDashboard setAuthed={setAuth} />
                 : <div
                     className='sign-in'
                     onPointerDown={() => setShowAuth(true)}

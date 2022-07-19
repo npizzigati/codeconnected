@@ -1,16 +1,14 @@
 'use strict';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-function UserDashboard ({ options, title, callback, config }) {
+function UserDashboard ({ setAuthed }) {
   const [username, setUsername] = useState('Anonymous');
   const [email, setEmail] = useState('---------------------');
   const [showDashboard, setShowDashboard] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const avatar = useRef(null);
   const dashboard = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     document.addEventListener('pointerdown', (ev) => {
@@ -76,12 +74,8 @@ function UserDashboard ({ options, title, callback, config }) {
           Sign in
         </button>
       </div>
-    </>
+    </div>
   );
-
-  function signIn () {
-    navigate('/');
-  }
 
   async function signOut () {
     const options = {
@@ -93,10 +87,10 @@ function UserDashboard ({ options, title, callback, config }) {
     try {
       const response = await fetch('/api/sign-out', options);
       console.log(await response.json());
+      setAuthed(false);
     } catch (error) {
       console.error('Error fetching json:', error, ' May not be signed out.');
     }
-    navigate('/');
   }
 
   function hideDashboard () {
