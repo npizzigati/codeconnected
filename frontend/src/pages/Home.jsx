@@ -62,14 +62,14 @@ function Home () {
               <span className='tagline'>Collaborative code editor, runner and REPL</span>
             </div>
             <div className='nav-right'>
-              <div
-                className='sign-in'
-                onPointerDown={() => setShowAuth(true)}
-              >
-                Sign in
-              </div>
-              {auth &&
-               <UserDashboard />}
+              {auth
+                ? <UserDashboard />
+                : <div
+                    className='sign-in'
+                    onPointerDown={() => setShowAuth(true)}
+                  >
+                    Sign in
+                  </div>}
             </div>
           </div>
           <div className='language-chooser-container'>
