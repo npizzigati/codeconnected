@@ -767,27 +767,24 @@ body {
     color: lightgray;
 }
 
-.sign-up .popup-container,
-.sign-in .popup-container {
+.popup-container {
     position: fixed;
     left: 0;
-    top: 10vh;
+    top: 5vh;
     display: flex;
     width: 100%;
     justify-content: center;
 }
 
-.sign-up .popup:empty,
-.sign-in .popup:empty {
+.popup:empty {
     opacity: 0;
 }
 
-.sign-up .popup:not(:empty),
-.sign-in .popup:not(:empty) {
+.popup:not(:empty) {
     padding: 0.3em 0.4em;
     font-size: 1.2rem;
     color: white;
-    background-color: #ff2a9c;
+    background-color: #6258d7;
     border-radius: 4px;
     opacity: 0.8;
     transition: opacity .5s;
