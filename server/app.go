@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"log"
 	// "github.com/aws/aws-sdk-go-v2"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
@@ -106,7 +107,7 @@ func initDBConnectionPool() {
 func initSesClient() {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		fmt.Println("error in loading AWS SES config: ", err)
+		log.Println("error in loading AWS SES config: ", err)
 	}
 	sesCli = sesv2.NewFromConfig(cfg)
 }
@@ -149,10 +150,10 @@ func sendEmail(subject, body, fromAddr string) {
 	}
 	output, err := sesCli.SendEmail(context.Background(), &email)
 	if err != nil {
-		fmt.Println("Error in sending email: ", err)
+		log.Println("Error in sending email: ", err)
 		return
 	}
-	fmt.Println("sendEmail output: ", output)
+	log.Println("sendEmail output: ", output)
 }
 
 func initClient() {
@@ -187,7 +188,7 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -202,16 +203,17 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("err reading json: ", err)
+		log.Println("err reading json: ", err)
 	}
 	err = json.Unmarshal(body, &rm)
 	if err != nil {
-		fmt.Println("err while trying to unmarshal: ", err)
+		log.Println("err while trying to unmarshal: ", err)
 	}
 
-	fmt.Println("*************rm.Language: ", rm.Language)
+	log.Println("*************rm.Language: ", rm.Language)
 	roomID := generateRoomID()
-	fmt.Println("************roomID: ", roomID)
+	log.Println("************roomID: ", roomID)
+	log.Println("************userID: ", userID)
 
 	room := room{
 		lang:      rm.Language,
@@ -233,7 +235,7 @@ func getRoomStatus(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 			"status": status,
 		})
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 	sendJsonResponse(w, resp)
 }
@@ -245,11 +247,11 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("err reading json: ", err)
+		log.Println("err reading json: ", err)
 	}
 	err = json.Unmarshal(body, &rm)
 	if err != nil {
-		fmt.Println("err while trying to unmarshal: ", err)
+		log.Println("err while trying to unmarshal: ", err)
 	}
 
 	roomID := rm.RoomID
@@ -271,13 +273,13 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	fmt.Println("*************rm.RoomID: ", rm.RoomID)
+	log.Println("*************rm.RoomID: ", rm.RoomID)
 
 	startContainer(room.lang, roomID)
 
 	var expiry int64
 	if auth, ok := session.Values["auth"].(bool); !ok || !auth {
-		fmt.Println("Unauthed user")
+		log.Println("Unauthed user")
 		expiry = time.Now().Add(anonRoomTimeout * time.Minute).Unix()
 	} else {
 		expiry = -1
@@ -294,11 +296,11 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 					currentTime := time.Now().Unix()
 					if currentTime >= expiry {
 						ticker.Stop()
-						fmt.Println("!!!!!Room Expired!!!!")
+						log.Println("!!!!!Room Expired!!!!")
 						closeContainerConnection(room.container.connection)
 						err := stopAndRemoveContainer(room.container.ID)
 						if err != nil {
-							fmt.Println("error in stopping/removing container: ", err)
+							log.Println("error in stopping/removing container: ", err)
 						}
 						delete(rooms, roomID)
 						return
@@ -329,7 +331,7 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 		err := ws.Ping(ctx)
 		if err != nil {
 			ws.Close(websocket.StatusInternalError, "websocket no longer available")
-			fmt.Println("---------------------Pong NOT received---------------------")
+			log.Println("---------------------Pong NOT received---------------------")
 			// TODO: Retry ping after a few seconds to account for the
 			// case where a client temporary disconnects (or refreshes
 			// the page) at exact instance of ping
@@ -344,7 +346,7 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 			closeEmptyRooms()
 			return
 		}
-		fmt.Println("---------------------Pong received---------------------")
+		log.Println("---------------------Pong received---------------------")
 		t.Reset(d)
 	}
 }
@@ -359,7 +361,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		OriginPatterns: []string{"localhost:5000", "codeconnected.dev"},
 	})
 	if err != nil {
-		fmt.Println("error in opening websocket: ", err)
+		log.Println("error in opening websocket: ", err)
 	}
 	defer ws.Close(websocket.StatusInternalError, "deferred close")
 
@@ -377,26 +379,26 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	for {
 		// Receive command
 		_, message, err := ws.Read(context.Background())
-		fmt.Println("message: ", message)
+		log.Println("message: ", message)
 		if err != nil {
-			fmt.Println("error receiving message: ", err, " ", time.Now().String())
+			log.Println("error receiving message: ", err, " ", time.Now().String())
 			// TODO: -- I should try to recover after this (reopen
 			// ws?). I don't think so
 			break
 		}
 
-		fmt.Printf("Command received: %s\n", message)
+		log.Printf("Command received: %s\n", message)
 		sendToContainer(message, roomID)
 	}
 }
 
 func startRunnerReader(roomID string) {
-	fmt.Println("Starting runner reader")
+	log.Println("Starting runner reader")
 	room := rooms[roomID]
 	cn := room.container
 	// There should only be one runner reader per container
 	if cn.runnerReaderActive {
-		fmt.Println("Runner reader already active")
+		log.Println("Runner reader already active")
 		return
 	}
 	cn.runnerReaderActive = true
@@ -408,14 +410,14 @@ func startRunnerReader(roomID string) {
 	newlineCount := 0
 	ansiEscapes, err := regexp.Compile("\x1B(?:[@-Z\\-_]|[[0-?]*[ -/]*[@-~])")
 	if err != nil {
-		fmt.Println("Regexp compilation error: ", err)
+		log.Println("Regexp compilation error: ", err)
 	}
 	promptTermination, err := regexp.Compile("> $")
 	if err != nil {
-		fmt.Println("Regexp compilation error: ", err)
+		log.Println("Regexp compilation error: ", err)
 	}
 	go func() {
-		fmt.Println("Reading from connection\n")
+		log.Println("Reading from connection\n")
 		var timer *time.Timer
 		for {
 			// Check for 8-byte docker multiplexing header and discard
@@ -423,7 +425,7 @@ func startRunnerReader(roomID string) {
 			peek, err := cn.bufReader.Peek(1)
 			// Peek will fail if reader is EOF (err == EOF)
 			if err != nil {
-				fmt.Println("peek error: ", err)
+				log.Println("peek error: ", err)
 				break
 			}
 			// Header will begin with ascii value 1
@@ -431,28 +433,28 @@ func startRunnerReader(roomID string) {
 				// Discard the header
 				num, err := cn.bufReader.Discard(8)
 				if err != nil {
-					fmt.Println("error in discarding header: ", err)
+					log.Println("error in discarding header: ", err)
 				}
-				fmt.Println("header bytes discarded: ", num)
+				log.Println("header bytes discarded: ", num)
 			}
 
 			ru, _, err := cn.bufReader.ReadRune()
 			byteSlice := []byte(string(ru))
 			if err == io.EOF {
-				fmt.Println("EOF hit in runner output")
+				log.Println("EOF hit in runner output")
 				break
 			}
 			if err != nil {
 				// Runner not connected
-				fmt.Println("runner read error: ", err, time.Now().String())
+				log.Println("runner read error: ", err, time.Now().String())
 				break
 			}
 
 			if string(ru) == "\n" {
-				fmt.Println("*********newline in output*********")
+				log.Println("*********newline in output*********")
 				newlineCount++
 				room.emit("newline", eventConfig{count: newlineCount})
-				fmt.Println("newlineCount: ", newlineCount)
+				log.Println("newlineCount: ", newlineCount)
 			}
 
 			// Add char to fake terminal buffer
@@ -479,7 +481,7 @@ func startRunnerReader(roomID string) {
 					// Check whether fakeTermBuffer ends with prompt termination
 					if promptTermination.Match(fakeTermBuffer) {
 						room.emit("promptReady", eventConfig{})
-						fmt.Println("Matched prompt termination")
+						log.Println("Matched prompt termination")
 						fakeTermBuffer = []byte{}
 						newlineCount = 0
 					}
@@ -492,12 +494,12 @@ func startRunnerReader(roomID string) {
 				writeToWebsockets(byteSlice, roomID)
 			}
 		}
-		fmt.Println("runner reader loop ended")
+		log.Println("runner reader loop ended")
 		cn.runnerReaderActive = false
 		// Try to reestablish connection if anybody is in room
 		// and restart flag is true
 		if len(room.wsockets) > 0 && room.container.runnerReaderRestart == true {
-			fmt.Println("Trying to reestablish connection")
+			log.Println("Trying to reestablish connection")
 			cn.connection.Close()
 			openLanguageConnection(room.lang, roomID)
 		}
@@ -505,7 +507,7 @@ func startRunnerReader(roomID string) {
 }
 
 func writeToWebsockets(text []byte, roomID string) {
-	fmt.Println("writing to wsockets: ", text, string(text))
+	log.Println("writing to wsockets: ", text, string(text))
 	room := rooms[roomID]
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
@@ -516,17 +518,17 @@ func writeToWebsockets(text []byte, roomID string) {
 	}
 
 	for _, ws := range room.wsockets {
-		fmt.Println("********Writing to websocket*********")
+		log.Println("********Writing to websocket*********")
 		err := ws.Write(context.Background(), websocket.MessageText, text)
 		if err != nil {
-			fmt.Println("ws write err: ", "text", text, "; err: ", err)
+			log.Println("ws write err: ", "text", text, "; err: ", err)
 		}
 	}
-	fmt.Println("number of wsocket conns: ", len(room.wsockets))
+	log.Println("number of wsocket conns: ", len(room.wsockets))
 }
 
 func sendToContainer(message []byte, roomID string) {
-	fmt.Println("Sending message to container")
+	log.Println("Sending message to container")
 	cn := rooms[roomID].container
 	lang := rooms[roomID].lang
 
@@ -538,10 +540,10 @@ func sendToContainer(message []byte, roomID string) {
 		time.Sleep(time.Duration(tries/2) * time.Second)
 		_, err := cn.runner.Write(message)
 		if err == nil {
-			fmt.Printf("Payload bytes: %#v\n\n", message)
+			log.Printf("Payload bytes: %#v\n\n", message)
 			break
 		}
-		fmt.Println("runner write error: ", err)
+		log.Println("runner write error: ", err)
 		// Reestablish connection
 		// FIXME: This part doesn't seem to be working  -- connection
 		// is not being reestablished after: runner write
@@ -555,14 +557,14 @@ func sendToContainer(message []byte, roomID string) {
 		// sleep
 		// ATTEMPTED FIX: Now restarting runner reader, too... Does
 		// this work now?
-		fmt.Println("trying to reestablish connection")
+		log.Println("trying to reestablish connection")
 		// TODO: Do I have to find out the status of connection and
 		// (if active) close it before opening it again?
 		cn.runnerReaderRestart = false
 		cn.connection.Close()
 		err = openLanguageConnection(lang, roomID)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		tries++
 	}
@@ -638,7 +640,7 @@ func startContainer(lang, roomID string) {
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		panic(err)
 	}
-	fmt.Println("Setting new container id to: ", resp.ID)
+	log.Println("Setting new container id to: ", resp.ID)
 	cn.ID = resp.ID
 	// Sql container needs a slight pause to create user
 	// This will give openLanguageConnection a better chance of
@@ -648,7 +650,7 @@ func startContainer(lang, roomID string) {
 	}
 	err = openLanguageConnection(lang, roomID)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
 
@@ -671,7 +673,7 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	room := rooms[roomID]
 	cn := room.container
 	room.lang = lang
-	fmt.Println("Switching language")
+	log.Println("Switching language")
 	// Set the restart flag to false so that the reader doesn't
 	// automatically restart when we close the connection
 	cn.runnerReaderRestart = false
@@ -679,7 +681,7 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	cn.connection.Close()
 	err := openLanguageConnection(lang, roomID)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
@@ -705,7 +707,7 @@ func openLanguageConnection(lang, roomID string) error {
 	})
 loop:
 	for {
-		fmt.Println("Attempting language connection")
+		log.Println("Attempting language connection")
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
@@ -726,13 +728,13 @@ func closeContainerConnection(connection types.HijackedResponse) {
 	// Close connection if it exists
 	// (If it doesn't exist, reader ptr will be nil)
 	if connection.Reader != nil {
-		fmt.Println("closing existing connection")
+		log.Println("closing existing connection")
 		connection.Close()
 	}
 }
 
 func attemptLangConn(lang, roomID string) {
-	fmt.Println("Attempting lang connection, lang: '", lang, "' ", "roomID: '", roomID, "'")
+	log.Println("Attempting lang connection, lang: '", lang, "' ", "roomID: '", roomID, "'")
 	room := rooms[roomID]
 	cn := room.container
 	var cmd []string
@@ -758,14 +760,14 @@ func attemptLangConn(lang, roomID string) {
 
 	resp, err := cli.ContainerExecCreate(ctx, cn.ID, execOpts)
 	if err != nil {
-		fmt.Println("unable to create exec process: ", err)
+		log.Println("unable to create exec process: ", err)
 		return
 	}
 
 	cn.connection, err = cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
-		fmt.Println("unable to start/attach to exec process: ", err)
+		log.Println("unable to start/attach to exec process: ", err)
 		return
 	}
 
@@ -853,32 +855,34 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("credentials: ", cm.Email, cm.PlainTextPW)
+	log.Println("credentials: ", cm.Email, cm.PlainTextPW)
 	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
 
 	emailFound := true
 	signedIn := false
 	var encryptedPW, username string
-	query := "SELECT encrypted_pw, username FROM users WHERE email = $1"
-	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW, &username); err != nil {
+	var userID int
+	query := "SELECT encrypted_pw, username, id FROM users WHERE email = $1"
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW, &username, &userID); err != nil {
 		// Will throw error if no records found
 		emailFound = false
-		fmt.Println("select query error: ", err)
+		log.Println("select query error: ", err)
 	}
 
 	if emailFound && bcrypt.CompareHashAndPassword([]byte(encryptedPW), []byte(pepperedPW)) == nil {
 		// success
-		fmt.Println("*****Successfully signed in")
+		log.Println("*****Successfully signed in")
 		signedIn = true
 		session.Values["auth"] = true
 		session.Values["email"] = cm.Email
 		session.Values["username"] = username
+		session.Values["userID"] = userID
 		if err = session.Save(r, w); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	} else {
-		fmt.Println("*****Sign in was unsuccessful.")
+		log.Println("*****Sign in was unsuccessful.")
 	}
 
 	type responseModel struct {
@@ -889,7 +893,7 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -914,10 +918,10 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		response := &responseModel{
 			Auth: false,
 		}
-		fmt.Println("user not authorized")
+		log.Println("user not authorized")
 		jsonResp, err := json.Marshal(response)
 		if err != nil {
-			fmt.Println("err in marshaling: ", err)
+			log.Println("err in marshaling: ", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -932,13 +936,13 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		ok              bool
 	)
 	if email, ok = session.Values["email"].(string); !ok {
-		fmt.Println("Email not found")
+		log.Println("Email not found")
 	}
 	if username, ok = session.Values["username"].(string); !ok {
-		fmt.Println("Username not found")
+		log.Println("Username not found")
 	}
 
-	fmt.Println("username and email: ", username, email)
+	log.Println("username and email: ", username, email)
 
 	response := &responseModel{
 		Auth:     true,
@@ -947,7 +951,7 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 
 	err = session.Save(r, w)
@@ -981,7 +985,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	emailFound := true
 	var userID int
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&userID); err != nil {
-		fmt.Println("query error: ", err)
+		log.Println("query error: ", err)
 		emailFound = false
 	}
 
@@ -992,20 +996,20 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 				"status": "failure",
 			})
 		if err != nil {
-			fmt.Println("err in marshaling: ", err)
+			log.Println("err in marshaling: ", err)
 		}
 		sendJsonResponse(w, failureResp)
 		return
 	}
 
-	fmt.Println("Email was found")
+	log.Println("Email was found")
 
 	expiry := time.Now().Add(resetTimeout * time.Minute).Unix()
 	code := generateRandomCode()
 	// Enter code and expiry into password reset requests
 	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
 	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
-		fmt.Println("unable to insert password reset request in db: ", err)
+		log.Println("unable to insert password reset request in db: ", err)
 	}
 
 	// Automatically delete reset request after timeout
@@ -1026,7 +1030,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 			"status": "success",
 		})
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 	sendJsonResponse(w, successResp)
 }
@@ -1042,7 +1046,7 @@ func generateRandomCode() string {
 func sendStringJsonResponse(w http.ResponseWriter, data map[string]string) {
 	resp, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 	sendJsonResponse(w, resp)
 	return
@@ -1051,7 +1055,7 @@ func sendStringJsonResponse(w http.ResponseWriter, data map[string]string) {
 func sendBoolJsonResponse(w http.ResponseWriter, data map[string]bool) {
 	resp, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 	sendJsonResponse(w, resp)
 	return
@@ -1079,8 +1083,8 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("reset code received: ", cm.Code)
-	fmt.Println("reset email received: '", cm.Email, "'")
+	log.Println("reset code received: ", cm.Code)
+	log.Println("reset email received: '", cm.Email, "'")
 
 	// Find reset code in db
 	query := "SELECT p.user_id, p.expiry FROM password_reset_requests AS p INNER JOIN users AS u ON p.user_id = u.id WHERE p.reset_code = $1 AND u.email = $2"
@@ -1088,13 +1092,13 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	var expiry int64
 	var status, reason string
 	if err := pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&userID, &expiry); err != nil {
-		fmt.Println("Error in finding user (reset password): ", err)
+		log.Println("Error in finding user (reset password): ", err)
 		status = "failure"
 		reason = "row not found or other database error"
 	}
 
-	fmt.Println("now: ", time.Now().Unix())
-	fmt.Println("expiry: ", expiry)
+	log.Println("now: ", time.Now().Unix())
+	log.Println("expiry: ", expiry)
 	// If row was not found, expiry will be 0
 	if expiry != 0 && time.Now().Unix() > expiry {
 		status = "failure"
@@ -1108,7 +1112,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		return
 	}
 
-	fmt.Println("Reset password code and user found")
+	log.Println("Reset password code and user found")
 
 	// Generate encrypted password
 	pepperedPW := cm.NewPlaintextPW + os.Getenv("PWPEPPER")
@@ -1121,7 +1125,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	// Change password in db
 	query = "UPDATE users SET encrypted_pw = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, encryptedPW, userID); err != nil {
-		fmt.Println("unable to insert: ", err)
+		log.Println("unable to insert: ", err)
 		sendStringJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1133,7 +1137,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 func deleteRequestRec(code string) string {
 	query := "DELETE FROM password_reset_requests WHERE reset_code = $1"
 	if _, err := pool.Exec(context.Background(), query, code); err != nil {
-		fmt.Println("unable to delete request record: ", err)
+		log.Println("unable to delete request record: ", err)
 		return "failure"
 	}
 	return "success"
@@ -1142,7 +1146,7 @@ func deleteRequestRec(code string) string {
 func deleteActivationRec(email string) string {
 	query := "DELETE FROM pending_activations WHERE email = $1"
 	if _, err := pool.Exec(context.Background(), query, email); err != nil {
-		fmt.Println("unable to delete activation record: ", err)
+		log.Println("unable to delete activation record: ", err)
 		return "failure"
 	}
 	return "success"
@@ -1162,7 +1166,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("activation code received: ", cm.Code)
+	log.Println("activation code received: ", cm.Code)
 	// Move user from pending activations to user if code is found
 	query := "SELECT username, email, encrypted_pw, expiry FROM pending_activations WHERE activation_code = $1"
 	var username, email, encryptedPW string
@@ -1170,16 +1174,16 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	status := "success"
 	var expiry int64
 	if err = pool.QueryRow(context.Background(), query, cm.Code).Scan(&username, &email, &encryptedPW, &expiry); err != nil {
-		fmt.Println("query error: ", err)
+		log.Println("query error: ", err)
 		recordFound = false
 		status = "failure"
 	}
 
 	// If row was not found, expiry will be 0
-	fmt.Println("now: ", time.Now().Unix())
-	fmt.Println("expiry: ", expiry)
+	log.Println("now: ", time.Now().Unix())
+	log.Println("expiry: ", expiry)
 	if expiry != 0 && time.Now().Unix() > expiry {
-		fmt.Println("Activation code has expired")
+		log.Println("Activation code has expired")
 		status = "failure"
 		// delete expired record
 		deleteActivationRec(cm.Code)
@@ -1192,7 +1196,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		status = deleteActivationRec(cm.Code)
 		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
 		if _, err := pool.Exec(context.Background(), query, username, email, encryptedPW); err != nil {
-			fmt.Println("unable to insert user data: ", err)
+			log.Println("unable to insert user data: ", err)
 			status = "failure"
 		}
 	}
@@ -1209,7 +1213,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -1236,8 +1240,8 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
-	fmt.Println("baseURL: ", cm.BaseURL)
+	log.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
+	log.Println("baseURL: ", cm.BaseURL)
 	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
 	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
 		bcrypt.DefaultCost)
@@ -1267,14 +1271,14 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var tmp int
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err == nil {
 		// Will throw error if no records found
-		fmt.Printf("email %s already registered", cm.Email)
+		log.Printf("email %s already registered", cm.Email)
 		emailUsed = true
 	} else {
 		query = "SELECT 1 FROM pending_activations WHERE email = $1"
 		var tmp int
 		if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err == nil {
 			// Will throw error if no records found
-			fmt.Printf("email %s is pending activation", cm.Email)
+			log.Printf("email %s is pending activation", cm.Email)
 			emailUsed = true
 		}
 	}
@@ -1282,7 +1286,7 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if !emailUsed {
 		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry, code_resends) VALUES($1, $2, $3, $4, $5, $6)"
 		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0); err != nil {
-			fmt.Println("unable to insert activation request: ", err)
+			log.Println("unable to insert activation request: ", err)
 		}
 
 		sendVerificationEmail(code)
@@ -1296,7 +1300,7 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("err in marshaling: ", err)
+		log.Println("err in marshaling: ", err)
 	}
 
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -1327,7 +1331,7 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&codeResends); err != nil {
 		// Will throw error if no record found (i.e., activation
 		// request expired and deleted)
-		fmt.Println("Select query error: ", err)
+		log.Println("Select query error: ", err)
 		status = "failure"
 		reason = "expired"
 	} else if codeResends > 2 {
@@ -1336,14 +1340,14 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	}
 
 	if status == "failure" {
-		fmt.Println(reason)
+		log.Println(reason)
 		sendStringJsonResponse(w, map[string]string{"status": status, "reason": reason})
 		return
 	}
 
 	query = "UPDATE pending_activations SET code_resends = $1 WHERE email = $2"
 	if _, err := pool.Exec(context.Background(), query, codeResends+1, cm.Email); err != nil {
-		fmt.Println("Unable to update code_resends: ", err)
+		log.Println("Unable to update code_resends: ", err)
 		status = "failure"
 		reason = "database error"
 	}
@@ -1352,7 +1356,7 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	activationCode := generateRandomCode()
 	query = "UPDATE pending_activations SET activation_code = $1 WHERE email = $2"
 	if _, err := pool.Exec(context.Background(), query, activationCode, cm.Email); err != nil {
-		fmt.Println("Unable to update activation code: ", err)
+		log.Println("Unable to update activation code: ", err)
 		status = "failure"
 		reason = "database error"
 	}
@@ -1361,7 +1365,7 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	expiry := time.Now().Add(activationTimeout * time.Minute).Unix()
 	query = "UPDATE pending_activations SET expiry = $1 WHERE email = $2"
 	if _, err := pool.Exec(context.Background(), query, expiry, cm.Email); err != nil {
-		fmt.Println("Unable to update expiry: ", err)
+		log.Println("Unable to update expiry: ", err)
 		status = "failure"
 		reason = "database error"
 	}
@@ -1427,7 +1431,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		room.setEventListener("newline", func(config eventConfig) {
 			lines, err := strconv.Atoi(linesOfCode)
 			if err != nil {
-				fmt.Println("strconv error: ", err)
+				log.Println("strconv error: ", err)
 			}
 			if config.count == lines+2 {
 				room.echo = true
@@ -1440,16 +1444,16 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 func closeEmptyRooms() {
 	toDelete := []string{}
 	for roomID, room := range rooms {
-		// fmt.Println("checking for empty rooms")
-		fmt.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
+		// log.Println("checking for empty rooms")
+		log.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		if len(room.wsockets) == 0 {
-			fmt.Println("removing room container: ", room.container.ID)
+			log.Println("removing room container: ", room.container.ID)
 			// Close hijacked connection with runner
 			closeContainerConnection(room.container.connection)
 			// Remove room container
 			err := stopAndRemoveContainer(room.container.ID)
 			if err != nil {
-				fmt.Println("error in stopping/removing container: ", err)
+				log.Println("error in stopping/removing container: ", err)
 			}
 			// Record roomID for deletion
 			toDelete = append(toDelete, roomID)
@@ -1458,7 +1462,7 @@ func closeEmptyRooms() {
 				delete(rooms, id)
 			}
 			// TODO: remove this println
-			fmt.Println("number of rooms open: ", len(rooms))
+			log.Println("number of rooms open: ", len(rooms))
 		}
 	}
 }
@@ -1475,13 +1479,13 @@ func startRoomCloser() {
 }
 
 func stopAndRemoveContainer(containername string) error {
-	fmt.Println("Removing container: ", containername)
+	log.Println("Removing container: ", containername)
 	ctx := context.Background()
 
 	// close connection
 
 	if err := cli.ContainerStop(ctx, containername, nil); err != nil {
-		fmt.Printf("Unable to stop container %s: %s", containername, err)
+		log.Printf("Unable to stop container %s: %s", containername, err)
 	}
 
 	removeOptions := types.ContainerRemoveOptions{
@@ -1490,7 +1494,7 @@ func stopAndRemoveContainer(containername string) error {
 	}
 
 	if err := cli.ContainerRemove(ctx, containername, removeOptions); err != nil {
-		fmt.Printf("Unable to remove container: %s", err)
+		log.Printf("Unable to remove container: %s", err)
 		return err
 	}
 
@@ -1527,7 +1531,7 @@ func main() {
 	router.POST("/api/clientclearterm", clientClearTerm)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
-	fmt.Printf("Starting server on port %d\n", port)
+	log.Printf("Starting server on port %d\n", port)
 
 	handler := cors.Default().Handler(router)
 	err := http.ListenAndServe(portString, handler)
