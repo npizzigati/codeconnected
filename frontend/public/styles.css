@@ -109,23 +109,36 @@ body {
     user-select: none;
 }
 
+.home .pre-launch-dialog .options {
+    margin-left: 3em;
+}
+
+.home .pre-launch-dialog .option-row {
+    display: table-row;
+    line-height: 2em;
+}
+
+.home .pre-launch-dialog .option-row .arrow {
+    height: 1.2em;
+    width: 1.2em;
+    padding-top: 0.7em;
+}
+
 .home .pre-launch-dialog .option {
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 0.5em;
     font-family: 'Lato', sans-serif;
     font-size: 1.3em;
     font-weight: 600;
-    color: #e1edff;
-    text-align: center;
-    margin: 0 auto 0.5em;
-    width: 75%;
-    background-color: #6258d7;
-    padding: 0.5em;
-    border-radius: 0.4em;
+    color: white;
+    text-decoration: underline;
     cursor: pointer;
     user-select: none;
 }
 
 .home .pre-launch-dialog .option:hover {
-    background-color: #4c45aa
+    color: #d737ff
 }
 
 #header-right-side .time-remaining {

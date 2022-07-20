@@ -44,11 +44,25 @@ function Home () {
                     Rooms created by unregistered users have a 15-minute time limit.
                   </div>
                 </div>
-                <div className='option' onPointerDown={preLaunchSignIn}>
-                  Sign in to remove time limit
-                </div>
-                <div className='option' onPointerDown={continueAnyway}>
-                  Continue to time-limited room
+                <div className='options'>
+                  <p className='option-row'>
+                    <img
+                      className='arrow'
+                      src='./arrow_forward.png'
+                    />
+                    <span className='option' onPointerDown={preLaunchSignIn}>
+                      Sign in to remove time limit
+                    </span>
+                  </p>
+                  <p className='option-row'>
+                    <img
+                      className='arrow'
+                      src='./arrow_forward.png'
+                    />
+                    <span className='option' onPointerDown={continueAnyway}>
+                      Continue to time-limited room
+                    </span>
+                  </p>
                 </div>
               </div>
             </div>}
