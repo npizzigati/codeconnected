@@ -66,7 +66,7 @@ function Home () {
                 </div>
               </div>
             </div>}
-          <div id='header-bar'>
+          <div className='header-bar'>
             <div className='header-logo' />
             <div className='logo-text'>
               <span className='site-name'>
@@ -75,7 +75,7 @@ function Home () {
               </span>
               <span className='tagline'>Collaborative code editor, runner and REPL</span>
             </div>
-            <div className='nav-right'>
+            <div className='right-side'>
               {auth
                 ? <UserDashboard setAuthed={setAuth} />
                 : <div

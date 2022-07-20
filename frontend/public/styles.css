@@ -31,28 +31,28 @@ body {
     background-repeat: no-repeat;
 }
 
-#header-bar {
+.home .header-bar {
     width: 100%
     margin: 0 0.5em var(--header-bar-bottom-margin) 0.3em;
     display: flex;
     border-bottom: 1px solid #777;
 }
 
-#header-bar .nav-right {
+.home .header-bar .right-side {
     margin-left: auto;
     margin-top: 0.8em;
     margin-right: 0.8em;
     user-select: none;
 }
 
-#header-bar .sign-in {
+.home .header-bar .sign-in {
     color: white;
     font-family: 'Lato', sans-serif;
     font-size: 1.3em;
     text-decoration: underline;
 }
 
-#header-bar .sign-in:hover {
+.home .header-bar .sign-in:hover {
     color: #d22eff;
     cursor: pointer;
 }
@@ -91,6 +91,7 @@ body {
     display: flex;
     width: 95%;
     margin: 0 auto 1em;
+    padding-left: 1em;
 }
 
 .home .pre-launch-dialog .message-container .attention-image {
@@ -139,15 +140,6 @@ body {
 
 .home .pre-launch-dialog .option:hover {
     color: #d737ff
-}
-
-#header-right-side .time-remaining {
-    color: white;
-}
-
-#header-right-side .time-remaining .sign-in-link {
-    text-decoration: underline;
-    cursor: pointer;
 }
 
 .home .header-logo {
