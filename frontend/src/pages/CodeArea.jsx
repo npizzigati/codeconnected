@@ -44,7 +44,7 @@ function CodeArea () {
   const initialX = useRef(null);
   const [cmWidth, setCmWidth] = useState('50%');
   const [termWidth, setTermWidth] = useState('50%');
-  const [minCmWidth, minTermWidth] = [300, 200];
+  const [minCmWidth, minTermWidth] = [450, 350];
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
   const [showMain, setShowMain] = useState(false);
