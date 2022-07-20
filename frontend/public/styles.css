@@ -18,6 +18,11 @@ body {
     background-color: var(--main-bg-color);
 }
 
+body.resizing {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 .close-button {
     position: absolute;
     cursor: pointer;

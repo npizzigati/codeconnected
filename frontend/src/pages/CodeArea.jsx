@@ -64,7 +64,9 @@ function CodeArea () {
   }, []);
 
   return (
-    <div className={showMain ? 'code-area visible' : 'code-area hidden'}>
+    <div
+      className={showMain ? 'code-area visible' : 'code-area hidden'}
+    >
       {showAuth &&
         <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} />}
       <div className='header-bar'>
@@ -92,7 +94,9 @@ function CodeArea () {
                 </div>}
         </div>
       </div>
-      <div id='main-container'>
+      <div
+        id='main-container'
+      >
         <div
           ref={cmContainerDOMRef}
           id='codemirror-container'
@@ -212,6 +216,7 @@ function CodeArea () {
     if (event.clientX < leftBoundary || event.clientX > rightBoundary) {
       return;
     }
+
     if (newCmWidth < minCmWidth) {
       newCmWidth = minCmWidth;
     }
@@ -228,15 +233,19 @@ function CodeArea () {
   }
 
   function startResize (event) {
+    // Prevent any elements from being selected (causing flicker)
+    // when resizing (a webkit browser problem)
+    document.body.classList.add('resizing');
+
     const elem = resizeBarDOMRef.current;
     console.log('clientX: ' + event.clientX);
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
-
     elem.onpointermove = (moveEvent) => resize(moveEvent, event);
   }
 
   async function stopResize (event) {
+    document.body.classList.remove('resizing');
     const elem = resizeBarDOMRef.current;
     elem.onpointermove = null;
     elem.releasePointerCapture(event.pointerId);
