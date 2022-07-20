@@ -3,8 +3,8 @@
     --main-bg-color: #1c1b22;
     --header-bar-height: 5em;
     --header-bar-bottom-margin: 0em;
-    --modal-background-color: #222;
-    --modal-border: 1px solid #555;
+    --modal-background-color: #111;
+    --modal-border: 2px solid #555;
 }
 
 input:focus,
