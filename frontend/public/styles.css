@@ -668,9 +668,9 @@ body.resizing {
     --unselected-tab-bkg-color: #444;
     position: fixed;
     z-index: 1001;
-    margin: 15vh auto 0;
-    left: 0;
-    right: 0;
+    margin-top: 15vh;
+    left: 50%;
+    transform: translate(-50%, 0);
     min-width: 16em;
     min-height: 11em;
     background-color: var(--modal-background-color);
