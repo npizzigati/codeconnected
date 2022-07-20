@@ -234,8 +234,8 @@ body {
 
 .code-area .header-bar .user-dashboard-container {
     height: fit-content;
-    margin-right: .5em;
-    margin-top: .5em;
+    margin-right: 1em;
+    margin-top: .9em;
 }
 
 .code-area .header-bar .sign-in {
