@@ -782,9 +782,11 @@ body {
 
 .popup:not(:empty) {
     padding: 0.3em 0.4em;
-    font-size: 1.2rem;
+    font-family: 'Lato', sans-serif;
+    font-weight: 600;
+    font-size: 1.4rem;
     color: white;
-    background-color: #6258d7;
+    background-color: #ff0004;
     border-radius: 4px;
     opacity: 0.8;
     transition: opacity .5s;
