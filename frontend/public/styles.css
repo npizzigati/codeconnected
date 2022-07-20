@@ -3,6 +3,8 @@
     --main-bg-color: #1c1b22;
     --header-bar-height: 2em;
     --header-bar-bottom-margin: 0em;
+    --modal-background-color: #222;
+    --modal-border: 1px solid #555;
 }
 
 input:focus,
@@ -78,8 +80,9 @@ body {
     width: 25em;
     left: 0;
     right: 0;
-    color: black;
-    background-color: white;
+    color: white;
+    background-color: var(--modal-background-color);
+    border: var(--modal-border);
     border-radius: 5px;
     user-select: none;
 }
@@ -93,14 +96,14 @@ body {
 .home .pre-launch-dialog .message-container .attention-image {
     width: 4.5em;
     background-image: url('./attention.png');
-    background-size: 2em;
+    background-size: 2.5em;
     background-repeat: no-repeat;
-    background-position: center top 0.8em;
+    background-position: center top 0.4em;
 }
 
 .home .pre-launch-dialog .message-container .message {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1.7em;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.3em;
     line-height: 1.2em;
     margin-left: 0.5em;
     user-select: none;
@@ -109,11 +112,12 @@ body {
 .home .pre-launch-dialog .option {
     font-family: 'Lato', sans-serif;
     font-size: 1.3em;
+    font-weight: 600;
     color: #e1edff;
     text-align: center;
     margin: 0 auto 0.5em;
     width: 75%;
-    background-color: #277ec0;
+    background-color: #6258d7;
     padding: 0.5em;
     border-radius: 0.4em;
     cursor: pointer;
@@ -121,7 +125,7 @@ body {
 }
 
 .home .pre-launch-dialog .option:hover {
-    background-color: #2e98e4
+    background-color: #4c45aa
 }
 
 #header-right-side .time-remaining {
@@ -580,9 +584,7 @@ body {
 }
 
 .auth-modal {
-    --modal-background-color: #222;
     --unselected-tab-bkg-color: #444;
-    --modal-border: 1px solid #555;
     position: fixed;
     z-index: 1001;
     margin: 15vh auto 0;
