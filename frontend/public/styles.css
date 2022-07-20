@@ -727,9 +727,10 @@ body.resizing {
 }
 
 .auth-modal input::placeholder {
-    color: #555;
+    color: #666;
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 400;
+    vertical-align: .middle;
 }
 
 .sign-up label,
