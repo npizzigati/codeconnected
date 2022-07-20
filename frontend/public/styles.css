@@ -730,7 +730,7 @@ body.resizing {
     color: #666;
     font-size: 1.2rem;
     font-weight: 400;
-    vertical-align: .middle;
+    vertical-align: middle;
 }
 
 .sign-up label,
