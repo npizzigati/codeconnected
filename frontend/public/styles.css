@@ -29,6 +29,7 @@ body {
     font-family: 'Saira Condensed', sans-serif;
     color: white;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .site-name .color1 {
@@ -46,6 +47,7 @@ body {
     display: block;
     margin-top: .4em;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 
@@ -83,6 +85,7 @@ body {
     margin-top: 0.8em;
     margin-right: 0.8em;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .home .header-bar .sign-in {
@@ -130,6 +133,7 @@ body {
     border: var(--modal-border);
     border-radius: 5px;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .home .pre-launch-dialog .message-container {
@@ -153,6 +157,7 @@ body {
     line-height: 1.2em;
     margin-left: 0.5em;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .home .pre-launch-dialog .options {
@@ -181,6 +186,7 @@ body {
     text-decoration: underline;
     cursor: pointer;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .home .pre-launch-dialog .option:hover {
@@ -218,6 +224,7 @@ body {
     margin-left: auto;
     margin-right: 0.5em;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .code-area .header-bar .time-remaining {
@@ -269,6 +276,7 @@ body {
     margin: 15vh 20% 0;
     border-left: 3px solid #777;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .language-chooser {
@@ -352,6 +360,7 @@ body {
 
 .user-dashboard {
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .user-dashboard .account-circle {
@@ -359,6 +368,7 @@ body {
     width: 2em;
     cursor: pointer;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .user-dashboard .main {
@@ -483,6 +493,7 @@ body {
     background-color: inherit;
     color: #999;
     user-select: none;
+    -webkit-user-select: none;
     display: flex;
 }
 
@@ -536,6 +547,7 @@ body {
     padding: 5px 5px;
     color: #999;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 .select-dropdown-item:hover {
@@ -605,6 +617,7 @@ body {
 
 .editor-and-repl-title {
     user-select: none;
+    -webkit-user-select: none;
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
     color: #999;
@@ -613,6 +626,7 @@ body {
 
 .editor-lang-label {
     user-select: none;
+    -webkit-user-select: none;
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
     color: #999;
@@ -761,6 +775,7 @@ body {
     border-top-left-radius: 0.7rem;
     border-top-right-radius: 0.7rem;
     user-select: none;
+    -webkit-user-select: none;
     flex-grow: 1;
     flex-basis: 0;
 }
