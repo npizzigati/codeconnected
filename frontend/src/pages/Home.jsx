@@ -67,7 +67,7 @@ function Home () {
               </div>
             </div>}
           <div className='header-bar'>
-            <div className='header-logo' />
+            <div className='logo' />
             <div className='logo-text'>
               <span className='site-name'>
                 <span className='color1'>code</span>
@@ -77,7 +77,9 @@ function Home () {
             </div>
             <div className='right-side'>
               {auth
-                ? <UserDashboard setAuthed={setAuth} />
+                ? <div className='user-dashboard-container'>
+                    <UserDashboard setAuthed={setAuth} />
+                  </div>
                 : <div
                     className='sign-in'
                     onPointerDown={() => setShowAuth(true)}

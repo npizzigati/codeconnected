@@ -64,19 +64,32 @@ function CodeArea () {
   }, []);
 
   return (
-    <div id='code-area' className={showMain ? 'visible' : 'hidden'}>
+    <div className={showMain ? 'code-area visible' : 'code-area hidden'}>
       {showAuth &&
         <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} />}
-      <div id='header-bar'>
-        <div id='header-left-side'>
-          <Link className='header-logo' to='/' />
+      <div className='header-bar'>
+        <Link className='logo' to='/' />
+        <div className='logo-text'>
+          <span className='site-name'>
+            <span className='color1'>code</span>
+            <span className='color2'>connected</span>
+          </span>
         </div>
-        <div id='header-right-side'>
+        <div className='right-side'>
           {timeLeftDisplay !== null &&
             <div className='time-remaining'>
               Time remaining: {timeLeftDisplay}
             </div>}
-          {authed && <UserDashboard />}
+            {authed
+              ? <div className='user-dashboard-container'>
+                  <UserDashboard setAuthed={setAuthed} />
+                </div>
+              : <div
+                  className='sign-in'
+                  onPointerDown={() => setShowAuth(true)}
+                >
+                  Sign in
+                </div>}
         </div>
       </div>
       <div id='main-container'>

@@ -1,7 +1,7 @@
 :root {
     font-size: calc(0.5em + 1vh);
     --main-bg-color: #1c1b22;
-    --header-bar-height: 2em;
+    --header-bar-height: 5em;
     --header-bar-bottom-margin: 0em;
     --modal-background-color: #222;
     --modal-border: 1px solid #555;
@@ -12,12 +12,6 @@ select:focus,
 textarea:focus,
 button:focus {
     outline: none;
-}
-
-.home {
-    /* blue */
-    background-color: var(--main-bg-color);
-    height: 100vh;
 }
 
 body {
@@ -31,11 +25,57 @@ body {
     background-repeat: no-repeat;
 }
 
+.site-name {
+    font-family: 'Saira Condensed', sans-serif;
+    color: white;
+    user-select: none;
+}
+
+.site-name .color1 {
+    color: #ec19ff;
+}
+
+.site-name .color2 {
+    color: white;
+}
+
+.tagline {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.3rem;
+    color: white;
+    display: block;
+    margin-top: .4em;
+    user-select: none;
+}
+
+
+.home {
+    background-color: var(--main-bg-color);
+    height: 100vh;
+}
+
 .home .header-bar {
     width: 100%
     margin: 0 0.5em var(--header-bar-bottom-margin) 0.3em;
     display: flex;
     border-bottom: 1px solid #777;
+}
+
+.home .header-bar .logo {
+    margin: 0.8em 0.5em 0 0.2em;
+    height: 5.5em;
+    width: 5.5em;
+    background-image: url('./codeconnected.png');
+    background-size: 5.5em;
+    background-repeat: no-repeat;
+}
+
+.home .header-bar .logo-text {
+    margin-top: .8em;
+}
+
+.home .header-bar .logo-text .site-name {
+    font-size: 2.5rem;
 }
 
 .home .header-bar .right-side {
@@ -55,6 +95,11 @@ body {
 .home .header-bar .sign-in:hover {
     color: #d22eff;
     cursor: pointer;
+}
+
+.home .header-bar .user-dashboard-container {
+    margin-right: .5em;
+    margin-top: .5em;
 }
 
 .backdrop {
@@ -142,53 +187,70 @@ body {
     color: #d737ff
 }
 
-.home .header-logo {
-    margin: 0.8em 0.5em 0 0.2em;
-    height: 5.5em;
-    width: 5.5em;
-    background-image: url('./codeconnected.png');
-    background-size: 5.5em;
-    background-repeat: no-repeat;
+.code-area .header-bar {
+    width: 100%;
+    height: var(--header-bar-height);
+    margin: 0 0.5em var(--header-bar-bottom-margin) 0.3em;
+    display: flex;
 }
 
-#code-area .header-logo {
-    margin-top: 0.4em;
+.code-area .header-bar .logo {
+    margin-top: 0.5em;
     margin-left: 0.2em;
     margin-right: 0.5em;
-    height: 1.5em;
-    width: 1.5em;
+    height: 2em;
+    width: 2em;
     background-image: url('./codeconnected.png');
-    background-size: 1.5em 1.5em;
+    background-size: 2em 2em;
     background-repeat: no-repeat;
-
 }
 
-.logo-text {
+.code-area .header-bar .logo-text {
     margin-top: .8em;
 }
 
-.site-name {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 2.5rem;
-    color: white;
+.code-area .header-bar .logo-text .site-name {
+    font-size: 1.5rem;
+}
+
+.code-area .header-bar .right-side {
+    display: flex;
+    margin-left: auto;
+    margin-right: 0.5em;
     user-select: none;
 }
 
-.site-name .color1 {
-    color: #ec19ff;
+.code-area .header-bar .time-remaining {
+    margin-top: 0.9em;
+    margin-right: 7em;
+    color: white;
+    height: fit-content;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.1em;
+    padding: 0.3em;
+    border-radius: 0.2em;
+    background-color: #5e499b
 }
 
-.site-name .color2 {
-    color: white;
+.code-area .header-bar .user-dashboard-container {
+    height: fit-content;
+    margin-right: .5em;
+    margin-top: .5em;
 }
 
-.tagline {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1.3rem;
+.code-area .header-bar .sign-in {
+    margin-top: 1em;
+    margin-right: 1em;
+    height: fit-content;
     color: white;
-    display: block;
-    margin-top: .4em;
-    user-select: none;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.2em;
+    text-decoration: underline;
+}
+
+.code-area .header-bar .sign-in:hover {
+    color: #d22eff;
+    cursor: pointer;
 }
 
 .avatar {
@@ -279,11 +341,11 @@ body {
     padding-right: .3em;
 }
 
-#code-area.hidden {
+.code-area.hidden {
     opacity: 0;
 }
 
-#code-area.visible {
+.code-area.visible {
     opacity: 1;
     transition: opacity .5s;
 }
@@ -295,8 +357,6 @@ body {
 .user-dashboard .account-circle {
     height: 2em;
     width: 2em;
-    margin-right: .5em;
-    margin-top: .5em;
     cursor: pointer;
     user-select: none;
 }
