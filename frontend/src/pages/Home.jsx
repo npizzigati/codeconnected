@@ -17,11 +17,19 @@ function Home () {
 
   useEffect(() => {
     console.log('Checking user authentication');
+    let isCanceled = false;
     (async () => {
       const userInfo = await getUserInfo();
+      if (isCanceled) {
+        return;
+      }
       setAuth(userInfo.auth);
       setAuthChecked(true);
     })();
+
+    return function cleanup () {
+      isCanceled = true;
+    };
   }, []);
 
   return (
