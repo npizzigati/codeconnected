@@ -1032,9 +1032,12 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 	logger.Println("Email was found")
 
+	// Delete any existing password reset requests for user
+	deleteRequestRec(userID)
+
+	// Enter code and expiry into password reset requests
 	expiry := time.Now().Add(resetTimeout * time.Minute).Unix()
 	code := generateRandomCode()
-	// Enter code and expiry into password reset requests
 	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
 	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
 		logger.Println("unable to insert password reset request in db: ", err)
@@ -1045,7 +1048,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		for {
 			time.Sleep(1 * time.Minute)
 			if time.Now().Unix() > expiry {
-				deleteRequestRec(userID, code)
+				deleteRequestRec(userID)
 				break
 			}
 		}
@@ -1132,7 +1135,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		status = "failure"
 		reason = "code expired"
 		// delete expired record
-		deleteRequestRec(userID, cm.Code)
+		deleteRequestRec(userID)
 	}
 
 	if status == "failure" {
@@ -1158,13 +1161,13 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		return
 	}
 	// Delete completed reset request from database
-	deleteRequestRec(userID, cm.Code)
+	deleteRequestRec(userID)
 	sendStringJsonResponse(w, map[string]string{"status": "success"})
 }
 
-func deleteRequestRec(userID int, code string) string {
-	query := "DELETE FROM password_reset_requests WHERE user_id = $1 AND code = $2"
-	if _, err := pool.Exec(context.Background(), query, userID, code); err != nil {
+func deleteRequestRec(userID int) string {
+	query := "DELETE FROM password_reset_requests WHERE user_id = $1"
+	if _, err := pool.Exec(context.Background(), query, userID); err != nil {
 		logger.Println("unable to delete request record: ", err)
 		return "failure"
 	}
