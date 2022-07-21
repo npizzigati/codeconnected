@@ -84,7 +84,7 @@ function CodeArea () {
       className={showMain ? 'code-area visible' : 'code-area hidden'}
     >
       {showAuth &&
-        <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} />}
+        <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
       <div className='header-bar'>
         <Link className='logo' to='/' />
         <div className='logo-text'>
