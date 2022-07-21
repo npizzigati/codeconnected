@@ -58,9 +58,25 @@ function CodeArea () {
   const cmContainerDOMRef = useRef(null);
 
   useEffect(() => {
+    let isCanceled = false;
+    function onlineEventHandler () {
+      console.log('now online');
+      location.reload();
+    }
+    // Check whether room exists when user comes online. This
+    // is so that users returning from sleep or otherwise being
+    // offline can automatically return to home page if room
+    // has closed.
+    window.addEventListener('online', onlineEventHandler);
+
     (async () => {
-      await setup();
+      await setup(isCanceled);
     })();
+
+    return function cleanup () {
+      window.removeEventListener('online', onlineEventHandler);
+      isCanceled = true;
+    };
   }, []);
 
   return (
@@ -251,7 +267,7 @@ function CodeArea () {
     elem.releasePointerCapture(event.pointerId);
   }
 
-  async function prepareRoom (roomID) {
+  async function prepareRoom (roomID, isCanceled) {
     const body = JSON.stringify({ roomID });
     const options = {
       method: 'POST',
@@ -262,6 +278,9 @@ function CodeArea () {
 
     try {
       const response = await fetch('/api/prepare-room', options);
+      if (isCanceled) {
+        return;
+      }
       const json = await response.json();
       console.log(JSON.stringify(json));
       const status = json.status;
@@ -275,8 +294,11 @@ function CodeArea () {
     }
   }
 
-  async function setup () {
+  async function setup (isCanceled) {
     if (!(await roomExists(roomID))) {
+      if (isCanceled) {
+        return;
+      }
       console.log('room does not exist');
       navigate('/');
       return;
@@ -289,7 +311,10 @@ function CodeArea () {
     console.log(status);
     if (status === 'created') {
       console.log('Will prepare room');
-      await prepareRoom(roomID);
+      await prepareRoom(roomID, isCanceled);
+      if (isCanceled) {
+        return;
+      }
     } else if (status === 'preparing') {
       console.log('Room is being prepared');
       // TODO: Show modal message that room is being prepared and
@@ -299,6 +324,9 @@ function CodeArea () {
 
     // Get initial lang and terminal history from server
     const initialVars = await getInitialRoomData(roomID);
+    if (isCanceled) {
+      return;
+    }
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
     const expiry = initialVars.expiry;
@@ -319,6 +347,9 @@ function CodeArea () {
     cm.setSize('100%', '100%');
 
     const userInfo = await getUserInfo();
+    if (isCanceled) {
+      return;
+    }
     if (userInfo.auth === true) {
       setAuthed(true);
       setUsername(userInfo.username);
@@ -372,15 +403,6 @@ function CodeArea () {
     });
     // Copy a reference to React state
     codeOptions.current = yCodeOptions;
-
-    // Check whether room exists when user comes online. This
-    // is so that users returning from sleep or otherwise being
-    // offline can automatically return to home page if room
-    // has closed.
-    window.addEventListener('online', () => {
-      console.log('now online');
-      location.reload();
-    });
 
     setRunnerReady(true);
   }
