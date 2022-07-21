@@ -213,8 +213,16 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		logger.Println("err while trying to unmarshal: ", err)
 	}
 
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
+	userID := -1
+	var ok bool
+	if userID, ok = session.Values["userID"].(int); !ok {
+		logger.Println("userID not found")
 	}
 
 	logger.Println("*************rm.Language: ", rm.Language)
@@ -229,6 +237,19 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	rooms[roomID] = &room
+
+	// TODO: Check whether userID is found; if so, insert the
+	// following record
+	// Like this:
+	// if userID != -1 {
+	// }
+
+	currentTime := time.Now().Unix()
+	query := "INSERT INTO coding_sessions(user_id, lang, when_created, when_accessed) VALUES($1, $2, $3, $4)"
+	if _, err := pool.Exec(context.Background(), query, userID, rm.Language, currentTime, currentTime); err != nil {
+		logger.Println("unable to insert record into coding_sessions: ", err)
+	}
+
 	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
 }
 
@@ -1199,17 +1220,25 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type responseModel struct {
 		Status string `json:"status"`
 	}
+
+	userID := -1
 	if recordFound {
 		status = deleteActivationRec(cm.Code)
-		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3)"
-		if _, err := pool.Exec(context.Background(), query, username, email, encryptedPW); err != nil {
+		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3) RETURNING id;"
+		if err := pool.QueryRow(context.Background(), query, username, email, encryptedPW).Scan(&userID); err != nil {
 			logger.Println("unable to insert user data: ", err)
 			status = "failure"
 		}
 	}
 
+	if userID == -1 {
+		logger.Println("User ID not retrieved")
+	}
+
 	session.Values["auth"] = true
 	session.Values["email"] = email
+	session.Values["username"] = username
+	session.Values["userID"] = userID
 	if err = session.Save(r, w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

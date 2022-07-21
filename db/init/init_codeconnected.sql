@@ -26,3 +26,12 @@ CREATE TABLE password_reset_requests (
   expiry BIGINT NOT NULL
 );
 
+CREATE TABLE coding_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  lang VARCHAR(20) NOT NULL,
+  editor_contents TEXT,
+  when_created BIGINT NOT NULL,
+  when_accessed BIGINT NOT NULL
+);
+
