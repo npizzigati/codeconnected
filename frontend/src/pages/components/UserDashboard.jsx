@@ -24,7 +24,8 @@ function UserDashboard ({ setAuthed }) {
 
     document.addEventListener('pointerdown', handleDocPointerDown);
 
-    let userInfo, isCanceled;
+    let userInfo;
+    let isCanceled = false;
     (async () => {
       userInfo = await getUserInfo();
       if (isCanceled) {
