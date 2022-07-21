@@ -11,20 +11,25 @@ function UserDashboard ({ setAuthed }) {
   const dashboard = useRef(null);
 
   useEffect(() => {
-    document.addEventListener('pointerdown', (ev) => {
+    function handleDocPointerDown (ev) {
       if (!dashboard.current) {
         return;
       }
-      const isPointerOutsideDashboard = ev.target !== avatar.current
-            && !ev.target.classList.contains('user-dashboard');
+      const isPointerOutsideDashboard = ev.target !== avatar.current &&
+            !ev.target.classList.contains('user-dashboard');
       if (isPointerOutsideDashboard) {
         hideDashboard();
       }
-    });
+    }
 
-    let userInfo;
+    document.addEventListener('pointerdown', handleDocPointerDown);
+
+    let userInfo, isCanceled;
     (async () => {
       userInfo = await getUserInfo();
+      if (isCanceled) {
+        return;
+      }
       if (userInfo.auth === false) {
         return;
       }
@@ -32,6 +37,11 @@ function UserDashboard ({ setAuthed }) {
       setUsername(userInfo.username);
       setEmail(userInfo.email);
     })();
+
+    return function cleanup () {
+      document.removeEventListener('pointerdown', handleDocPointerDown);
+      isCanceled = true;
+    };
   }, []);
 
   return (
