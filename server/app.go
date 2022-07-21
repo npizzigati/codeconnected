@@ -219,10 +219,11 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	userID := -1
+	var userID int
 	var ok bool
 	if userID, ok = session.Values["userID"].(int); !ok {
 		logger.Println("userID not found")
+		userID = -1
 	}
 
 	logger.Println("*************rm.Language: ", rm.Language)
@@ -238,16 +239,13 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	rooms[roomID] = &room
 
-	// TODO: Check whether userID is found; if so, insert the
-	// following record
-	// Like this:
-	// if userID != -1 {
-	// }
-
-	currentTime := time.Now().Unix()
-	query := "INSERT INTO coding_sessions(user_id, lang, when_created, when_accessed) VALUES($1, $2, $3, $4)"
-	if _, err := pool.Exec(context.Background(), query, userID, rm.Language, currentTime, currentTime); err != nil {
-		logger.Println("unable to insert record into coding_sessions: ", err)
+	// If user found, insert coding sessions record
+	if userID != -1 {
+		currentTime := time.Now().Unix()
+		query := "INSERT INTO coding_sessions(user_id, lang, when_created, when_accessed) VALUES($1, $2, $3, $4)"
+		if _, err := pool.Exec(context.Background(), query, userID, rm.Language, currentTime, currentTime); err != nil {
+			logger.Println("unable to insert record into coding_sessions: ", err)
+		}
 	}
 
 	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
