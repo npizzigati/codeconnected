@@ -1045,7 +1045,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		for {
 			time.Sleep(1 * time.Minute)
 			if time.Now().Unix() > expiry {
-				deleteRequestRec(code)
+				deleteRequestRec(userID, code)
 				break
 			}
 		}
@@ -1132,7 +1132,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		status = "failure"
 		reason = "code expired"
 		// delete expired record
-		deleteRequestRec(cm.Code)
+		deleteRequestRec(userID, cm.Code)
 	}
 
 	if status == "failure" {
@@ -1158,13 +1158,13 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		return
 	}
 	// Delete completed reset request from database
-	deleteRequestRec(cm.Code)
+	deleteRequestRec(userID, cm.Code)
 	sendStringJsonResponse(w, map[string]string{"status": "success"})
 }
 
-func deleteRequestRec(code string) string {
-	query := "DELETE FROM password_reset_requests WHERE reset_code = $1"
-	if _, err := pool.Exec(context.Background(), query, code); err != nil {
+func deleteRequestRec(userID int, code string) string {
+	query := "DELETE FROM password_reset_requests WHERE user_id = $1 AND code = $2"
+	if _, err := pool.Exec(context.Background(), query, userID, code); err != nil {
 		logger.Println("unable to delete request record: ", err)
 		return "failure"
 	}
