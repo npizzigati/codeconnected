@@ -98,16 +98,16 @@ function CodeArea () {
             <div className='time-remaining'>
               Time remaining: {timeLeftDisplay}
             </div>}
-            {authed
-              ? <div className='user-dashboard-container'>
-                  <UserDashboard setAuthed={setAuthed} />
-                </div>
-              : <div
-                  className='sign-in'
-                  onPointerDown={() => setShowAuth(true)}
-                >
-                  Sign in
-                </div>}
+          {authed
+            ? <div className='user-dashboard-container'>
+                <UserDashboard setAuthed={setAuthed} />
+              </div>
+            : <div
+                className='sign-in'
+                onPointerDown={() => setShowAuth(true)}
+              >
+                Sign in
+              </div>}
         </div>
       </div>
       <div
