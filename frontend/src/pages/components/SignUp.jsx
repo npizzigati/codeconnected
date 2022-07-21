@@ -234,7 +234,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
       return;
     }
 
-    const body = JSON.stringify({ code: activationCode });
+    const body = JSON.stringify({ code: activationCode, email });
     const options = {
       method: 'POST',
       mode: 'cors',

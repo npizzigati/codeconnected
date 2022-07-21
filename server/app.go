@@ -1183,7 +1183,8 @@ func deleteActivationRec(email string) string {
 func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	session, err := store.Get(r, "session")
 	type contentModel struct {
-		Code string `json:"code"`
+		Code  string `json:"code"`
+		Email string `json:"email"`
 	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
@@ -1196,25 +1197,24 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	logger.Println("activation code received: ", cm.Code)
 	// Move user from pending activations to user if code is found
-	query := "SELECT username, email, encrypted_pw, expiry FROM pending_activations WHERE activation_code = $1"
-	var username, email, encryptedPW string
+	query := "SELECT username, encrypted_pw, expiry FROM pending_activations WHERE activation_code = $1 AND email = $2"
+	var username, encryptedPW string
+	var expiry int64
 	recordFound := true
 	status := "success"
-	var expiry int64
-	if err = pool.QueryRow(context.Background(), query, cm.Code).Scan(&username, &email, &encryptedPW, &expiry); err != nil {
+	if err = pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&username, &encryptedPW, &expiry); err != nil {
 		logger.Println("query error: ", err)
 		recordFound = false
 		status = "failure"
 	}
-
-	// If row was not found, expiry will be 0
 	logger.Println("now: ", time.Now().Unix())
 	logger.Println("expiry: ", expiry)
+	// If row was not found, expiry will be 0
 	if expiry != 0 && time.Now().Unix() > expiry {
 		logger.Println("Activation code has expired")
 		status = "failure"
 		// delete expired record
-		deleteActivationRec(cm.Code)
+		deleteActivationRec(cm.Email)
 	}
 
 	type responseModel struct {
@@ -1223,9 +1223,9 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	userID := -1
 	if recordFound {
-		status = deleteActivationRec(cm.Code)
+		deleteActivationRec(cm.Email)
 		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3) RETURNING id;"
-		if err := pool.QueryRow(context.Background(), query, username, email, encryptedPW).Scan(&userID); err != nil {
+		if err := pool.QueryRow(context.Background(), query, username, cm.Email, encryptedPW).Scan(&userID); err != nil {
 			logger.Println("unable to insert user data: ", err)
 			status = "failure"
 		}
@@ -1236,7 +1236,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	session.Values["auth"] = true
-	session.Values["email"] = email
+	session.Values["email"] = cm.Email
 	session.Values["username"] = username
 	session.Values["userID"] = userID
 	if err = session.Save(r, w); err != nil {
@@ -1288,19 +1288,6 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	expiry := time.Now().Add(activationTimeout * time.Minute).Unix()
 	code := generateRandomCode()
 
-	// Automatically delete activation request after timeout
-	// TODO: Stop this goroutine when the activation request is
-	// deleted normally
-	go func() {
-		for {
-			time.Sleep(1 * time.Minute)
-			if time.Now().Unix() > expiry {
-				deleteActivationRec(cm.Email)
-				break
-			}
-		}
-	}()
-
 	// Check whether user has already registered
 	var emailUsed bool
 	query := "SELECT 1 FROM users WHERE email = $1"
@@ -1324,6 +1311,19 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0); err != nil {
 			logger.Println("unable to insert activation request: ", err)
 		}
+
+		// Automatically delete activation request after timeout
+		// TODO: Stop this goroutine when the activation request is
+		// deleted normally
+		go func() {
+			for {
+				time.Sleep(1 * time.Minute)
+				if time.Now().Unix() > expiry {
+					deleteActivationRec(cm.Email)
+					break
+				}
+			}
+		}()
 
 		sendVerificationEmail(code)
 	}
