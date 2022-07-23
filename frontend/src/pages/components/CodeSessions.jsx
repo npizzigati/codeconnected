@@ -24,7 +24,9 @@ function CodeSessions () {
         <p key={cSession.sessID}
            onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
         >
-          <span>{langNameTrans(cSession.lang)}</span><span>{dateTrans(cSession.when_accessed)}</span>
+          <span>{langNameTrans(cSession.lang)}</span>
+          <span>{getLOC(cSession.content)}</span>
+          <span>{dateTrans(cSession.when_accessed)}</span>
         </p>
       );
       setCSessions(formattedSessions);
@@ -38,11 +40,26 @@ function CodeSessions () {
   return (
     <div className='code-sessions'>
       <p>
-        <span>Language</span><span>Last Accessed</span>
+        <span>Language</span><span>Lines of Code</span><span>Last Accessed</span>
       </p>
       {cSessions}
     </div>
   );
+
+  function getLOC (content) {
+    const lines = content.split('\n');
+
+    // Remove trailing empty lines
+    // First get last line number
+    let lastLineNum;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i] !== '') {
+        lastLineNum = i;
+        break;
+      }
+    }
+    return lines.slice(0, lastLineNum + 1).length;
+  }
 
   async function launch (language, sessID, content) {
     const roomID = await requestRoom(language, sessID, content);
