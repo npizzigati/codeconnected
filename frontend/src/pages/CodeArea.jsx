@@ -286,12 +286,14 @@ function CodeArea () {
       const status = json.status;
       if (status === 'ready') {
         console.log('Room successfully prepared');
+        return json;
       } else {
         console.error('Error preparing room.');
       }
     } catch (error) {
       console.error('Error preparing room: ', error);
     }
+    return -1;
   }
 
   async function setup (isCanceled) {
@@ -309,9 +311,14 @@ function CodeArea () {
     setShowMain(true);
     const { status } = await getRoomStatus(roomID);
     console.log(status);
+    let codeSessionID;
+    let initialContent = '';
     if (status === 'created') {
       console.log('Will prepare room');
-      await prepareRoom(roomID, isCanceled);
+      const json = await prepareRoom(roomID, isCanceled);
+      codeSessionID = json.codeSessionID;
+      initialContent = json.initialContent;
+      console.log('codeSessionID: ' + codeSessionID);
       if (isCanceled) {
         return;
       }
@@ -330,6 +337,10 @@ function CodeArea () {
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
     const expiry = initialVars.expiry;
+    // isCreator will be true if this user is signed in and is
+    // the creator of the room
+    const isCreator = initialVars.isCreator;
+    console.log('isCreator: ' + isCreator);
     if (expiry !== -1) {
       expiryCountDown(expiry);
     }
@@ -404,7 +415,53 @@ function CodeArea () {
     // Copy a reference to React state
     codeOptions.current = yCodeOptions;
 
+    // If this is the creating user and they are signed in, send
+    // code editor content to server at intervals to be saved
+    if (isCreator) {
+      // save delay in ms
+      const saveDelay = 2000;
+      // Update x (saveDelay) seconds after any changes in shared code editor
+      let saveTimeout;
+      ytextCode.observe(() => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => saveCodeSession(codeSessionID, isCanceled), saveDelay);
+      });
+    }
+
+    if (initialContent.length > 0) {
+      cm.setValue(initialContent);
+    }
     setRunnerReady(true);
+  }
+
+  async function saveCodeSession (codeSessionID, isCanceled) {
+    const content = cmRef.current.getValue();
+
+    const body = JSON.stringify({ codeSessionID, content });
+    console.log('going to send code session for saving: ', body);
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
+    };
+
+    try {
+      const response = await fetch('/api/save-code-session', options);
+      if (isCanceled) {
+        return;
+      }
+      const json = await response.json();
+      console.log(JSON.stringify(json));
+      const status = json.status;
+      if (status === 'success') {
+        console.log('Session code saved');
+      } else {
+        console.error('Session code not saved');
+      }
+    } catch (error) {
+      console.error('Error in saving session code: ', error);
+    }
   }
 
   async function getUserInfo () {

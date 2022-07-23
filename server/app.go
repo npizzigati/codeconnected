@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
+	"strings"
 	// "github.com/aws/aws-sdk-go-v2"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
@@ -53,7 +54,10 @@ type eventConfig struct {
 
 type room struct {
 	wsockets         []*websocket.Conn
+	creatorUserID    int
 	lang             string
+	codeSessionID    int
+	initialContent   string
 	echo             bool
 	container        *containerDetails
 	eventSubscribers map[string]func(eventConfig)
@@ -180,14 +184,36 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	expiry := rooms[roomID].expiry
 
 	type responseModel struct {
-		Language string `json:"language"`
-		History  string `json:"history"`
-		Expiry   int64  `json:"expiry"`
+		Language  string `json:"language"`
+		History   string `json:"history"`
+		Expiry    int64  `json:"expiry"`
+		IsCreator bool   `json:"isCreator"`
 	}
+
+	// Get userID from session. If user isn't signed in userID will
+	// be -1
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var userID int
+	var ok bool
+	if userID, ok = session.Values["userID"].(int); !ok {
+		logger.Println("userID not found")
+		userID = -1
+	}
+
+	isCreator := false
+	if userID != -1 && userID == rooms[roomID].creatorUserID {
+		isCreator = true
+	}
+
 	response := &responseModel{
-		Language: lang,
-		History:  string(hist),
-		Expiry:   expiry,
+		Language:  lang,
+		History:   string(hist),
+		Expiry:    expiry,
+		IsCreator: isCreator,
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
@@ -199,9 +225,121 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	w.Write(jsonResp)
 }
 
+func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var userID int
+	var ok bool
+	if userID, ok = session.Values["userID"].(int); !ok {
+		logger.Println("userID not found")
+		userID = -1
+	}
+
+	type codeSession struct {
+		SessID        int    `json:"sessID"`
+		Lang          string `json:"lang"`
+		Content       string `json:"content"`
+		When_accessed int64  `json:"when_accessed"`
+	}
+
+	type responseModel struct {
+		CodeSessions []codeSession `json:"codeSessions"`
+	}
+
+	var cSession codeSession
+	var cSessions []codeSession
+	var id int32
+	var lang string
+	var content string
+	var when_accessed int64
+	queryLines :=
+		[]string{"SELECT id, lang, editor_contents, when_accessed",
+			"FROM coding_sessions WHERE user_id = $1",
+			"ORDER BY when_accessed DESC LIMIT 5"}
+	query := strings.Join(queryLines, " ")
+	rows, err := pool.Query(context.Background(), query, userID)
+	if err != nil {
+		logger.Println("Query unsuccessful: ", err)
+	}
+	for rows.Next() {
+		values, err := rows.Values()
+		if err != nil {
+			logger.Println("Error iterating dataset: ", err)
+		}
+		// Database gives int value as int32
+		if id, ok = values[0].(int32); !ok {
+			logger.Println("Type assertion failed")
+		}
+		if lang, ok = values[1].(string); !ok {
+			logger.Println("Type assertion failed")
+		}
+		if content, ok = values[2].(string); !ok {
+			logger.Println("Type assertion failed -- content (db editor_contents) is probably nil")
+		}
+		if when_accessed, ok = values[3].(int64); !ok {
+			logger.Println("Type assertion failed")
+		}
+		cSession = codeSession{
+			SessID:        int(id),
+			Lang:          lang,
+			Content:       content,
+			When_accessed: when_accessed,
+		}
+		cSessions = append(cSessions, cSession)
+	}
+	response := &responseModel{
+		CodeSessions: cSessions,
+	}
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		logger.Println("err in marshaling: ", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
+}
+
+func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type codeSessionModel struct {
+		CodeSessionID int
+		Content       string
+	}
+	var csm codeSessionModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Println("err reading json: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+	err = json.Unmarshal(body, &csm)
+	if err != nil {
+		logger.Println("err while trying to unmarshal: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+
+	logger.Println("content: ", csm.Content)
+	logger.Println("codeSessionID: ", csm.CodeSessionID)
+
+	query := "UPDATE coding_sessions SET editor_contents = $1 WHERE id = $2"
+	if _, err := pool.Exec(context.Background(), query, csm.Content, csm.CodeSessionID); err != nil {
+		logger.Println("unable to update content in coding_sessions: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+
+	sendStringJsonResponse(w, map[string]string{"status": "success"})
+}
+
 func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
-		Language string
+		Language       string `json="language"`
+		CodeSessionID  int    `json="codeSessionID"`
+		InitialContent string `json="initialContent"`
 	}
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
@@ -213,40 +351,32 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		logger.Println("err while trying to unmarshal: ", err)
 	}
 
-	session, err := store.Get(r, "session")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var userID int
-	var ok bool
-	if userID, ok = session.Values["userID"].(int); !ok {
-		logger.Println("userID not found")
-		userID = -1
-	}
-
 	logger.Println("*************rm.Language: ", rm.Language)
-	roomID := generateRoomID()
+	logger.Println("*************rm.CodeSessionID: ", rm.CodeSessionID)
+
+	// If this is an existing code session and the room still
+	// exists (is still open), send back that same room ID
+	var roomID string
+	for k, r := range rooms {
+		if r.codeSessionID == rm.CodeSessionID {
+			roomID = k
+			sendStringJsonResponse(w, map[string]string{"roomID": roomID})
+			return
+		}
+	}
+
+	roomID = generateRoomID()
 	logger.Println("************roomID: ", roomID)
-	logger.Println("************userID: ", userID)
 
 	room := room{
-		lang:      rm.Language,
-		container: &containerDetails{},
-		status:    "created",
+		lang:           rm.Language,
+		codeSessionID:  rm.CodeSessionID,
+		initialContent: rm.InitialContent,
+		container:      &containerDetails{},
+		status:         "created",
 	}
 
 	rooms[roomID] = &room
-
-	// If user found, insert coding sessions record
-	if userID != -1 {
-		currentTime := time.Now().Unix()
-		query := "INSERT INTO coding_sessions(user_id, lang, when_created, when_accessed) VALUES($1, $2, $3, $4)"
-		if _, err := pool.Exec(context.Background(), query, userID, rm.Language, currentTime, currentTime); err != nil {
-			logger.Println("unable to insert record into coding_sessions: ", err)
-		}
-	}
 
 	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
 }
@@ -303,8 +433,9 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	startContainer(room.lang, roomID)
 
+	var auth, ok bool
 	var expiry int64
-	if auth, ok := session.Values["auth"].(bool); !ok || !auth {
+	if auth, ok = session.Values["auth"].(bool); !ok || !auth {
 		logger.Println("Unauthed user")
 		expiry = time.Now().Add(anonRoomTimeout * time.Minute).Unix()
 	} else {
@@ -336,8 +467,55 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}()
 	}
 
+	var userID int
+	if userID, ok = session.Values["userID"].(int); !ok {
+		logger.Println("userID not found")
+		userID = -1
+	}
+
+	room.creatorUserID = userID
+
+	// If this is an existing code session, don't create a new
+	// one. Instead update when_accessed timestamp.
+	if room.codeSessionID != -1 {
+		query := "UPDATE coding_sessions SET when_accessed = $1 WHERE id = $2"
+		currentTime := time.Now().Unix()
+		if _, err := pool.Exec(context.Background(), query, currentTime, room.codeSessionID); err != nil {
+			logger.Println("Error in updating coding_sessions when_accessed timestamp: ", err)
+		}
+	} else {
+		// If user found, insert code sessions record and get code
+		// session ID back
+		if userID != -1 {
+			currentTime := time.Now().Unix()
+			query := "INSERT INTO coding_sessions(user_id, lang, when_created, when_accessed) VALUES($1, $2, $3, $4) RETURNING id"
+			if err := pool.QueryRow(context.Background(), query, userID, room.lang, currentTime, currentTime).Scan(&room.codeSessionID); err != nil {
+				logger.Println("unable to insert record into coding_sessions: ", err)
+			}
+		}
+	}
+
 	room.status = "ready"
-	sendStringJsonResponse(w, map[string]string{"status": "ready"})
+
+	type responseModel struct {
+		Status         string `json:"status"`
+		CodeSessionID  int    `json:"codeSessionID"`
+		InitialContent string `json:"initialContent"`
+	}
+
+	response := &responseModel{
+		Status:         "ready",
+		CodeSessionID:  room.codeSessionID,
+		InitialContent: room.initialContent,
+	}
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		logger.Println("err in marshaling: ", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
 }
 
 // Ping/pong to detect when people leave room (websockets stop
@@ -1566,6 +1744,8 @@ func main() {
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
+	router.POST("/api/save-code-session", saveCodeSession)
+	router.GET("/api/get-code-sessions", getCodeSessions)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Printf("Starting server on port %d\n", port)

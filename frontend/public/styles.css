@@ -110,6 +110,14 @@ body.resizing {
     margin-top: .5em;
 }
 
+.home main {
+    display: flex;
+}
+
+.home main .code-session-container {
+    color: white;
+}
+
 .backdrop {
     position: fixed;
     z-index: 999;
@@ -198,6 +206,19 @@ body.resizing {
     color: #d737ff
 }
 
+.code-sessions p {
+    display: table-row;
+}
+
+.code-sessions p:hover {
+    background-color: #5e499b;
+    cursor: pointer;
+}
+
+.code-sessions span {
+    display: table-cell;
+}
+
 .code-area .header-bar {
     width: 100%;
     height: var(--header-bar-height);
@@ -277,15 +298,11 @@ body.resizing {
 }
 
 .language-chooser-container {
-    position: relative;
-    margin: 15vh 20% 0;
-    border-left: 3px solid #777;
     user-select: none;
     -webkit-user-select: none;
 }
 
 .language-chooser {
-    width: 50%;
 }
 
 .language-chooser li {
@@ -303,17 +320,6 @@ body.resizing {
 .language-chooser > *:hover {
     cursor: pointer;
     color: #d22eff;
-}
-
-.language-chooser-container .arrow-image {
-    position: absolute;
-    background-image: url('./hand_drawn_arrow.png');
-    background-repeat: no-repeat;
-    top: -0.2em;
-    left: -5em;
-    height: 4em;
-    width: 4em;
-    background-size: 4em;
 }
 
 .language-chooser-container .heading-text {

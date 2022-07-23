@@ -1,11 +1,13 @@
 'use strict';
 
 import React, { useState, useEffect } from 'react';
-
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import UserDashboard from './components/UserDashboard.jsx';
 import Auth from './components/Auth.jsx';
+import CodeSessions from './components/CodeSessions.jsx';
+
+import { requestRoom } from '../helpers/launchUtils.js';
 
 function Home () {
   const [auth, setAuth] = useState(false);
@@ -96,23 +98,27 @@ function Home () {
                   </div>}
             </div>
           </div>
-          <div className='language-chooser-container'>
-            <div className='heading-text'>
-              <div className='arrow-image' />
-              Choose a language to start coding:
+          <main>
+            <div className='language-chooser-container'>
+              <div className='heading-text'>
+                Choose a language to start coding:
+              </div>
+              <ul className='language-chooser'>
+                <li onPointerDown={() => preLaunch('ruby')}>
+                  &gt; Ruby
+                </li>
+                <li onPointerDown={() => preLaunch('node')}>
+                  &gt; Node.js
+                </li>
+                <li onPointerDown={() => preLaunch('postgres')}>
+                  &gt; PostgreSQL
+                </li>
+              </ul>
             </div>
-            <ul className='language-chooser'>
-              <li onPointerDown={() => preLaunch('ruby')}>
-                &gt; Ruby
-              </li>
-              <li onPointerDown={() => preLaunch('node')}>
-                &gt; Node.js
-              </li>
-              <li onPointerDown={() => preLaunch('postgres')}>
-                &gt; PostgreSQL
-              </li>
-            </ul>
-          </div>
+            <div className='code-session-container'>
+              <CodeSessions />
+            </div>
+          </main>
         </div>}
     </>
   );
@@ -146,16 +152,6 @@ function Home () {
     setShowAuth(true);
   }
 
-  function preLaunch (language) {
-    if (auth) {
-      launch(language);
-      return;
-    }
-
-    setPreLaunchLanguage(language);
-    setShowPreLaunchDialog(true);
-  }
-
   async function launch (language) {
     const roomID = await requestRoom(language);
     if (roomID === null) {
@@ -167,35 +163,14 @@ function Home () {
     navigate(`/${roomID}`);
   }
 
-  async function requestRoom (language) {
-    console.log(`Starting ${language} room`);
-
-    const body = JSON.stringify({ language });
-    const options = {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json;charset=utf-8' },
-      body: body
-    };
-
-    // TODO: Check if successful (status code 201) before processing
-    // (If room is not created successfully, console.log spits
-    // out the error from go, but we don't handle the error (we
-    // just display our fake prompt and pretend everything went ok))
-    try {
-      const response = await fetch('/api/createroom', options);
-      const json = await response.json();
-      console.log(JSON.stringify(json));
-      const roomID = json.roomID;
-      if (roomID === undefined) {
-        console.error('Error fetching room ID');
-        return null;
-      }
-      return roomID;
-    } catch (error) {
-      console.error('Error fetching room ID:', error);
-      return null;
+  function preLaunch (language) {
+    if (auth) {
+      launch(language);
+      return;
     }
+
+    setPreLaunchLanguage(language);
+    setShowPreLaunchDialog(true);
   }
 }
 
