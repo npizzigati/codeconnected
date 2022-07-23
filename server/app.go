@@ -276,8 +276,12 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		if lang, ok = values[1].(string); !ok {
 			logger.Println("Type assertion failed")
 		}
-		if content, ok = values[2].(string); !ok {
-			logger.Println("Type assertion failed -- content (db editor_contents) is probably nil")
+		// If editor_contents is nil, set content to ""
+		// (if we don't do this, the type assertion below will fail)
+		if values[2] == nil {
+			content = ""
+		} else if content, ok = values[2].(string); !ok {
+			logger.Println("Type assertion failed")
 		}
 		if when_accessed, ok = values[3].(int64); !ok {
 			logger.Println("Type assertion failed")
