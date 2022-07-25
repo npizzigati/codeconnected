@@ -100,22 +100,25 @@ function Home () {
           </div>
           <main>
             <div className='language-chooser-container'>
-              <div className='heading-text'>
-                Choose a language to start coding:
+              <div className='header'>
+                Start new coding session
               </div>
               <ul className='language-chooser'>
                 <li onPointerDown={() => preLaunch('ruby')}>
-                  &gt; Ruby
+                  <img className='shrink' src='./ruby.png' alt='Ruby icon' />
+                  <span>Ruby</span>
                 </li>
                 <li onPointerDown={() => preLaunch('node')}>
-                  &gt; Node.js
+                  <img src='./node.png' alt='Ruby icon' />
+                  <span>Node.js</span>
                 </li>
                 <li onPointerDown={() => preLaunch('postgres')}>
-                  &gt; PostgreSQL
+                  <img className='shrink' src='./postgres.png' alt='Ruby icon' />
+                  <span>PostgreSQL</span>
                 </li>
               </ul>
             </div>
-            <div className='code-session-container'>
+            <div className='code-sessions-container'>
               <CodeSessions />
             </div>
           </main>

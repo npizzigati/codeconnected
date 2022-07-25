@@ -57,13 +57,16 @@ body.resizing {
 
 
 .home {
+    --header-bar-height: 6em;
+    --header-bar-bottom-margin: 5px;
     background-color: var(--main-bg-color);
     height: 100vh;
 }
 
 .home .header-bar {
-    width: 100%
-    margin: 0 0.5em var(--header-bar-bottom-margin) 0.3em;
+    width: 100%;
+    margin: 0 0.5em var(--header-bar-bottom-margin) 0;
+    height: var(--header-bar-height);
     display: flex;
     border-bottom: 1px solid #777;
 }
@@ -112,10 +115,14 @@ body.resizing {
 
 .home main {
     display: flex;
+    height: calc(100vh - 10px - var(--header-bar-height) - var(--header-bar-bottom-margin));
 }
 
-.home main .code-session-container {
-    color: white;
+.home main > div {
+    border: 1px solid #444;
+    border-radius: 0.5rem;
+    background-color: #22212a;
+    overflow: hidden;
 }
 
 .backdrop {
@@ -206,17 +213,76 @@ body.resizing {
     color: #d737ff
 }
 
-.code-sessions p {
-    display: table-row;
+.code-sessions-container {
+    flex: 1;
+    height: 100%;
+    margin-right: 5px;
 }
 
-.code-sessions p:hover {
-    background-color: #5e499b;
+.code-sessions {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.5rem;
+}
+
+.code-sessions > .header {
+    flex: 1
+    font-family: 'Lato', sans-serif;
+    font-size: 2rem;
+    margin: 1em 0;
+}
+
+.code-sessions .table {
+    display: table;
+    font-family: 'Jost', sans-serif;
+}
+
+.code-sessions .table p.header {
+    font-size: 0.6em;
+    font-family: 'Roboto', sans-serif;
+    text-align: center;
+    margin: 1em 0;
+}
+
+.code-sessions p:hover:not(.header) {
+    background-color: #2e2c38;
     cursor: pointer;
 }
 
-.code-sessions span {
+.code-sessions .table p {
+    display: table-row;
+    line-height: 1.5em;
+}
+
+.code-sessions .table p span {
     display: table-cell;
+}
+
+.code-sessions .table p.header span {
+    display: table-cell;
+    text-align: center;
+    padding: 0 0 0 1.9em;
+}
+
+.code-sessions .table p.items span {
+    display: table-cell;
+    padding: 0 0 0 1em;
+}
+
+.code-sessions .table p.items span.LOC {
+    text-align: center;
+}
+
+.code-sessions .table p.items span.lang {
+    text-align: center;
+}
+
+.code-sessions .table p.items span.timestamp {
+    padding-right: 0.2em;
 }
 
 .code-area .header-bar {
@@ -298,40 +364,61 @@ body.resizing {
 }
 
 .language-chooser-container {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-left: 5px;
+    margin-right: 5px;
     user-select: none;
     -webkit-user-select: none;
 }
 
 .language-chooser {
+    display: flex;
+    height: 10em;
 }
 
 .language-chooser li {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 2rem;
-    color: white;
-    height: 2em;
+    flex: 1;
     display: flex;
-    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    padding-left: 0.2em;
-    margin-left: 0.5em;
-}
-
-.language-chooser > *:hover {
-    cursor: pointer;
-    color: #d22eff;
-}
-
-.language-chooser-container .heading-text {
-    background-color: #333;
-    border-radius: 0.3em;
-    font-family: 'Lato', sans-serif;
-    padding: 0.1em .3em 0.3em;
+    text-align: center;
+    font-family: 'Jost', sans-serif;
+    font-size: 1.5rem;
     color: white;
+    border: 1px solid #444;
+    border-radius: 2em;
+    margin: 1.5em;
+    padding: 0.5em;
+}
+
+.language-chooser li:hover {
+    background-color: #2e2c38;
+}
+
+.language-chooser li img {
+    height: 65px;
+    width: 65px;
+    margin-right: 0.5em;
+}
+
+.language-chooser li img.shrink {
+    height: 35px;
+    width: 35px;
+}
+
+.language-chooser li span {
+    display: block
+}
+
+.language-chooser-container .header {
+    align-self: center;
+    margin: 1em 0 0 0;
+    font-family: 'Lato', sans-serif;
     font-size: 2rem;
-    margin: 0 0 0.5em 0.3em;
-    padding-left: 0.2em;
-    width: max-content;
+    color: white;
 }
 
 .sign-in .email-icon,

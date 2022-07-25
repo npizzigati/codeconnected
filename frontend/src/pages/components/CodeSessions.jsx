@@ -15,18 +15,17 @@ function CodeSessions () {
       console.log('Going to get code sessions');
       const { codeSessions } = await getCodeSessions();
       console.log(JSON.stringify(codeSessions));
-      // Reverse array so that it displays in correct order
-      codeSessions.reverse();
       if (isCanceled) {
         return;
       }
       formattedSessions = codeSessions.map(cSession =>
         <p key={cSession.sessID}
+           className='items'
            onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
         >
-          <span>{langNameTrans(cSession.lang)}</span>
-          <span>{getLOC(cSession.content)}</span>
-          <span>{dateTrans(cSession.when_accessed)}</span>
+          <span className='lang'>{langNameTrans(cSession.lang)}</span>
+          <span className='LOC'>{getLOC(cSession.content)}</span>
+          <span className='timestamp'>{dateTrans(cSession.when_accessed)}</span>
         </p>
       );
       setCSessions(formattedSessions);
@@ -39,10 +38,15 @@ function CodeSessions () {
 
   return (
     <div className='code-sessions'>
-      <p>
-        <span>Language</span><span>Lines of Code</span><span>Last Accessed</span>
-      </p>
-      {cSessions}
+      <div className='header'>
+        Resume session
+      </div>
+      <div className='table'>
+        <p className='header'>
+          <span>Language</span><span>Lines of Code</span><span>Last Accessed</span>
+        </p>
+        {cSessions}
+      </div>
     </div>
   );
 
