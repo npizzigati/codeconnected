@@ -482,11 +482,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// If this is an existing code session, don't create a new
 	// one. Instead update when_accessed timestamp.
 	if room.codeSessionID != -1 {
-		query := "UPDATE coding_sessions SET when_accessed = $1 WHERE id = $2"
-		currentTime := time.Now().Unix()
-		if _, err := pool.Exec(context.Background(), query, currentTime, room.codeSessionID); err != nil {
-			logger.Println("Error in updating coding_sessions when_accessed timestamp: ", err)
-		}
+		updateRoomAccessTime(room.codeSessionID)
 	} else {
 		// If user found, insert code sessions record and get code
 		// session ID back
@@ -1660,6 +1656,14 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
+func updateRoomAccessTime(codeSessionID int) {
+	query := "UPDATE coding_sessions SET when_accessed = $1 WHERE id = $2"
+	currentTime := time.Now().Unix()
+	if _, err := pool.Exec(context.Background(), query, currentTime, codeSessionID); err != nil {
+		logger.Println("Error in updating coding_sessions when_accessed timestamp: ", err)
+	}
+}
+
 func closeEmptyRooms() {
 	toDelete := []string{}
 	for roomID, room := range rooms {
@@ -1667,6 +1671,10 @@ func closeEmptyRooms() {
 		logger.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		if len(room.wsockets) == 0 {
 			logger.Println("removing room container: ", room.container.ID)
+			// Update room access time if code session associated with it
+			if room.codeSessionID != -1 {
+				updateRoomAccessTime(room.codeSessionID)
+			}
 			// Close hijacked connection with runner
 			closeContainerConnection(room.container.connection)
 			// Remove room container
