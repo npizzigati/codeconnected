@@ -78,10 +78,40 @@ function CodeSessions () {
 
 
   function dateTrans (unixTimestamp) {
+    // Date/time unit constants in ms
+    const sec = 1000;
+    const min = 60 * sec;
+    const hour = 60 * min;
+    const day = 24 * hour;
+    // Other date constants
+    const months = ['January', 'February', 'March', 'April', 'May',
+                    'June', 'July', 'August', 'September', 'October',
+                    'November', 'December'];
     // Javascript expects timestamp in ms
     const ms = unixTimestamp * 1000;
-    const dateTime = new Date(ms);
-    return dateTime.toLocaleString();
+    // Calculate time delta
+    const accessed = new Date(ms);
+    const now = new Date();
+    const delta = now - accessed;
+    // Find number of days/hours/min elapsed
+    const days = Math.trunc(delta / day);
+    const hours = Math.trunc(delta / hour);
+    const minutes = Math.trunc(delta / min);
+    // Return largest unit elapsed. If days is greater than 10,
+    // return actual date
+    let dateTimeString;
+    if (days > 10) {
+      dateTimeString = accessed.toLocaleDateString();
+    } else if (days > 0) {
+      dateTimeString = `Approx. ${days} ${days > 1 ? 'days' : 'day'} ago`;
+    } else if (hours > 0) {
+      dateTimeString = `Approx. ${hours} ${hours > 1 ? 'hours' : 'hour'} ago`;
+    } else if (minutes > 1) {
+      dateTimeString = `${minutes} ${minutes > 1 ? 'minutes' : 'minute'} ago`;
+    } else {
+      dateTimeString = '1 minute ago';
+    }
+    return dateTimeString;
   }
 
   function langNameTrans (name) {
