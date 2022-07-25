@@ -248,7 +248,7 @@ body.resizing {
     margin: 1em 0;
 }
 
-.code-sessions p:hover:not(.header) {
+.code-sessions p.items:hover {
     background-color: #2e2c38;
     cursor: pointer;
 }
@@ -282,7 +282,7 @@ body.resizing {
 }
 
 .code-sessions .table p.items span.timestamp {
-    padding-right: 0.2em;
+    text-align: center;
 }
 
 .code-area .header-bar {
