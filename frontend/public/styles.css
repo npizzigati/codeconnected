@@ -390,7 +390,7 @@ body.resizing {
     right: 1em;
     min-width: 10em;
     border: var(--modal-border);
-    border-radius: 0.3em;
+    border-radius: 5px;
     background-color: var(--modal-background-color);
     z-index: 1000;
     box-sizing: border-box;
@@ -454,6 +454,7 @@ body.resizing {
     font-size: 1.5rem;
     color: white;
     border: none;
+    border-radius: 0 0 3px 3px;
     padding: 7px;
     background-color: #6258d7;
     width: 100%;
