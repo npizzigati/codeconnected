@@ -646,7 +646,7 @@ body.resizing {
 #main-container {
     display: flex;
     min-height: 100px;
-    height: calc(95vh - var(--header-bar-height) - var(--header-bar-bottom-margin));
+    height: calc(100vh - 0.5em - var(--header-bar-height) - var(--header-bar-bottom-margin));
 }
 
 #codemirror-wrapper {
