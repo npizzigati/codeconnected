@@ -12,7 +12,9 @@ function CodeSessions () {
   useEffect(() => {
     let isCanceled = false;
     (async () => {
-      console.log('Going to get code sessions');
+      // Update code sessions on server in case user has just left room
+      await updateCodeSessions();
+      // Get codeSessions
       const { codeSessions } = await getCodeSessions();
       console.log(JSON.stringify(codeSessions));
       if (isCanceled) {
@@ -142,6 +144,28 @@ function CodeSessions () {
     } catch (error) {
       console.log('Error fetching code sessions: ' + error);
       return {};
+    }
+  }
+
+  async function updateCodeSessions (isCanceled) {
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Length': '0' }
+    };
+
+    try {
+      const response = await fetch('/api/update-code-sessions', options);
+      const json = await response.json();
+      console.log(JSON.stringify(json));
+      const status = json.status;
+      if (status === 'success') {
+        console.log('Code sessions successfully updated');
+      } else {
+        console.error('Error updating code sessions.');
+      }
+    } catch (error) {
+      console.error('Error updating code sessions: ', error);
     }
   }
 }

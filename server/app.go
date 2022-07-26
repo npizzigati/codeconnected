@@ -1656,6 +1656,47 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
+func updateCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var userID int
+	var ok bool
+	if userID, ok = session.Values["userID"].(int); !ok {
+		logger.Println("userID not found")
+		userID = -1
+	}
+
+	if userID == -1 {
+		sendStringJsonResponse(w, map[string]string{"status": "no update"})
+		return
+	}
+
+	// This method is called through the api by the CodeSessions
+	// component to check whether the user has recently exited any
+	// rooms (as they are at that point on the home page) If user
+	// is the creator of any rooms, don't close those rooms (they
+	// will close automatically if they are empty), but consider
+	// that the session has been last accessed at the time of exit,
+	// which in this case is the time this method is called
+	var sessionsToUpdate []int
+	for _, room := range rooms {
+		if room.creatorUserID == userID {
+			sessionsToUpdate = append(sessionsToUpdate, room.codeSessionID)
+		}
+	}
+
+	for _, codesessID := range sessionsToUpdate {
+		updateRoomAccessTime(codesessID)
+		logger.Println("updating access time for code session ID: ", codesessID)
+	}
+
+	sendStringJsonResponse(w, map[string]string{"status": "success"})
+}
+
 func updateRoomAccessTime(codeSessionID int) {
 	query := "UPDATE coding_sessions SET when_accessed = $1 WHERE id = $2"
 	currentTime := time.Now().Unix()
@@ -1757,6 +1798,7 @@ func main() {
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
 	router.POST("/api/save-code-session", saveCodeSession)
+	router.POST("/api/update-code-sessions", updateCodeSessions)
 	router.GET("/api/get-code-sessions", getCodeSessions)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
