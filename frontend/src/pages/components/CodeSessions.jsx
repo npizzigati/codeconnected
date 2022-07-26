@@ -103,13 +103,13 @@ function CodeSessions () {
     if (days > 10) {
       dateTimeString = accessed.toLocaleDateString();
     } else if (days > 0) {
-      dateTimeString = `Approx. ${days} ${days > 1 ? 'days' : 'day'} ago`;
+      dateTimeString = `About ${days} ${days > 1 ? 'days' : 'day'} ago`;
     } else if (hours > 0) {
-      dateTimeString = `Approx. ${hours} ${hours > 1 ? 'hours' : 'hour'} ago`;
+      dateTimeString = `About ${hours} ${hours > 1 ? 'hours' : 'hour'} ago`;
     } else if (minutes > 1) {
-      dateTimeString = `${minutes} ${minutes > 1 ? 'minutes' : 'minute'} ago`;
+      dateTimeString = `About ${minutes} ${minutes > 1 ? 'minutes' : 'minute'} ago`;
     } else {
-      dateTimeString = '1 minute ago';
+      dateTimeString = 'Less than 1 minute ago';
     }
     return dateTimeString;
   }
