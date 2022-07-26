@@ -59,6 +59,7 @@ body.resizing {
 .home {
     --header-bar-height: 6em;
     --header-bar-bottom-margin: 5px;
+    --footer-height: 1em;
     background-color: var(--main-bg-color);
     height: 100vh;
 }
@@ -115,7 +116,7 @@ body.resizing {
 
 .home main {
     display: flex;
-    height: calc(100vh - 10px - var(--header-bar-height) - var(--header-bar-bottom-margin));
+    height: calc(100vh - 20px - var(--header-bar-height) - var(--header-bar-bottom-margin) - var(--footer-height));
 }
 
 .home main > div {
@@ -211,6 +212,32 @@ body.resizing {
 
 .home .pre-launch-dialog .option:hover {
     color: #d737ff
+}
+
+.home footer {
+    margin-top: var(--header-bar-bottom-margin);
+}
+
+.home footer div.message {
+    display: inline;
+    font-family: 'Lato', sans-serif;
+    font-size: 1em;
+    margin-left: 0.7em;
+    color: #b7b7b7;
+}
+
+.home footer .site-name {
+    font-size: 1.3em;
+}
+
+.home footer .github-link {
+    display: inline-block;
+    background-image: url('./github.png');
+    height: 1em;
+    width: 1em;
+    background-size: 1em 1em;
+    background-repeat: no-repeat;
+    margin-left: 0.5em;
 }
 
 .code-sessions-container {

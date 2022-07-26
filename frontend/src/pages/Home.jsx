@@ -122,6 +122,13 @@ function Home () {
               <CodeSessions />
             </div>
           </main>
+          <footer>
+            <div className='message'>
+              <span className='site-name'><span className='color1'>code</span><span className='color2'>connected</span></span>
+              <span>&nbsp;is open source software</span>
+            </div>
+            <a className='github-link' href='https://github.com/npizzigati/codeconnected' />
+          </footer>
         </div>}
     </>
   );
