@@ -20,17 +20,18 @@ function CodeSessions () {
       if (isCanceled) {
         return;
       }
-      formattedSessions = codeSessions.map(cSession =>
-        <p key={cSession.sessID}
-           className='items'
-           onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
-        >
-          <span className='lang'>{langNameTrans(cSession.lang)}</span>
-          <span className='LOC'>{getLOC(cSession.content)}</span>
-          <span className='timestamp'>{dateTrans(cSession.when_accessed)}</span>
-        </p>
-      );
+      formattedSessions = formatSessionList(codeSessions);
       setCSessions(formattedSessions);
+      // Recalculate time since code session was accessed, at interval
+      // Update interval in seconds
+      const updateIntervalTime = 60;
+      const intervalHandle = setInterval(() => {
+        const formattedSessions = formatSessionList(codeSessions);
+        if (isCanceled) {
+          clearInterval(intervalHandle);
+        }
+        setCSessions(formattedSessions);
+      }, updateIntervalTime * 1000);
     })();
 
     return function cleanup () {
@@ -51,6 +52,21 @@ function CodeSessions () {
       </div>
     </div>
   );
+
+  function formatSessionList (codeSessions) {
+    formattedSessions = codeSessions.map(cSession =>
+      <p
+        key={cSession.sessID}
+        className='items'
+        onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
+      >
+        <span className='lang'>{langNameTrans(cSession.lang)}</span>
+        <span className='LOC'>{getLOC(cSession.content)}</span>
+        <span className='timestamp'>{dateTrans(cSession.when_accessed)}</span>
+      </p>
+    );
+    return formattedSessions;
+  }
 
   function getLOC (content) {
     const lines = content.split('\n');
