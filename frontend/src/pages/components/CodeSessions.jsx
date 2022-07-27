@@ -1,58 +1,77 @@
 'use strict';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { requestRoom } from '../../helpers/launchUtils.js';
 
-function CodeSessions () {
+function CodeSessions ({ authed }) {
   const [cSessions, setCSessions] = useState([]);
   const navigate = useNavigate();
+  const isCanceled = useRef(false);
   let formattedSessions;
   useEffect(() => {
-    let isCanceled = false;
     (async () => {
-      // Get codeSessions
-      const { codeSessions } = await getCodeSessions();
-      console.log(JSON.stringify(codeSessions));
-      if (isCanceled) {
+      if (!authed) {
         return;
       }
-      formattedSessions = formatSessionList(codeSessions);
-      setCSessions(formattedSessions);
-      // Recalculate time since code session was accessed, at interval
-      // Update interval in seconds
-      const updateIntervalTime = 20;
-      const intervalHandle = setInterval(() => {
-        const formattedSessions = formatSessionList(codeSessions);
-        if (isCanceled) {
-          clearInterval(intervalHandle);
-          console.log('Clearing code sessions interval');
-          return;
-        }
-        setCSessions(formattedSessions);
-      }, updateIntervalTime * 1000);
+      buildSessionList();
     })();
 
     return function cleanup () {
       console.log('Cleaning up after CodeSessions component');
-      isCanceled = true;
+      isCanceled.current = true;
     };
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      if (!authed) {
+        return;
+      }
+      buildSessionList();
+    })();
+  }, [authed]);
+
   return (
-    <div className='code-sessions'>
-      <div className='header'>
-        Resume session
-      </div>
-      <div className='table'>
-        <p className='header'>
-          <span>Language</span><span>Lines of Code</span><span>Last Accessed</span>
-        </p>
-        {cSessions}
-      </div>
-    </div>
+    <>
+      {authed
+        ? <div className='code-sessions'>
+            <div className='header'>
+              Resume session
+            </div>
+            <div className='table'>
+              <p className='header'>
+                <span>Language</span><span>Lines of Code</span><span>Last Accessed</span>
+              </p>
+              {cSessions}
+            </div>
+          </div>
+        : <div>not authed</div>}
+    </>
   );
+
+  async function buildSessionList () {
+    const { codeSessions } = await getCodeSessions();
+    console.log(JSON.stringify(codeSessions));
+    if (isCanceled.current) {
+      return;
+    }
+    formattedSessions = formatSessionList(codeSessions);
+    setCSessions(formattedSessions);
+    // Recalculate time since code session was accessed, at interval
+    // Update interval in seconds
+    const updateIntervalTime = 20;
+    const intervalHandle = setInterval(() => {
+      const formattedSessions = formatSessionList(codeSessions);
+      if (isCanceled.current) {
+        clearInterval(intervalHandle);
+        console.log('Clearing code sessions interval');
+        return;
+      }
+      setCSessions(formattedSessions);
+    }, updateIntervalTime * 1000);
+  }
 
   function formatSessionList (codeSessions) {
     formattedSessions = codeSessions.map(cSession =>

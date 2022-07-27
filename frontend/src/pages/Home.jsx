@@ -119,7 +119,7 @@ function Home () {
               </ul>
             </div>
             <div className='code-sessions-container'>
-              <CodeSessions />
+              <CodeSessions authed={auth}/>
             </div>
           </main>
           <footer>
