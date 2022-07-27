@@ -362,7 +362,7 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// exists (is still open), send back that same room ID
 	var roomID string
 	for k, r := range rooms {
-		if r.codeSessionID == rm.CodeSessionID {
+		if rm.CodeSessionID != -1 && r.codeSessionID == rm.CodeSessionID {
 			roomID = k
 			sendStringJsonResponse(w, map[string]string{"roomID": roomID})
 			return
