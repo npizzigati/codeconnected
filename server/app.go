@@ -400,6 +400,28 @@ func getRoomStatus(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	sendJsonResponse(w, resp)
 }
 
+func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type paramsModel struct {
+		RoomID string
+	}
+	var pm paramsModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Println("err reading json: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+	err = json.Unmarshal(body, &pm)
+	if err != nil {
+		logger.Println("err while trying to unmarshal: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+
+	room := rooms[pm.RoomID]
+	sendIntJsonResponse(w, map[string]int{"codeSessionID": room.codeSessionID})
+}
+
 func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
@@ -1268,6 +1290,15 @@ func sendBoolJsonResponse(w http.ResponseWriter, data map[string]bool) {
 	return
 }
 
+func sendIntJsonResponse(w http.ResponseWriter, data map[string]int) {
+	resp, err := json.Marshal(data)
+	if err != nil {
+		logger.Println("err in marshaling: ", err)
+	}
+	sendJsonResponse(w, resp)
+	return
+}
+
 // TODO: Use this helper function when appropriate
 func sendJsonResponse(w http.ResponseWriter, jsonResp []byte) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -1656,45 +1687,44 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
-func updateCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	session, err := store.Get(r, "session")
+func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	logger.Println("Going to update code session")
+	type paramsModel struct {
+		CodeSessionID int
+		Language      string
+		Content       string
+	}
+	var pm paramsModel
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Println("err reading json: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+	err = json.Unmarshal(body, &pm)
+	if err != nil {
+		logger.Println("err while trying to unmarshal: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
-	var userID int
-	var ok bool
-	if userID, ok = session.Values["userID"].(int); !ok {
-		logger.Println("userID not found")
-		userID = -1
-	}
-
-	if userID == -1 {
-		sendStringJsonResponse(w, map[string]string{"status": "no update"})
+	logger.Printf("In code session updated function. csID: %d, lang: %s, content: %s", pm.CodeSessionID, pm.Language, pm.Content)
+	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content); err != nil {
+		logger.Println("error in updating code session: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
 		return
-	}
-
-	// This method is called through the api by the CodeSessions
-	// component to check whether the user has recently exited any
-	// rooms (as they are at that point on the home page) If user
-	// is the creator of any rooms, don't close those rooms (they
-	// will close automatically if they are empty), but consider
-	// that the session has been last accessed at the time of exit,
-	// which in this case is the time this method is called
-	var sessionsToUpdate []int
-	for _, room := range rooms {
-		if room.creatorUserID == userID {
-			sessionsToUpdate = append(sessionsToUpdate, room.codeSessionID)
-		}
-	}
-
-	for _, codesessID := range sessionsToUpdate {
-		updateRoomAccessTime(codesessID)
-		logger.Println("updating access time for code session ID: ", codesessID)
 	}
 
 	sendStringJsonResponse(w, map[string]string{"status": "success"})
+}
+
+func runSessionUpdateQuery(codeSessionID int, language string, content string) error {
+	query := "UPDATE coding_sessions SET when_accessed = $1, lang = $2, editor_contents = $3 WHERE id = $4"
+	currentTime := time.Now().Unix()
+	if _, err := pool.Exec(context.Background(), query, currentTime, language, content, codeSessionID); err != nil {
+		return err
+	}
+	return nil
 }
 
 func updateRoomAccessTime(codeSessionID int) {
@@ -1798,8 +1828,9 @@ func main() {
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/clientclearterm", clientClearTerm)
 	router.POST("/api/save-code-session", saveCodeSession)
-	router.POST("/api/update-code-sessions", updateCodeSessions)
+	router.POST("/api/update-code-session", updateCodeSession)
 	router.GET("/api/get-code-sessions", getCodeSessions)
+	router.POST("/api/get-code-session-id", getCodeSessionID)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Printf("Starting server on port %d\n", port)

@@ -12,8 +12,6 @@ function CodeSessions () {
   useEffect(() => {
     let isCanceled = false;
     (async () => {
-      // Update code sessions on server in case user has just left room
-      await updateCodeSessions();
       // Get codeSessions
       const { codeSessions } = await getCodeSessions();
       console.log(JSON.stringify(codeSessions));
@@ -24,17 +22,20 @@ function CodeSessions () {
       setCSessions(formattedSessions);
       // Recalculate time since code session was accessed, at interval
       // Update interval in seconds
-      const updateIntervalTime = 60;
+      const updateIntervalTime = 20;
       const intervalHandle = setInterval(() => {
         const formattedSessions = formatSessionList(codeSessions);
         if (isCanceled) {
           clearInterval(intervalHandle);
+          console.log('Clearing code sessions interval');
+          return;
         }
         setCSessions(formattedSessions);
       }, updateIntervalTime * 1000);
     })();
 
     return function cleanup () {
+      console.log('Cleaning up after CodeSessions component');
       isCanceled = true;
     };
   }, []);
@@ -124,7 +125,7 @@ function CodeSessions () {
       dateTimeString = `About ${days} ${days > 1 ? 'days' : 'day'} ago`;
     } else if (hours > 0) {
       dateTimeString = `About ${hours} ${hours > 1 ? 'hours' : 'hour'} ago`;
-    } else if (minutes > 1) {
+    } else if (minutes > 0) {
       dateTimeString = `About ${minutes} ${minutes > 1 ? 'minutes' : 'minute'} ago`;
     } else {
       dateTimeString = 'Less than 1 minute ago';
@@ -162,29 +163,6 @@ function CodeSessions () {
       return {};
     }
   }
-
-  async function updateCodeSessions (isCanceled) {
-    const options = {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Length': '0' }
-    };
-
-    try {
-      const response = await fetch('/api/update-code-sessions', options);
-      const json = await response.json();
-      console.log(JSON.stringify(json));
-      const status = json.status;
-      if (status === 'success') {
-        console.log('Code sessions successfully updated');
-      } else {
-        console.error('Error updating code sessions.');
-      }
-    } catch (error) {
-      console.error('Error updating code sessions: ', error);
-    }
-  }
 }
-
 
 export { CodeSessions as default };

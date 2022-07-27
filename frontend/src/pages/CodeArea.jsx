@@ -36,10 +36,11 @@ function CodeArea () {
   const flags = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
+  const lang = useRef(null);
+  const codeSessionID = useRef(-1);
   const [language, setLanguage] = useState('');
   // FIXME: Do I need this? Am I using the ydocRef anywhere?
   const [ydocRef, setYdocRef] = useState(null);
-
   const resizeBarDOMRef = useRef(null);
   const initialX = useRef(null);
   const [cmWidth, setCmWidth] = useState('50%');
@@ -127,8 +128,9 @@ function CodeArea () {
                         { value: 'postgres', label: 'PostgreSQL' }]}
               title={cmTitle}
               callback={(ev) => {
-                const lang = ev.target.dataset.value;
-                switchLanguage(lang);
+                lang.current = ev.target.dataset.value;
+                switchLanguage(lang.current);
+                updateCodeSession();
               }}
               config={{ staticTitle: true }}
             />
@@ -267,6 +269,26 @@ function CodeArea () {
     elem.releasePointerCapture(event.pointerId);
   }
 
+  async function getCodeSessionID (roomID) {
+    const body = JSON.stringify({ roomID });
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
+    };
+
+    try {
+      const response = await fetch('/api/get-code-session-id', options);
+      const json = await response.json();
+      console.log(JSON.stringify(json));
+      return json.codeSessionID;
+    } catch (error) {
+      console.error('Error preparing room: ', error);
+    }
+    return -1;
+  }
+
   async function prepareRoom (roomID, isCanceled) {
     const body = JSON.stringify({ roomID });
     const options = {
@@ -311,14 +333,13 @@ function CodeArea () {
     setShowMain(true);
     const { status } = await getRoomStatus(roomID);
     console.log(status);
-    let codeSessionID;
     let initialContent = '';
     if (status === 'created') {
       console.log('Will prepare room');
       const json = await prepareRoom(roomID, isCanceled);
-      codeSessionID = json.codeSessionID;
+      codeSessionID.current = json.codeSessionID;
       initialContent = json.initialContent;
-      console.log('codeSessionID: ' + codeSessionID);
+      console.log('codeSessionID: ' + codeSessionID.current);
       if (isCanceled) {
         return;
       }
@@ -340,6 +361,14 @@ function CodeArea () {
     // isCreator will be true if this user is signed in and is
     // the creator of the room
     const isCreator = initialVars.isCreator;
+    // If codeSessionID has not yet been set and user is the room
+    // creator, that's because we restarted a session where the
+    // room was still open (and ready). We need to get the
+    // codeSessionID now for purposes of saving the session
+    if (isCreator && codeSessionID.current === -1) {
+      codeSessionID.current = await getCodeSessionID(roomID);
+      console.log('codeSessionID: ' + codeSessionID.current);
+    }
     console.log('isCreator: ' + isCreator);
     if (expiry !== -1) {
       expiryCountDown(expiry);
@@ -368,6 +397,7 @@ function CodeArea () {
     }
 
     setLanguage(initialLang);
+    lang.current = initialLang;
     showTitles(initialLang);
     term.current = new Terminal();
     term.current.open(termDomRef.current);
@@ -407,10 +437,10 @@ function CodeArea () {
 
     const yCodeOptions = ydoc.getMap('code options');
     yCodeOptions.observe(ev => {
-      const lang = ev.target.get('language');
-      setLanguage(lang);
-      cm.setOption('mode', lang);
-      console.log('language is now: ' + lang);
+      lang.current = ev.target.get('language');
+      setLanguage(lang.current);
+      cm.setOption('mode', lang.current);
+      console.log('language is now: ' + lang.current);
     });
     // Copy a reference to React state
     codeOptions.current = yCodeOptions;
@@ -424,7 +454,7 @@ function CodeArea () {
       let saveTimeout;
       ytextCode.observe(() => {
         clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => saveCodeSession(codeSessionID, isCanceled), saveDelay);
+        saveTimeout = setTimeout(() => updateCodeSession(), saveDelay);
       });
     }
 
@@ -434,33 +464,28 @@ function CodeArea () {
     setRunnerReady(true);
   }
 
-  async function saveCodeSession (codeSessionID, isCanceled) {
+  async function updateCodeSession () {
+    console.log('going to update code session');
     const content = cmRef.current.getValue();
-
-    const body = JSON.stringify({ codeSessionID, content });
-    console.log('going to send code session for saving: ', body);
+    const body = JSON.stringify({ codeSessionID: codeSessionID.current, language: lang.current, content });
     const options = {
       method: 'POST',
       mode: 'cors',
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: body
     };
-
     try {
-      const response = await fetch('/api/save-code-session', options);
-      if (isCanceled) {
-        return;
-      }
+      const response = await fetch('/api/update-code-session', options);
       const json = await response.json();
       console.log(JSON.stringify(json));
       const status = json.status;
       if (status === 'success') {
-        console.log('Session code saved');
+        console.log('Code session successfully updated');
       } else {
-        console.error('Session code not saved');
+        console.error('Error updating code session.');
       }
     } catch (error) {
-      console.error('Error in saving session code: ', error);
+      console.error('Error updating code session: ', error);
     }
   }
 
