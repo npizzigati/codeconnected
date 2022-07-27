@@ -46,7 +46,7 @@ function Home () {
             />}
           {showPreLaunchDialog &&
             <div className='pre-launch-dialog-container'>
-              <div className='backdrop' onPointerDown={closePreLaunchDialog} />
+              <div className='backdrop' onPointerDown={abortPreLaunch} />
               <div className='pre-launch-dialog'>
                 <div className='message-container'>
                   <div className='attention-image' />
@@ -148,8 +148,9 @@ function Home () {
     }
   }
 
-  function closePreLaunchDialog () {
+  function abortPreLaunch () {
     setShowPreLaunchDialog(false);
+    setPreLaunchLanguage(null);
   }
 
   function continueAnyway () {
