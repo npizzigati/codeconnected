@@ -488,12 +488,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 					if currentTime >= expiry {
 						ticker.Stop()
 						logger.Println("!!!!!Room Expired!!!!")
-						closeContainerConnection(room.container.connection)
-						err := stopAndRemoveContainer(room.container.ID)
-						if err != nil {
-							logger.Println("error in stopping/removing container: ", err)
-						}
-						delete(rooms, roomID)
+						closeRoom(roomID)
 						return
 					}
 				}
@@ -528,6 +523,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// TODO: In the previous stages of room preparation, I should
 	// abort if there are any errors and send the appropriate
 	// message to the client
+	closer.Stop()
 	room.status = "ready"
 
 	type responseModel struct {
@@ -1770,38 +1766,33 @@ func updateRoomAccessTime(codeSessionID int) {
 }
 
 func closeEmptyRooms() {
-	// TODO: Also close rooms that have been aborted before being
-	// ready after a delay (maybe a 1 min delay after the room was
-	// created)
-	toDelete := []string{}
+	// Remove rooms where there are no users
 	for roomID, room := range rooms {
-		// logger.Println("checking for empty rooms")
 		logger.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		// Check if room container exists to make sure we're not
 		// deleting rooms that are in the process of being created
 		if len(room.wsockets) == 0 && room.status == "ready" {
-			logger.Println("removing room container: ", room.container.ID)
-			// Update room access time if code session associated with it
-			if room.codeSessionID != -1 {
-				updateRoomAccessTime(room.codeSessionID)
-			}
-			// Close hijacked connection with runner
-			closeContainerConnection(room.container.connection)
-			// Remove room container
-			err := stopAndRemoveContainer(room.container.ID)
-			if err != nil {
-				logger.Println("error in stopping/removing container: ", err)
-			}
-			// Record roomID for deletion
-			toDelete = append(toDelete, roomID)
-			// Remove empty rooms
-			for _, id := range toDelete {
-				delete(rooms, id)
-			}
-			// TODO: remove this println
-			logger.Println("number of rooms open: ", len(rooms))
+			closeRoom(roomID)
 		}
 	}
+}
+
+func closeRoom(roomID string) {
+	room := rooms[roomID]
+	logger.Println("removing room container: ", room.container.ID)
+	// Update room access time if code session associated with it
+	if room.codeSessionID != -1 {
+		updateRoomAccessTime(room.codeSessionID)
+	}
+	// Close hijacked connection with runner
+	closeContainerConnection(room.container.connection)
+	// Remove room container
+	err := stopAndRemoveContainer(room.container.ID)
+	if err != nil {
+		logger.Println("error in stopping/removing container: ", err)
+	}
+	// Remove empty room from rooms map
+	delete(rooms, roomID)
 }
 
 // Remove old unused containers/close rooms
