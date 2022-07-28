@@ -639,6 +639,8 @@ func startRunnerReader(roomID string) {
 	var ok bool
 	if room, ok = rooms[roomID]; !ok {
 		fmt.Printf("room %s does not exist", roomID)
+		// TODO: Abort here (and abort in other functions where room
+		// is found not to exist)
 	}
 
 	cn := room.container
