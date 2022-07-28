@@ -177,18 +177,22 @@ func generateRoomID() string {
 }
 
 func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	queryValues := r.URL.Query()
-	roomID := queryValues.Get("roomID")
-	lang := rooms[roomID].lang
-	hist := rooms[roomID].termHist
-	expiry := rooms[roomID].expiry
-
 	type responseModel struct {
 		Language  string `json:"language"`
 		History   string `json:"history"`
 		Expiry    int64  `json:"expiry"`
 		IsCreator bool   `json:"isCreator"`
 	}
+
+	queryValues := r.URL.Query()
+	roomID := queryValues.Get("roomID")
+	if _, ok := rooms[roomID]; !ok {
+		logger.Printf("Room %s does not exist", roomID)
+	}
+
+	lang := rooms[roomID].lang
+	hist := rooms[roomID].termHist
+	expiry := rooms[roomID].expiry
 
 	// Get userID from session. If user isn't signed in userID will
 	// be -1
@@ -457,7 +461,11 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
 
-	startContainer(room.lang, roomID)
+	if err = startContainer(room.lang, roomID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logger.Printf("Could not start container for room %s", roomID)
+		return
+	}
 
 	var auth, ok bool
 	var expiry int64
@@ -517,6 +525,9 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}
 	}
 
+	// TODO: In the previous stages of room preparation, I should
+	// abort if there are any errors and send the appropriate
+	// message to the client
 	room.status = "ready"
 
 	type responseModel struct {
@@ -554,23 +565,26 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 		// the Ping method sends a ping and returns on receipt of the
 		// corresponding pong or cancelation of the context. If the error
 		// returned from Ping is nil, then the pong was received.
-		err := ws.Ping(ctx)
-		if err != nil {
-			ws.Close(websocket.StatusInternalError, "websocket no longer available")
-			logger.Println("---------------------Pong NOT received---------------------")
-			// TODO: Retry ping after a few seconds to account for the
-			// case where a client temporary disconnects (or refreshes
-			// the page) at exact instance of ping
-			// Remove websocket from room
-			var deadIdx int
-			for idx, socket := range room.wsockets {
-				if socket == ws {
-					deadIdx = idx
+		if err := ws.Ping(ctx); err != nil {
+			// Retry ping to account for the case where a client
+			// temporary disconnects (or refreshes the page) at exact
+			// instance of ping
+			time.Sleep(2 * time.Second)
+			if err := ws.Ping(ctx); err != nil {
+				ws.Close(websocket.StatusInternalError, "websocket no longer available")
+				logger.Println("---------------------Pong NOT received---------------------")
+
+				// Remove websocket from room
+				var deadIdx int
+				for idx, socket := range room.wsockets {
+					if socket == ws {
+						deadIdx = idx
+					}
 				}
+				room.wsockets = append(room.wsockets[:deadIdx], room.wsockets[deadIdx+1:]...)
+				closeEmptyRooms()
+				return
 			}
-			room.wsockets = append(room.wsockets[:deadIdx], room.wsockets[deadIdx+1:]...)
-			closeEmptyRooms()
-			return
 		}
 		logger.Println("---------------------Pong received---------------------")
 		t.Reset(d)
@@ -620,7 +634,13 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func startRunnerReader(roomID string) {
 	logger.Println("Starting runner reader")
-	room := rooms[roomID]
+
+	var room *room
+	var ok bool
+	if room, ok = rooms[roomID]; !ok {
+		fmt.Printf("room %s does not exist", roomID)
+	}
+
 	cn := room.container
 	// There should only be one runner reader per container
 	if cn.runnerReaderActive {
@@ -842,7 +862,7 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // TODO: Move error handling to createRoom (return error here
 // along with containerDetails)
-func startContainer(lang, roomID string) {
+func startContainer(lang, roomID string) error {
 	room := rooms[roomID]
 	cn := room.container
 	ctx := context.Background()
@@ -876,8 +896,9 @@ func startContainer(lang, roomID string) {
 	}
 	err = openLanguageConnection(lang, roomID)
 	if err != nil {
-		logger.Println(err)
+		return err
 	}
+	return nil
 }
 
 func resizeTTY(cn *containerDetails, rows int, cols int) error {
@@ -919,17 +940,22 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 // regular codearea user screen. It should give user a modal
 // message instead.
 func openLanguageConnection(lang, roomID string) error {
-	room := rooms[roomID]
-	room.echo = false
+	var r *room
+	var ok bool
+	if r, ok = rooms[roomID]; !ok {
+		return errors.New("room does not exist")
+	}
+	r.echo = false
 	// Number of attempts to make
 	maxTries := 5
 	tries := 0
 	// Wait until prompt is ready
-	waitTime := 3000
+	waitTime := 4000
 	success := make(chan struct{})
-	room.setEventListener("promptReady", func(config eventConfig) {
+	r.setEventListener("promptReady", func(config eventConfig) {
+		fmt.Printf("Prompt ready in room %s. Should stop attempts to open lang connection now.", roomID)
 		close(success)
-		room.removeEventListener("promptReady")
+		r.removeEventListener("promptReady")
 	})
 loop:
 	for {
@@ -937,7 +963,8 @@ loop:
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
-			room.echo = true
+			fmt.Printf("Stopping loop to attempt language connection")
+			r.echo = true
 			displayInitialPrompt(roomID)
 			return nil
 		case <-time.After(time.Duration(waitTime) * time.Millisecond):
@@ -947,7 +974,7 @@ loop:
 			}
 		}
 	}
-	return errors.New("Unable to open language connection (could not get prompt)")
+	return errors.New("unable to open language connection (could not get prompt)")
 }
 
 func closeContainerConnection(connection types.HijackedResponse) {
@@ -961,7 +988,11 @@ func closeContainerConnection(connection types.HijackedResponse) {
 
 func attemptLangConn(lang, roomID string) {
 	logger.Println("Attempting lang connection, lang: '", lang, "' ", "roomID: '", roomID, "'")
-	room := rooms[roomID]
+	var room *room
+	var ok bool
+	if room, ok = rooms[roomID]; !ok {
+		fmt.Printf("room %s does not exist", roomID)
+	}
 	cn := room.container
 	var cmd []string
 	switch lang {
@@ -1626,6 +1657,7 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	var exists bool
 	if _, found := rooms[roomID]; found {
 		exists = true
+		logger.Printf("room %s does exist", roomID)
 	} else {
 		exists = false
 	}
@@ -1736,11 +1768,16 @@ func updateRoomAccessTime(codeSessionID int) {
 }
 
 func closeEmptyRooms() {
+	// TODO: Also close rooms that have been aborted before being
+	// ready after a delay (maybe a 1 min delay after the room was
+	// created)
 	toDelete := []string{}
 	for roomID, room := range rooms {
 		// logger.Println("checking for empty rooms")
 		logger.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
-		if len(room.wsockets) == 0 {
+		// Check if room container exists to make sure we're not
+		// deleting rooms that are in the process of being created
+		if len(room.wsockets) == 0 && room.status == "ready" {
 			logger.Println("removing room container: ", room.container.ID)
 			// Update room access time if code session associated with it
 			if room.codeSessionID != -1 {
