@@ -426,6 +426,21 @@ func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	sendIntJsonResponse(w, map[string]int{"codeSessionID": room.codeSessionID})
 }
 
+// Delete room in preparation that hasn't become ready after
+// timeout
+func closeUnsuccessfulRoom(roomID string) *time.Timer {
+	prepTimeout := 20
+	closer := time.NewTimer(time.Duration(prepTimeout) * time.Second)
+	go func() {
+		<-closer.C
+		// Close room if it still exists
+		if _, ok := rooms[roomID]; ok {
+			closeRoom(roomID)
+		}
+	}()
+	return closer
+}
+
 func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
@@ -442,6 +457,8 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	roomID := rm.RoomID
 	room := rooms[roomID]
+
+	closer := closeUnsuccessfulRoom(roomID)
 
 	// Room can only be prepared once. If the link is shared before
 	// room is prepared, this request could be made by a second
