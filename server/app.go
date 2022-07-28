@@ -484,6 +484,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
+	// If creating user is not authed, set expiry on room
 	var auth, ok bool
 	var expiry int64
 	if auth, ok = session.Values["auth"].(bool); !ok || !auth {
