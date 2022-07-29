@@ -377,7 +377,6 @@ function CodeArea () {
     setShowCodeMirror(true);
 
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      mode: initialLang,
       value: '',
       lineNumbers: true,
       autoCloseBrackets: true,
@@ -385,6 +384,9 @@ function CodeArea () {
     });
 
     cm.setSize('100%', '100%');
+
+    // Copy a reference to code mirror editor to React state
+    cmRef.current = cm;
 
     const userInfo = await getUserInfo();
     if (isCanceled) {
@@ -398,6 +400,7 @@ function CodeArea () {
 
     setLanguage(initialLang);
     lang.current = initialLang;
+    setCmLanguage();
     showTitles(initialLang);
     term.current = new Terminal();
     term.current.open(termDomRef.current);
@@ -423,8 +426,6 @@ function CodeArea () {
     wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
 
     const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
-    // Copy a reference to code mirror editor to React state
-    cmRef.current = cm;
 
     const yFlags = ydoc.getMap('flags');
     yFlags.observe(ev => {
@@ -439,6 +440,7 @@ function CodeArea () {
     yCodeOptions.observe(ev => {
       lang.current = ev.target.get('language');
       setLanguage(lang.current);
+      setCmLanguage();
       console.log('language is now: ' + lang.current);
     });
     // Copy a reference to React state
@@ -463,7 +465,7 @@ function CodeArea () {
     setRunnerReady(true);
   }
 
-  function setCmLanguage() {
+  function setCmLanguage () {
     let cmLangMode;
     switch (lang.current) {
     case 'node':
