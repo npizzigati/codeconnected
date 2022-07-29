@@ -42,6 +42,7 @@ function Home () {
             <Auth
               setShowAuth={setShowAuth}
               setAuthed={setAuth}
+              setPreLaunchLanguage={setPreLaunchLanguage}
               config={preLaunchLanguage === null ? {} : { successCallback: () => launch(preLaunchLanguage) }}
             />}
           {showPreLaunchDialog &&

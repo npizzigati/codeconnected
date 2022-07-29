@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import SignIn from './SignIn.jsx';
 import SignUp from './SignUp.jsx';
 
-function Auth ({ setShowAuth, setAuthed, config }) {
+function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
   const [selectedTab, setSelectedTab] = useState('signIn');
   const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
@@ -52,6 +52,9 @@ function Auth ({ setShowAuth, setAuthed, config }) {
 
   function closeAuth () {
     setShowAuth(false);
+    // Reset prelaunch language to null to abort any launching of
+    // language room the next time user signs in.
+    setPreLaunchLanguage(null);
   }
 
   function handleTabClick (ev) {
