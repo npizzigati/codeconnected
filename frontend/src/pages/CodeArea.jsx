@@ -439,7 +439,6 @@ function CodeArea () {
     yCodeOptions.observe(ev => {
       lang.current = ev.target.get('language');
       setLanguage(lang.current);
-      cm.setOption('mode', lang.current);
       console.log('language is now: ' + lang.current);
     });
     // Copy a reference to React state
@@ -462,6 +461,22 @@ function CodeArea () {
       cm.setValue(initialContent);
     }
     setRunnerReady(true);
+  }
+
+  function setCmLanguage() {
+    let cmLangMode;
+    switch (lang.current) {
+    case 'node':
+      cmLangMode = 'javascript';
+      break;
+    case 'ruby':
+      cmLangMode = 'ruby';
+      break;
+    case 'postgres':
+      cmLangMode = 'sql';
+      break;
+    }
+    cmRef.current.setOption('mode', cmLangMode);
   }
 
   async function updateCodeSession () {
