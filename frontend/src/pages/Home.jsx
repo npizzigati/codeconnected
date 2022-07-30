@@ -102,7 +102,7 @@ function Home () {
           <main>
             <div className='language-chooser-container'>
               <div className='header'>
-                Start new coding session
+                Start a new coding session
               </div>
               <ul className='language-chooser'>
                 <li onPointerDown={() => preLaunch('ruby')}>
