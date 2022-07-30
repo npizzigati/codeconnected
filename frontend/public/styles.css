@@ -499,11 +499,29 @@ body.resizing {
     padding-right: .3em;
 }
 
-.code-area.hidden {
+.code-area {
+    height: 100%
+    width: 100%
+}
+
+.code-area .spinner-container {
+    position: fixed;
+    height: 15rem;
+    width: 15rem;
+    display: flex;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.code-area main.hidden {
     opacity: 0;
 }
 
-.code-area.visible {
+.code-area main.visible {
     opacity: 1;
     transition: opacity .5s;
 }

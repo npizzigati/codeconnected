@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import PuffLoader from 'react-spinners/PuffLoader';
 
 import * as Y from 'yjs';
 import { CodemirrorBinding } from 'y-codemirror';
@@ -58,6 +59,12 @@ function CodeArea () {
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const cmContainerDOMRef = useRef(null);
 
+  const spinnerCSSOverride = {
+    position: 'absolute',
+    display: 'block',
+    margin: '0 auto'
+  };
+
   useEffect(() => {
     let isCanceled = false;
     function onlineEventHandler () {
@@ -81,103 +88,116 @@ function CodeArea () {
   }, []);
 
   return (
-    <div
-      className={showMain ? 'code-area visible' : 'code-area hidden'}
-    >
-      {showAuth &&
-        <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
-      <div className='header-bar'>
-        <Link className='logo' to='/' />
-        <div className='logo-text'>
-          <span className='site-name'>
-            <span className='color1'>code</span>
-            <span className='color2'>connected</span>
-          </span>
-        </div>
-        {runnerReady &&
-          <div className='right-side'>
-            {timeLeftDisplay !== null &&
-              <div className='time-remaining'>
-                Time remaining: {timeLeftDisplay}
-              </div>}
-            {authed
-              ? <div className='user-dashboard-container'>
-                  <UserDashboard setAuthed={setAuthed} />
-                </div>
-              : <div
-                  className='sign-in'
-                  onPointerDown={() => setShowAuth(true)}
-                >
-                  Sign in
-                </div>}
-          </div>}
-      </div>
-      <div
-        id='main-container'
+    <div className='code-area'>
+      {!runnerReady &&
+        <div>
+          <div className='spinner-container'>
+            <PuffLoader
+              color='#369999'
+              loading={!runnerReady}
+              size={150}
+            />
+          </div>
+          <div className='backdrop' />
+        </div>}
+      <main
+        className={showMain ? 'main visible' : 'main hidden'}
       >
-        <div
-          ref={cmContainerDOMRef}
-          id='codemirror-container'
-          style={{ width: cmWidth }}
-        >
-          <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-            <span className='editor-and-repl-title'>Code Editor</span>
-            <span className='editor-lang-label'>Language:&nbsp;</span>
-            <Select
-              options={[{ value: 'ruby', label: 'Ruby' },
-                        { value: 'node', label: 'Node.js' },
-                        { value: 'postgres', label: 'PostgreSQL' }]}
-              title={cmTitle}
-              callback={(ev) => {
-                lang.current = ev.target.dataset.value;
-                switchLanguage(lang.current);
-                updateCodeSession();
-              }}
-              config={{ staticTitle: true }}
-            />
-            <button id='run-button' onClick={executeContent}>Run</button>
+        {showAuth &&
+          <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
+        <div className='header-bar'>
+          <Link className='logo' to='/' />
+          <div className='logo-text'>
+            <span className='site-name'>
+              <span className='color1'>code</span>
+              <span className='color2'>connected</span>
+            </span>
           </div>
-          <div id='codemirror-wrapper'>
-            {showCodeMirror &&
-              <textarea
-                ref={codeAreaDOMRef}
-              />}
-          </div>
-        </div>
-        <div
-          ref={resizeBarDOMRef}
-          id='resizer'
-          onPointerDown={startResize}
-          onPointerUp={stopResize}
-        >
-          <div id='resizer-handle' />
-        </div>
-        <div
-          id='terminal-container'
-          ref={termContainerDomRef}
-          style={{ width: termWidth }}
-        >
-          <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-            <span className='editor-and-repl-title'>{replTitle}</span>
-            <Select
-              options={[{ value: 'clear', label: 'Clear' },
-                        { value: 'reset', label: 'Reset' }]}
-              title='Actions'
-              callback={executeReplAction}
-              config={{ staticTitle: true }}
-            />
-          </div>
-          {termEnabled &&
-            <div
-              ref={termDomRef}
-              id='terminal-wrapper'
-            />}
-          {!termEnabled &&
-            <div className='terminal-expired'>
-              Terminal has expired.
+          {runnerReady &&
+            <div className='right-side'>
+              {timeLeftDisplay !== null &&
+                <div className='time-remaining'>
+                  Time remaining: {timeLeftDisplay}
+                </div>}
+              {authed
+                ? <div className='user-dashboard-container'>
+                    <UserDashboard setAuthed={setAuthed} />
+                  </div>
+                : <div
+                    className='sign-in'
+                    onPointerDown={() => setShowAuth(true)}
+                  >
+                    Sign in
+                  </div>}
             </div>}
         </div>
-      </div>
+        <div
+          id='main-container'
+        >
+          <div
+            ref={cmContainerDOMRef}
+            id='codemirror-container'
+            style={{ width: cmWidth }}
+          >
+            <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
+              <span className='editor-and-repl-title'>Code Editor</span>
+              <span className='editor-lang-label'>Language:&nbsp;</span>
+              <Select
+                options={[{ value: 'ruby', label: 'Ruby' },
+                          { value: 'node', label: 'Node.js' },
+                          { value: 'postgres', label: 'PostgreSQL' }]}
+                title={cmTitle}
+                callback={(ev) => {
+                  lang.current = ev.target.dataset.value;
+                  switchLanguage(lang.current);
+                  updateCodeSession();
+                }}
+                config={{ staticTitle: true }}
+              />
+              <button id='run-button' onClick={executeContent}>Run</button>
+            </div>
+            <div id='codemirror-wrapper'>
+              {showCodeMirror &&
+                <textarea
+                  ref={codeAreaDOMRef}
+                />}
+            </div>
+          </div>
+          <div
+            ref={resizeBarDOMRef}
+            id='resizer'
+            onPointerDown={startResize}
+            onPointerUp={stopResize}
+          >
+            <div id='resizer-handle' />
+          </div>
+          <div
+            id='terminal-container'
+            ref={termContainerDomRef}
+            style={{ width: termWidth }}
+          >
+            <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
+              <span className='editor-and-repl-title'>{replTitle}</span>
+              <Select
+                options={[{ value: 'clear', label: 'Clear' },
+                          { value: 'reset', label: 'Reset' }]}
+                title='Actions'
+                callback={executeReplAction}
+                config={{ staticTitle: true }}
+              />
+            </div>
+            {termEnabled &&
+              <div
+                ref={termDomRef}
+                id='terminal-wrapper'
+              />}
+            {!termEnabled &&
+              <div className='terminal-expired'>
+                Terminal has expired.
+              </div>}
+          </div>
+        </div>
+      </main>
     </div>
   );
 
