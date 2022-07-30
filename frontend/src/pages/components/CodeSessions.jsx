@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { requestRoom } from '../../helpers/launchUtils.js';
 
-function CodeSessions ({ authed }) {
+function CodeSessions ({ authed, setShowAuth }) {
   const [cSessions, setCSessions] = useState([]);
   const navigate = useNavigate();
   const isCanceled = useRef(false);
@@ -38,7 +38,7 @@ function CodeSessions ({ authed }) {
       {authed
         ? <div>
             <div className='pane-header'>
-              Session history
+              Resume a session
             </div>
             <div className='pane-subheader'>
               Click on a session to resume
@@ -50,11 +50,17 @@ function CodeSessions ({ authed }) {
               {cSessions}
             </div>
           </div>
-       : <div><div className='pane-header'>Session history</div>
-           <div className='pane-subheader'>
-             Sign in to save and access previous sessions
-           </div>
-         </div}
+       : <div className='pane-message-unauthed'>
+           <span
+             className='sign-in-link'
+             onPointerDown={() => setShowAuth(true)}
+           >
+             Sign in
+           </span>
+           <span>
+             &nbsp;to save and access previous sessions
+           </span>
+         </div>}
     </div>
   );
 
