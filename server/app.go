@@ -434,9 +434,7 @@ func closeUnsuccessfulRoom(roomID string) *time.Timer {
 	go func() {
 		<-closer.C
 		// Close room if it still exists
-		if _, ok := rooms[roomID]; ok {
-			closeRoom(roomID)
-		}
+		closeRoom(roomID)
 	}()
 	return closer
 }
@@ -1796,7 +1794,12 @@ func closeEmptyRooms() {
 }
 
 func closeRoom(roomID string) {
-	room := rooms[roomID]
+	var room *room
+	var ok bool
+	// Do nothing if room does not exist
+	if room, ok = rooms[roomID]; !ok {
+		return
+	}
 	logger.Println("removing room container: ", room.container.ID)
 	// Update room access time if code session associated with it
 	if room.codeSessionID != -1 {
