@@ -904,11 +904,11 @@ func startContainer(lang, roomID string) error {
 	}
 	logger.Println("Setting new container id to: ", resp.ID)
 	cn.ID = resp.ID
-	// Sql container needs a slight pause to create user
+	// Sql container needs a pause to startup postgres
 	// This will give openLanguageConnection a better chance of
-	// correctly opening the connection on the first try
+	// correctly opening psql on the first try
 	if lang == "postgres" {
-		time.Sleep(2 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 	err = openLanguageConnection(lang, roomID)
 	if err != nil {
