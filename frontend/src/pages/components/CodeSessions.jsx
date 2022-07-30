@@ -41,7 +41,7 @@ function CodeSessions ({ authed, setShowAuth }) {
               Resume a session
             </div>
             <div className='pane-subheader'>
-              Click on a session to resume
+              Click on a session to start it up again
             </div>
             <div className='table'>
               <p className='header'>
