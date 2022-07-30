@@ -652,7 +652,7 @@ func startRunnerReader(roomID string) {
 	var room *room
 	var ok bool
 	if room, ok = rooms[roomID]; !ok {
-		fmt.Printf("room %s does not exist", roomID)
+		logger.Printf("room %s does not exist", roomID)
 		// TODO: Abort here (and abort in other functions where room
 		// is found not to exist)
 	}
@@ -969,7 +969,7 @@ func openLanguageConnection(lang, roomID string) error {
 	waitTime := 4000
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func(config eventConfig) {
-		fmt.Printf("Prompt ready in room %s. Should stop attempts to open lang connection now.", roomID)
+		logger.Printf("Prompt ready in room %s. Should stop attempts to open lang connection now.", roomID)
 		close(success)
 		r.removeEventListener("promptReady")
 	})
@@ -979,7 +979,7 @@ loop:
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
-			fmt.Printf("Stopping loop to attempt language connection")
+			logger.Printf("Stopping loop to attempt language connection")
 			r.echo = true
 			displayInitialPrompt(roomID)
 			return nil
@@ -1007,7 +1007,7 @@ func attemptLangConn(lang, roomID string) {
 	var room *room
 	var ok bool
 	if room, ok = rooms[roomID]; !ok {
-		fmt.Printf("room %s does not exist", roomID)
+		logger.Printf("room %s does not exist", roomID)
 	}
 	cn := room.container
 	var cmd []string

@@ -34,11 +34,14 @@ function CodeSessions ({ authed }) {
   }, [authed]);
 
   return (
-    <>
+    <div className='code-sessions'>
       {authed
-        ? <div className='code-sessions'>
-            <div className='header'>
-              Resume session
+        ? <div>
+            <div className='pane-header'>
+              Session history
+            </div>
+            <div className='pane-subheader'>
+              Click on a session to resume
             </div>
             <div className='table'>
               <p className='header'>
@@ -47,8 +50,12 @@ function CodeSessions ({ authed }) {
               {cSessions}
             </div>
           </div>
-        : <div>not authed</div>}
-    </>
+       : <div><div className='pane-header'>Session history</div>
+           <div className='pane-subheader'>
+             Sign in to save and access previous sessions
+           </div>
+         </div}
+    </div>
   );
 
   async function buildSessionList () {
