@@ -94,22 +94,23 @@ function CodeArea () {
             <span className='color2'>connected</span>
           </span>
         </div>
-        <div className='right-side'>
-          {timeLeftDisplay !== null &&
-            <div className='time-remaining'>
-              Time remaining: {timeLeftDisplay}
-            </div>}
-          {authed
-            ? <div className='user-dashboard-container'>
-                <UserDashboard setAuthed={setAuthed} />
-              </div>
-            : <div
-                className='sign-in'
-                onPointerDown={() => setShowAuth(true)}
-              >
-                Sign in
+        {runnerReady &&
+          <div className='right-side'>
+            {timeLeftDisplay !== null &&
+              <div className='time-remaining'>
+                Time remaining: {timeLeftDisplay}
               </div>}
-        </div>
+            {authed
+              ? <div className='user-dashboard-container'>
+                  <UserDashboard setAuthed={setAuthed} />
+                </div>
+              : <div
+                  className='sign-in'
+                  onPointerDown={() => setShowAuth(true)}
+                >
+                  Sign in
+                </div>}
+          </div>}
       </div>
       <div
         id='main-container'
