@@ -974,6 +974,11 @@ func openLanguageConnection(lang, roomID string) error {
 loop:
 	for {
 		logger.Println("Attempting language connection")
+		// Do not attempt language connection if room does not exist anymore
+		if _, ok := rooms[roomID]; !ok {
+			logger.Println("Room no longer exists")
+			break loop
+		}
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
