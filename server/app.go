@@ -1800,6 +1800,7 @@ func closeRoom(roomID string) {
 	if room, ok = rooms[roomID]; !ok {
 		return
 	}
+	logger.Println("remove room: ", roomID)
 	logger.Println("removing room container: ", room.container.ID)
 	// Update room access time if code session associated with it
 	if room.codeSessionID != -1 {
