@@ -441,9 +441,11 @@ function CodeArea () {
     // y.js connection providers
     const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc);
     // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+    console.log('About to create WebSocketProvider');
     const wsProvider = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
+    console.log('Just created WebSocketProvider');
     wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
 
     const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);

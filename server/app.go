@@ -540,6 +540,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// abort if there are any errors and send the appropriate
 	// message to the client
 	closer.Stop()
+	logger.Printf("Room %s is ready\n", roomID)
 	room.status = "ready"
 
 	type responseModel struct {
