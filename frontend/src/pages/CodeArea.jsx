@@ -379,18 +379,18 @@ function CodeArea () {
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
     const expiry = initialVars.expiry;
-    // isCreator will be true if this user is signed in and is
+    // isAuthedCreator will be true if this user is signed in and is
     // the creator of the room
-    const isCreator = initialVars.isCreator;
+    const isAuthedCreator = initialVars.isAuthedCreator;
     // If codeSessionID has not yet been set and user is the room
     // creator, that's because we restarted a session where the
     // room was still open (and ready). We need to get the
     // codeSessionID now for purposes of saving the session
-    if (isCreator && codeSessionID.current === -1) {
+    if (isAuthedCreator && codeSessionID.current === -1) {
       codeSessionID.current = await getCodeSessionID(roomID);
       console.log('codeSessionID: ' + codeSessionID.current);
     }
-    console.log('isCreator: ' + isCreator);
+    console.log('isAuthedCreator: ' + isAuthedCreator);
     if (expiry !== -1) {
       expiryCountDown(expiry);
     }
@@ -471,7 +471,7 @@ function CodeArea () {
 
     // If this is the creating user and they are signed in, send
     // code editor content to server at intervals to be saved
-    if (isCreator) {
+    if (isAuthedCreator) {
       // save delay in ms
       const saveDelay = 2000;
       // Update x (saveDelay) seconds after any changes in shared code editor

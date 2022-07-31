@@ -96,7 +96,7 @@ var sesCli *sesv2.Client
 
 // Timeouts in minutes
 const activationTimeout = 5
-const anonRoomTimeout = 15
+const anonRoomTimeout = 1
 
 // Logger
 var logger = log.New(os.Stderr, "LOG: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -178,10 +178,10 @@ func generateRoomID() string {
 
 func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type responseModel struct {
-		Language  string `json:"language"`
-		History   string `json:"history"`
-		Expiry    int64  `json:"expiry"`
-		IsCreator bool   `json:"isCreator"`
+		Language        string `json:"language"`
+		History         string `json:"history"`
+		Expiry          int64  `json:"expiry"`
+		IsAuthedCreator bool   `json:"isAuthedCreator"`
 	}
 
 	queryValues := r.URL.Query()
@@ -208,16 +208,16 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		userID = -1
 	}
 
-	isCreator := false
+	isAuthedCreator := false
 	if userID != -1 && userID == rooms[roomID].creatorUserID {
-		isCreator = true
+		isAuthedCreator = true
 	}
 
 	response := &responseModel{
-		Language:  lang,
-		History:   string(hist),
-		Expiry:    expiry,
-		IsCreator: isCreator,
+		Language:        lang,
+		History:         string(hist),
+		Expiry:          expiry,
+		IsAuthedCreator: isAuthedCreator,
 	}
 	jsonResp, err := json.Marshal(response)
 	if err != nil {
