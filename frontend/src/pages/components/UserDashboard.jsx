@@ -3,10 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 function UserDashboard ({ setAuthed }) {
-  const [username, setUsername] = useState('Anonymous');
-  const [email, setEmail] = useState('---------------------');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
   const avatar = useRef(null);
   const dashboard = useRef(null);
 
@@ -34,7 +33,6 @@ function UserDashboard ({ setAuthed }) {
       if (userInfo.auth === false) {
         return;
       }
-      setSignedIn(true);
       setUsername(userInfo.username);
       setEmail(userInfo.email);
     })();
@@ -54,9 +52,9 @@ function UserDashboard ({ setAuthed }) {
         ref={avatar}
         onPointerDown={toggleDashboard}
       />
-      <div
+      <main
         ref={dashboard}
-        className={'main ' + (showDashboard ? 'visible' : 'hidden')}
+        className={showDashboard ? 'visible' : 'hidden'}
       >
         <div className='items'>
           <p>
@@ -75,18 +73,12 @@ function UserDashboard ({ setAuthed }) {
           </p>
         </div>
         <button
-          className={'sign-out-button' + (signedIn ? '' : ' hidden')}
+          className='sign-out-button'
           onPointerDown={signOut}
         >
           Sign out
         </button>
-        <button
-          className={'user-dashboard sign-in-button' + (signedIn ? ' hidden' : '')}
-          onPointerDown={signOut}
-        >
-          Sign in
-        </button>
-      </div>
+      </main>
     </div>
   );
 
