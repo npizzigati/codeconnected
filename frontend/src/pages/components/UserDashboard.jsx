@@ -56,6 +56,9 @@ function UserDashboard ({ setAuthed }) {
         ref={dashboard}
         className={showDashboard ? 'visible' : 'hidden'}
       >
+        <div className='heading'>
+          Signed in as:
+        </div>
         <div className='items'>
           <p>
             <img
