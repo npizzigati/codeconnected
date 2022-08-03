@@ -304,6 +304,22 @@ function CodeArea () {
     return -1;
   }
 
+  function setRoomStatusOpen (roomID) {
+    const body = JSON.stringify({ roomID });
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
+    };
+
+    try {
+      fetch('/api/set-room-status-open', options);
+    } catch (error) {
+      console.error('Error preparing room: ', error);
+    }
+  }
+
   async function prepareRoom (roomID, isCanceled) {
     const body = JSON.stringify({ roomID });
     const options = {
@@ -480,6 +496,7 @@ function CodeArea () {
       cm.setValue(initialContent);
     }
     setRunnerReady(true);
+    setRoomStatusOpen(roomID);
   }
 
   function setCmLanguage () {

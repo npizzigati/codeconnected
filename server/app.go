@@ -439,6 +439,24 @@ func closeUnsuccessfulRoom(roomID string) *time.Timer {
 	return closer
 }
 
+func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type roomModel struct {
+		RoomID string
+	}
+	var rm roomModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Println("err reading json: ", err)
+	}
+	err = json.Unmarshal(body, &rm)
+	if err != nil {
+		logger.Println("err while trying to unmarshal: ", err)
+	}
+
+	rooms[rm.RoomID].status = "open"
+	logger.Printf("Room %s is %s\n", rm.RoomID, rooms[rm.RoomID].status)
+}
+
 func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
@@ -1793,7 +1811,7 @@ func closeEmptyRooms() {
 		logger.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		// Check if room container exists to make sure we're not
 		// deleting rooms that are in the process of being created
-		if len(room.wsockets) == 0 && room.status == "ready" {
+		if len(room.wsockets) == 0 && room.status == "open" {
 			closeRoom(roomID)
 		}
 	}
@@ -1889,6 +1907,7 @@ func main() {
 	router.POST("/api/update-code-session", updateCodeSession)
 	router.GET("/api/get-code-sessions", getCodeSessions)
 	router.POST("/api/get-code-session-id", getCodeSessionID)
+	router.POST("/api/set-room-status-open", setRoomStatusOpen)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Printf("Starting server on port %d\n", port)
