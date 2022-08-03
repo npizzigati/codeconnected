@@ -59,12 +59,6 @@ function CodeArea () {
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const cmContainerDOMRef = useRef(null);
 
-  const spinnerCSSOverride = {
-    position: 'absolute',
-    display: 'block',
-    margin: '0 auto'
-  };
-
   useEffect(() => {
     let isCanceled = false;
     function onlineEventHandler () {
