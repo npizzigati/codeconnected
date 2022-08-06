@@ -40,16 +40,17 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
         <div className='popup'>{popupMessage}</div>
       </div>
       {status === 'pre' &&
-        <form noValidate className='sign-in' onSubmit={handleSubmit}>
-          <p>
-            <label htmlFor='email'>
+        <form noValidate className='form' onSubmit={handleSubmit}>
+          <p className='form__row'>
+            <label className='form__label' htmlFor='email'>
               <img
-                className='email-icon'
+                className='form__label-img'
                 src='./mail.png'
                 alt='email icon'
               />
             </label>
             <input
+              className='form__input'
               id='email'
               name='email'
               type='email'
@@ -62,19 +63,20 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               onChange={handleChange}
             />
           </p>
-          <p className='error'>
-            <span className='col-placeholder' />
-            <span>{emailValidationError}</span>
+          <p className='form__row form__row--error'>
+            <span className='form__error-item' />
+            <span className='form__error-item'>{emailValidationError}</span>
           </p>
-          <p>
-            <label htmlFor='password'>
+          <p className='form__row'>
+            <label className='form__label' htmlFor='password'>
               <img
-                className='password-icon'
+                className='form__label-img'
                 src='./key_icon.png'
                 alt='password icon'
               />
             </label>
             <input
+              className='form__input'
               id='password'
               name='password'
               type='password'
@@ -87,28 +89,28 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               onChange={handleChange}
             />
           </p>
-          <p className='error'>
-            <span className='col-placeholder' />
-            <span>{passwordValidationError}</span>
+          <p className='form__row form__row--error'>
+            <span className='form__error-item' />
+            <span className='form__error-item'>{passwordValidationError}</span>
           </p>
-          <button className='submit-button' type='submit'>Sign in</button>
+          <button className='form__submit-button' type='submit'>Sign in</button>
           <span
-            className='bottom-link'
+            className='form__bottom-link'
             onPointerDown={showForgotPassword}
           >
             Forgot your password?
           </span>
         </form>}
       {status === 'forgotPassword' &&
-        <div className='forgot-password'>
-          <div className='message'>
+        <div>
+          <div className='form__subheading'>
             To reset your password, please first verify your email address:
           </div>
           <form noValidate onSubmit={handleSubmitForgotPassword}>
-            <p>
-              <label htmlFor='email'>
+            <p className='form__row'>
+              <label className='form__label' htmlFor='email'>
                 <img
-                  className='email-icon'
+                  className='form__label-img'
                   src='./mail.png'
                   alt='email icon'
                 />
@@ -126,8 +128,8 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 onChange={handleForgotPasswordChange}
               />
             </p>
-            <p className='error'>
-              <span className='col-placeholder' />
+            <p className='form__row form__row--error'>
+              <span className='form__error-item' />
               <span>{emailForgotPwValidationError}</span>
             </p>
             <button className='submit-button' type='submit'>Verify</button>
@@ -147,10 +149,10 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             Please enter your new password below and provide the reset code.
           </div>
           <form noValidate className='sign-in' onSubmit={handleSubmitPasswordReset}>
-            <p>
-              <label htmlFor='password'>
+            <p className='form__row'>
+              <label className='form__label' htmlFor='password'>
                 <img
-                  className='password-icon'
+                  className='form__label-img'
                   src='./key_icon.png'
                   alt='password icon'
                 />
@@ -169,14 +171,14 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 onChange={handlePasswordResetChange}
               />
             </p>
-            <p className='error'>
-              <span className='col-placeholder' />
+            <p className='form__row form__row--error'>
+              <span className='form__item-placeholder' />
               <span>{newPasswordValidationError}</span>
             </p>
-            <p>
-              <label htmlFor='passwordDup'>
+            <p className='form__row'>
+              <label className='form__label' htmlFor='passwordDup'>
                 <img
-                  className='password-icon'
+                  className='form__label-img'
                   src='./key_icon.png'
                   alt='password icon'
                 />
@@ -195,12 +197,12 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 onChange={handlePasswordResetChange}
               />
             </p>
-            <p className='error'>
-              <span className='col-placeholder' />
+            <p className='form__row form__row--error'>
+              <span className='form__item-placeholder' />
               <span>{newPasswordDupValidationError}</span>
             </p>
             <div className='code-field'>
-              <label htmlFor='resetCode'>
+              <label className='form__label' htmlFor='resetCode'>
                 Enter code:
               </label>
               <input
@@ -214,11 +216,13 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 required
                 onChange={handlePasswordResetChange}
               />
-              <div className='error'>{codeValidationError}</div>
+              <p className='form__row form__row--error'>
+                {codeValidationError}
+              </p>
             </div>
-            <button className='submit-button' type='submit'>Reset password</button>
+            <button className='form__submit-button' type='submit'>Reset password</button>
             <span
-              className='bottom-link'
+              className='form__bottom-link'
               onPointerDown={goBackToSignIn}
             >
               Go back to sign-in form
@@ -226,10 +230,10 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
           </form>
         </div>}
       {status === 'success' &&
-        <div className='password-reset-success'>
-          <span className='message'>Password successfully reset!</span>
+        <div>
+          <span className='form__subheading form__subheading--large'>Password successfully reset!</span>
           <span
-            className='bottom-link'
+            className='form__bottom-link'
             onPointerDown={goBackToSignIn}
           >
             Go to sign-in form

@@ -34,18 +34,18 @@ function CodeSessions ({ authed, setShowAuth }) {
   }, [authed]);
 
   return (
-    <div className='code-sessions'>
+    <div className='flex-container flex-container--col'>
       {authed
         ? <div>
-            <div className='pane-header'>
-              Resume a session
-            </div>
-            <div className='pane-subheader'>
+            <h1 className='u-center-text u-marg-top-1'>Resume a session</h1>
+            <h3 className='u-center-text u-marg-bot-2'>
               Click on a session to start it up again
-            </div>
-            <div className='table'>
-              <p className='header'>
-                <span>Language</span><span>Lines of Code</span><span>Last Accessed</span>
+            </h3>
+            <div className='table u-center-block'>
+              <p className='table-row table-row--heading'>
+                <h4 className='table-cell'>Language</h4>
+                <h4 className='table-cell'>LOC</h4>
+                <h4 className='table-cell'>Last Accessed</h4>
               </p>
               {cSessions}
             </div>
@@ -63,6 +63,21 @@ function CodeSessions ({ authed, setShowAuth }) {
          </div>}
     </div>
   );
+
+  function formatSessionList (codeSessions) {
+    formattedSessions = codeSessions.map(cSession =>
+      <p
+        key={cSession.sessID}
+        className='table-row table-row--items'
+        onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
+      >
+        <span className='table-cell'>{langNameTrans(cSession.lang)}</span>
+        <span className='table-cell u-center-text'>{getLOC(cSession.content)}</span>
+        <span className='table-cell'>{dateTrans(cSession.when_accessed)}</span>
+      </p>
+    );
+    return formattedSessions;
+  }
 
   async function buildSessionList () {
     const { codeSessions } = await getCodeSessions();
@@ -84,21 +99,6 @@ function CodeSessions ({ authed, setShowAuth }) {
       }
       setCSessions(formattedSessions);
     }, updateIntervalTime * 1000);
-  }
-
-  function formatSessionList (codeSessions) {
-    formattedSessions = codeSessions.map(cSession =>
-      <p
-        key={cSession.sessID}
-        className='items'
-        onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
-      >
-        <span className='lang'>{langNameTrans(cSession.lang)}</span>
-        <span className='LOC'>{getLOC(cSession.content)}</span>
-        <span className='timestamp'>{dateTrans(cSession.when_accessed)}</span>
-      </p>
-    );
-    return formattedSessions;
   }
 
   function getLOC (content) {

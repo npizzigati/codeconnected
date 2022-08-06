@@ -9,27 +9,29 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
   const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
   return (
-    <div className='auth-modal-container'>
+    <>
       <div className='backdrop' />
-      <div className='auth-modal'>
-        <div className='close-button' onPointerDown={closeAuth} />
-        <div className='tabs'>
+      <div className='tabbed-modal'>
+        <div className='close-button__container'>
+          <div className='close-button' onPointerDown={closeAuth} />
+        </div>
+        <div className='tabbed-modal__tab-container'>
           <div
             id='sign-in-tab'
-            className={((selectedTab === 'signIn') ? ' selected' : '')}
+            className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signIn') ? ' selected' : '')}
             onPointerDown={handleTabClick}
           >
             Sign in
           </div>
           <div
             id='sign-up-tab'
-            className={((selectedTab === 'signUp') ? ' selected' : '')}
+            className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signUp') ? ' selected' : '')}
             onPointerDown={handleTabClick}
           >
             Sign up
           </div>
         </div>
-        <div className='content'>
+        <div className='tabbed-modal__content'>
           {selectedTab === 'signIn'
             ? <SignIn
                 setShowAuth={setShowAuth}
@@ -47,7 +49,7 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
               />}
         </div>
       </div>
-    </div>
+    </>
   );
 
   function closeAuth () {

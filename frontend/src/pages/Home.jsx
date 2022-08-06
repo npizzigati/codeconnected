@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import UserDashboard from './components/UserDashboard.jsx';
+import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 import CodeSessions from './components/CodeSessions.jsx';
 
@@ -37,7 +37,7 @@ function Home () {
   return (
     <>
       {authChecked &&
-        <div className='home'>
+        <div id='home'>
           {showAuth &&
             <Auth
               setShowAuth={setShowAuth}
@@ -77,58 +77,110 @@ function Home () {
                 </div>
               </div>
             </div>}
-          <div className='header-bar'>
-            <div className='logo' />
-            <div className='logo-text'>
-              <span className='site-name'>
-                <span className='color1'>code</span>
-                <span className='color2'>connected</span>
-              </span>
-              <span className='tagline'>Collaborative code editor, runner and REPL</span>
+          <header>
+            <div className='flex-pane'>
+              <div className='media'>
+                <div className='media__image-container'>
+                  <img className='media__image--small u-marg-top-2' src='./codeconnected.png' alt='Logo' />
+                </div>
+                <div className='media__text'>
+                  <div>
+                    <div className='site-name'>
+                      <span className='site-name--color1'>code</span>
+                      <span className='site-name--color2'>connected</span>
+                    </div>
+                    <div className='tagline'>Collaborative code editor, runner and REPL</div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className='right-side'>
+            <div className='flex-pane flex-pane--right-justified flex-pane--vert-centered u-marg-right-2'>
               {auth
-                ? <div className='user-dashboard-container'>
-                    <UserDashboard setAuthed={setAuth} />
+                ? <div className='clickable-image-container'>
+                    <UserQuickdash setAuthed={setAuth} />
                   </div>
                 : <div
-                    className='sign-in'
+                    className='sign-in-link'
                     onPointerDown={() => setShowAuth(true)}
                   >
                     Sign in
                   </div>}
             </div>
-          </div>
+          </header>
           <main>
-            <div className='language-chooser-container'>
-              <div className='header'>
-                Start a new coding session
+            <div className='flex-pane flex-pane--boxed flex-pane--wide'>
+              <div className='flex-pane flex-container flex-container--col u-no-select'>
+                <div>
+                  <h1 className='u-marg-top-1 u-center-text'>Start a new coding session</h1>
+                </div>
+                <ul className='flex-container'>
+                  <li
+                    className='list-item'
+                    onPointerDown={() => preLaunch('ruby')}
+                  >
+                    <div className='media'>
+                      <div className='media__image-container'>
+                        <img className='media__image media__image--small' src='./ruby.png' alt='Ruby icon' />
+                      </div>
+                      <div className='media__text'>
+                        <div>
+                          <span className='thin-font'>Ruby</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li
+                    className='list-item'
+                    onPointerDown={() => preLaunch('node')}
+                  >
+                    <div className='media'>
+                      <div className='media__image-container'>
+                        <img className='media__image' src='./node.png' alt='Node icon' />
+                      </div>
+                      <div className='media__text'>
+                        <div>
+                          <span className='thin-font'>Node.js</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li
+                    className='list-item'
+                    onPointerDown={() => preLaunch('postgres')}
+                  >
+                    <div className='media'>
+                      <div className='media__image-container'>
+                        <img className='media__image media__image--small' src='./postgres.png' alt='Postgres icon' />
+                      </div>
+                      <div className='media__text'>
+                        <div>
+                          <span className='thin-font'>PostgreSQL</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
               </div>
-              <ul className='language-chooser'>
-                <li onPointerDown={() => preLaunch('ruby')}>
-                  <img className='shrink' src='./ruby.png' alt='Ruby icon' />
-                  <span>Ruby</span>
-                </li>
-                <li onPointerDown={() => preLaunch('node')}>
-                  <img src='./node.png' alt='Ruby icon' />
-                  <span>Node.js</span>
-                </li>
-                <li onPointerDown={() => preLaunch('postgres')}>
-                  <img className='shrink' src='./postgres.png' alt='Ruby icon' />
-                  <span>PostgreSQL</span>
-                </li>
-              </ul>
             </div>
-            <div className='code-sessions-container'>
-              <CodeSessions authed={auth} setShowAuth={setShowAuth} />
+            <div className='flex-pane flex-pane--boxed flex-pane--narrow'>
+              <div>
+                <CodeSessions authed={auth} setShowAuth={setShowAuth} />
+              </div>
             </div>
           </main>
           <footer>
-            <div className='message'>
-              <span className='site-name'><span className='color1'>code</span><span className='color2'>connected</span></span>
-              <span>&nbsp;is open source software</span>
+            <div className='media'>
+              <div className='media__text'>
+                <div className='site-name'>
+                  <span className='site-name site-name--color1 site-name--micro'>code</span>
+                  <span className='site-name site-name--color2 site-name--micro'>connected</span>
+                  <span className='message--micro'>&nbsp;is open source software</span>
+                </div>
+              </div>
+              <div className='media__image-container u-pad-top-2'>
+                <a className='image-link' href='https://github.com/npizzigati/codeconnected' />
+              </div>
             </div>
-            <a className='github-link' href='https://github.com/npizzigati/codeconnected' />
           </footer>
         </div>}
     </>

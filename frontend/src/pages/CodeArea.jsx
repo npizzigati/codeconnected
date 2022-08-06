@@ -18,7 +18,7 @@ import 'codemirror/mode/sql/sql.js';
 import { Terminal } from 'xterm';
 
 import Select from './components/Select.jsx';
-import UserDashboard from './components/UserDashboard.jsx';
+import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 
 // TODO: Somehow ping the server to deal with the case where the
@@ -102,10 +102,8 @@ function CodeArea () {
         <div className='header-bar'>
           <Link className='logo' to='/' />
           <div className='logo-text'>
-            <span className='site-name'>
-              <span className='color1'>code</span>
-              <span className='color2'>connected</span>
-            </span>
+            <span className='site-name site-name--small site-name--color1'>code</span>
+            <span className='site-name site-name--small site-name--color2'>connected</span>
           </div>
           {runnerReady &&
             <div className='right-side'>
@@ -114,11 +112,11 @@ function CodeArea () {
                   Time remaining: {timeLeftDisplay}
                 </div>}
               {authed
-                ? <div className='user-dashboard-container'>
-                    <UserDashboard setAuthed={setAuthed} />
+                ? <div className='user-quickdash-container'>
+                    <UserQuickdash setAuthed={setAuthed} />
                   </div>
                 : <div
-                    className='sign-in'
+                    className='sign-in-link'
                     onPointerDown={() => setShowAuth(true)}
                   >
                     Sign in
@@ -268,7 +266,7 @@ function CodeArea () {
   function startResize (event) {
     // Prevent any elements from being selected (causing flicker)
     // when resizing (a webkit browser problem)
-    document.body.classList.add('resizing');
+    document.body.classList.add('is-resizing');
 
     const elem = resizeBarDOMRef.current;
     console.log('clientX: ' + event.clientX);
@@ -278,7 +276,7 @@ function CodeArea () {
   }
 
   async function stopResize (event) {
-    document.body.classList.remove('resizing');
+    document.body.classList.remove('is-resizing');
     const elem = resizeBarDOMRef.current;
     elem.onpointermove = null;
     elem.releasePointerCapture(event.pointerId);
