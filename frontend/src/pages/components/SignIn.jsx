@@ -333,7 +333,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
     } else if (input.validity.valueMissing) {
       errorMsg = `${field} is required.`;
     } else if (input.validity.typeMismatch) {
-      errorMsg = `Please enter a valid ${field.toLowerCase()}.`;
+      errorMsg = `${field.toLowerCase()} is invalid.`;
     }
 
     setErrorMessage(input, errorMsg);
