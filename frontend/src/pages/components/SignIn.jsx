@@ -142,13 +142,15 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
           </form>
         </div>}
       {status === 'resetPassword' &&
-        <div className='reset-password'>
+        <div>
           <div className='form__subheading'>
-            A reset code has been sent to your email,&nbsp;
-            if your account could be found.&nbsp;
-            Please enter your new password below and provide the reset code.
+            <p>
+              A reset code has been sent to your email,&nbsp;
+              if your account could be found.
+            </p>
+            <p>Please enter your new password below and provide the reset code.</p>
           </div>
-          <form noValidate className='sign-in' onSubmit={handleSubmitPasswordReset}>
+          <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
             <p className='form__row'>
               <label className='form__label' htmlFor='password'>
                 <img
