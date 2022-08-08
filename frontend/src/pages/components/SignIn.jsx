@@ -402,7 +402,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
     };
 
 
-    showPopup('Reset code sent (if account found)');
+    showPopup('Check your email for reset code');
     setStatus('resetPassword');
     fetch('/api/forgot-password', options)
       .then(response => response.json())
