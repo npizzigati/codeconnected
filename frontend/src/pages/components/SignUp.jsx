@@ -197,7 +197,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
         </div>}
 
       {activationStatus === 'failure' &&
-        <div u-pad-top-3 u-pad-bot-3>
+        <div className='u-pad-top-3 u-pad-bot-3'>
           <div className='form__subheading'>Your activation request has timed out.</div>
           <span
             className='form__bottom-link u-marg-top-3 u-marg-bot-3'
