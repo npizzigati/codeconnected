@@ -90,7 +90,7 @@ function Home () {
                     </div>
                     <div className='aligned-block__cell u-pad-left-2'>
                       <span className='popup-dialog__text popup-dialog__text--small'>
-                        Continue to time-limited room
+                        Continue to time-limited room&nbsp;&nbsp;
                       </span>
                     </div>
                   </div>
