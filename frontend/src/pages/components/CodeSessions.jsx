@@ -100,6 +100,8 @@ function CodeSessions ({ authed, setShowAuth }) {
       setCSessions([]);
       setShowCSessions(false);
       return;
+    } else {
+      setShowCSessions(true);
     }
     const formattedSessions = formatSessionList(codeSessions);
     setCSessions(formattedSessions);
