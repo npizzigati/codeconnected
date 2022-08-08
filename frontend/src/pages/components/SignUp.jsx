@@ -191,16 +191,16 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
       {activationStatus === 'success' &&
         <div>
           <form noValidate className='form' onSubmit={handleGetStartedSubmit}>
-            <span className='form__subheading'>You are now registered and signed in!</span>
+            <div className='form__subheading'>You are now registered and signed in!</div>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
           </form>
         </div>}
 
       {activationStatus === 'failure' &&
-        <div>
-          <span className='form_subheading'>Your activation request has timed out.</span>
+        <div u-pad-top-3 u-pad-bot-3>
+          <div className='form__subheading'>Your activation request has timed out.</div>
           <span
-            className='form__bottom-link u-marg-top-3'
+            className='form__bottom-link u-marg-top-3 u-marg-bot-3'
             onPointerDown={goBackToSignUp}
           >
             Go back to sign-up form
