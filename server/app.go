@@ -1486,39 +1486,35 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	query := "SELECT username, encrypted_pw, expiry FROM pending_activations WHERE activation_code = $1 AND email = $2"
 	var username, encryptedPW string
 	var expiry int64
-	recordFound := true
-	status := "success"
+	// Will throw errow if code is not found
 	if err = pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&username, &encryptedPW, &expiry); err != nil {
 		logger.Println("query error: ", err)
-		recordFound = false
-		status = "failure"
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	logger.Println("now: ", time.Now().Unix())
 	logger.Println("expiry: ", expiry)
-	// If row was not found, expiry will be 0
-	if expiry != 0 && time.Now().Unix() > expiry {
+	if time.Now().Unix() > expiry {
 		logger.Println("Activation code has expired")
-		status = "failure"
 		// delete expired record
 		deleteActivationRec(cm.Email)
-	}
-
-	type responseModel struct {
-		Status string `json:"status"`
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	userID := -1
-	if recordFound {
-		deleteActivationRec(cm.Email)
-		query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3) RETURNING id;"
-		if err := pool.QueryRow(context.Background(), query, username, cm.Email, encryptedPW).Scan(&userID); err != nil {
-			logger.Println("unable to insert user data: ", err)
-			status = "failure"
-		}
+	deleteActivationRec(cm.Email)
+	query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3) RETURNING id;"
+	if err := pool.QueryRow(context.Background(), query, username, cm.Email, encryptedPW).Scan(&userID); err != nil {
+		logger.Println("unable to insert user data: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	if userID == -1 {
-		logger.Println("User ID not retrieved")
+		logger.Println("User ID could not be retrieved")
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	session.Values["auth"] = true
@@ -1530,17 +1526,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	response := &responseModel{
-		Status: status,
-	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	sendStringJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
