@@ -29,8 +29,12 @@ function Home () {
       setAuthChecked(true);
     })();
 
+    // Escape key to close modal dialogs
+    document.addEventListener('keydown', closeModals);
+
     return function cleanup () {
       isCanceled = true;
+      document.removeEventListener('keydown', closeModals);
     };
   }, []);
 
@@ -205,6 +209,14 @@ function Home () {
         </div>}
     </>
   );
+
+  function closeModals (event) {
+    console.log(event.keyCode);
+    if (event.keyCode !== 27) {
+      return;
+    }
+    setShowPreLaunchDialog(false);
+  }
 
   async function getUserInfo () {
     const options = {
