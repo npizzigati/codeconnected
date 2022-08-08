@@ -892,10 +892,20 @@ body.is-resizing {
     background-color: #6258d7;
 }
 
-.form__submit-button:hover,
+.form__submit-button:focus {
+    cursor: pointer;
+    background-color: #6258d7;
+    outline: #4941a2 solid 3px;
+}
+
+.form__submit-button:hover {
+    cursor: pointer;
+    background-color: #7366fe;
+}
+
 .form__submit-button:active {
     cursor: pointer;
-    background-color: #5c52ca;
+    background-color: #4941a2;
 }
 
 .form__bottom-link {
