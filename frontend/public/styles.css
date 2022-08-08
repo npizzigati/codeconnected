@@ -865,6 +865,10 @@ body.is-resizing {
     color: #222;
 }
 
+.form__input:focus {
+    outline: #675ce4 2px solid;
+}
+
 .form__input::placeholder {
     color: #666;
     font-size: 1.2rem;
@@ -895,7 +899,7 @@ body.is-resizing {
 .form__submit-button:focus {
     cursor: pointer;
     background-color: #6258d7;
-    outline: #4941a2 solid 3px;
+    outline: #4941a2 solid 2px;
 }
 
 .form__submit-button:hover {
