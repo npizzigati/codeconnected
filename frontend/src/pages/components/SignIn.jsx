@@ -95,7 +95,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
           </p>
           <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign in</button>
           <span
-            className='form__bottom-link'
+            className='form__bottom-link u-marg-top-3'
             onPointerDown={showForgotPassword}
           >
             Forgot your password?
@@ -104,7 +104,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
       {status === 'forgotPassword' &&
         <div>
           <form noValidate className='form' onSubmit={handleSubmitForgotPassword}>
-            <div className='form__subheading u-pad-bottom-3'>
+            <div className='form__subheading u-pad-bot-3'>
               To reset your password, please first verify your email address:
             </div>
             <p className='form__row'>
@@ -135,7 +135,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             </p>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Verify</button>
             <span
-              className='form__bottom-link'
+              className='form__bottom-link u-marg-top-3'
               onPointerDown={goBackToSignIn}
             >
               Go back to sign-in form
@@ -145,7 +145,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
       {status === 'resetPassword' &&
         <div>
           <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
-            <div className='form__subheading form__subheading--large u-pad-bottom-3'>
+            <div className='form__subheading form__subheading--large u-pad-bot-3'>
               Choose a new password
             </div>
             <p className='form__row'>
@@ -222,7 +222,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             </div>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Reset password</button>
             <span
-              className='form__bottom-link'
+              className='form__bottom-link u-marg-top-3'
               onPointerDown={goBackToSignIn}
             >
               Go back to sign-in form
@@ -230,10 +230,10 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
           </form>
         </div>}
       {status === 'success' &&
-        <div>
-          <span className='form__subheading form__subheading--large u-pad-top-4 u-pad-bottom-4'>Password successfully reset!</span>
+        <div className='u-pad-top-4 u-pad-bot-4 u-center-text'>
+          <span className='form__subheading form__subheading--large'>Password successfully reset!</span>
           <span
-            className='form__bottom-link'
+            className='form__bottom-link u-marg-top-3'
             onPointerDown={goBackToSignIn}
           >
             Go to sign-in form
@@ -401,17 +401,17 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
       body: body
     };
 
+
+    showPopup('Reset email sent (if account found)');
+    setStatus('resetPassword');
     fetch('/api/forgot-password', options)
       .then(response => response.json())
       .then(json => {
         console.log('forgotpassword status: ' + json.status);
         if (json.status === 'success') {
           console.log('email address found and reset email sent');
-          showPopup('Reset email sent (if account found)');
-          setStatus('resetPassword');
         } else {
           console.log('email address not found and reset email not sent');
-          setStatus('resetPassword');
         }
       });
   }

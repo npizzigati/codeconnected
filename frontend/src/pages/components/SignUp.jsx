@@ -150,19 +150,20 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
         </form>}
       {activationStatus === 'underway' &&
         <div className='activation'>
-          <form noValidate onSubmit={handleCodeSubmit}>
-            <div className='message'>
+          <form className='form' noValidate onSubmit={handleCodeSubmit}>
+            <div className='form__subheading u-pad-bot-1'>
               A verification code has been sent to:
             </div>
-            <div className='email'>
+            <div className='email u-marg-bot-3'>
               {email}
             </div>
-            <div className='form__code-field'>
-              <label htmlFor='activationCode'>
+            <div>
+              <label className='form__label form__label--code u-center-text u-marg-top-2 u-marg-bot-1' htmlFor='activationCode'>
                 Enter code:
               </label>
               <input
                 id='activationCode'
+                className='form__input form__input--code u-center-block'
                 name='activationCode'
                 type='text'
                 size='5'
@@ -172,17 +173,17 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
                 required
                 onChange={handleCodeChange}
               />
-              <div className='error'>{codeValidationError}</div>
+              <div className='form__error-item form__error-item--code u-center-text'>{codeValidationError}</div>
             </div>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Complete Registration</button>
             <span
-              className='form__bottom-link'
+              className='form__bottom-link u-marg-top-3'
               onPointerDown={resendEmail}
             >
               Resend activation code
             </span>
             <span
-              className='bottom-link'
+              className='form__bottom-link u-marg-top-1'
               onPointerDown={goBackToSignUp}
             >
               Go back to sign-up form
@@ -192,8 +193,8 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
       {activationStatus === 'success' &&
         <div className='activation-success'>
           <form noValidate className='form' onSubmit={handleGetStartedSubmit}>
-            <span className='message'>You are now registered and signed in!</span>
-            <button className='submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
+            <span className='form__subheading'>You are now registered and signed in!</span>
+            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
           </form>
         </div>}
 
@@ -201,7 +202,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
         <div className='activation-failure'>
           <span className='message'>Your activation request has timed out.</span>
           <span
-            className='bottom-link'
+            className='form__bottom-link u-marg-top-3'
             onPointerDown={goBackToSignUp}
           >
             Go back to sign-up form

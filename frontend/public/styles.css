@@ -900,7 +900,6 @@ body.is-resizing {
 
 .form__bottom-link {
     display: block;
-    margin: 2em 0;
     text-align: center;
     font-size: 0.9rem;
     text-decoration: underline;
@@ -914,9 +913,9 @@ body.is-resizing {
 }
 
 .form__subheading {
-    width: 14em;
+    width: 17em;
     margin: 0 auto;
-    line-height: 1.5em;
+    line-height: 1.4em;
     text-align: center;
     font-family: 'Lato', sans-serif;
     font-size: 1rem;
@@ -941,8 +940,8 @@ body.is-resizing {
     margin-top: 15vh;
     left: 50%;
     transform: translate(-50%, 0);
-    min-width: 14em;
-    min-height: 7em;
+    min-width: 25em;
+    min-height: 10em;
     background-color: var(--modal-background-color);
     border-radius: 0.7rem;
 }
@@ -1143,19 +1142,19 @@ body.is-resizing {
     padding-top: 2em;
 }
 
-.u-pad-bottom-1 {
+.u-pad-bot-1 {
     padding-bottom: 0.3em;
 }
 
-.u-pad-bottom-2 {
+.u-pad-bot-2 {
     padding-bottom: 0.6em;
 }
 
-.u-pad-bottom-3 {
+.u-pad-bot-3 {
     padding-bottom: 0.9em;
 }
 
-.u-pad-bottom-4 {
+.u-pad-bot-4 {
     padding-bottom: 2em;
 }
 
@@ -1169,7 +1168,8 @@ body.is-resizing {
 }
 
 .u-center-block {
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @media (max-width: 500px), (max-height: 220px) {
