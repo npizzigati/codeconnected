@@ -1012,7 +1012,7 @@ body.is-resizing {
 }
 
 .popup-container {
-    position: fixed;
+    position: absolute;
     left: 0;
     top: 5vh;
     display: flex;
