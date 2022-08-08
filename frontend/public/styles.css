@@ -1001,20 +1001,6 @@ body.is-resizing {
     border-bottom: none;
 }
 
-.activation p {
-    text-align: center;
-}
-
-.activation .message {
-    text-align: center;
-    font-size: 1rem;
-}
-
-.activation .email {
-    text-align: center;
-    font-size: 1.3rem;
-}
-
 .popup-container {
     position: absolute;
     left: 0;
@@ -1037,14 +1023,6 @@ body.is-resizing {
     background-color: #6975a2;
     border-radius: 4px;
     transition: opacity .5s;
-}
-
-.activation-success .message,
-.activation-failure .message {
-    display: block;
-    margin: 2em 0;
-    text-align: center;
-    font-size: 1.3rem;
 }
 
 #resizer{
