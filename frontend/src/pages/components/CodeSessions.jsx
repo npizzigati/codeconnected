@@ -42,7 +42,9 @@ function CodeSessions ({ authed, setShowAuth }) {
             {showCSessions
               ? <div>
                   <h3 className='u-center-text u-marg-bot-2'>
-                    Click on a session to start it up again
+                    <span className='flex-pane__message flex-pane__message--small'>
+                      Click on a session to start it up again
+                    </span>
                   </h3>
                   <div className='table u-center-block'>
                     <div className='table-row table-row--heading'>
