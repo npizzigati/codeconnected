@@ -58,7 +58,7 @@ function CodeSessions ({ authed, setShowAuth }) {
              Sign in
            </span>
            <span>
-             &nbsp;to save and access previous sessions
+             &nbsp;to access previous sessions
            </span>
          </div>}
     </div>
