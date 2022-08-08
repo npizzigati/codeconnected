@@ -505,7 +505,6 @@ body.is-resizing {
     font-family: 'Lato', sans-serif;
     font-size: 1.2rem;
     color: white;
-    padding-top: 1em;
     text-align: center;
 }
 
@@ -513,6 +512,7 @@ body.is-resizing {
     position: absolute;
     display: flex;
     flex-direction: column;
+    padding: 1em;
     top: 3em;
     right: 1em;
     min-width: 10em;
