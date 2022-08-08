@@ -93,7 +93,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             <span className='form__blank-item' />
             <span className='form__error-item'>{passwordValidationError}</span>
           </p>
-          <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign in</button>
+          <button className='form__submit-button u-center-block u-marg-top-2 u-marg-bot-2' type='submit'>Sign in</button>
           <span
             className='form__bottom-link u-marg-top-3'
             onPointerDown={showForgotPassword}
@@ -133,7 +133,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               <span className='form__blank-item' />
               <span className='form__error-item'>{emailForgotPwValidationError}</span>
             </p>
-            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Verify</button>
+            <button className='form__submit-button u-center-block u-marg-top-2' type='submit'>Verify</button>
             <span
               className='form__bottom-link u-marg-top-3'
               onPointerDown={goBackToSignIn}

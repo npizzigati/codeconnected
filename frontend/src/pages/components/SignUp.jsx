@@ -144,7 +144,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <span className='form__blank-item' />
             <span className='form__error-item'>{passwordDupValidationError}</span>
           </p>
-          <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign up</button>
+          <button className='form__submit-button u-center-block u-marg-top-2 u-marg-bot-2' type='submit'>Sign up</button>
         </form>}
       {activationStatus === 'underway' &&
         <div className='activation'>
