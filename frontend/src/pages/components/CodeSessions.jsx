@@ -7,6 +7,7 @@ import { requestRoom } from '../../helpers/launchUtils.js';
 
 function CodeSessions ({ authed, setShowAuth }) {
   const [cSessions, setCSessions] = useState([]);
+  const [showCSessions, setShowCSessions] = useState(true);
   const navigate = useNavigate();
   const isCanceled = useRef(false);
   let formattedSessions;
@@ -38,17 +39,25 @@ function CodeSessions ({ authed, setShowAuth }) {
       {authed
         ? <div>
             <h1 className='u-center-text u-marg-top-1'>Resume a session</h1>
-            <h3 className='u-center-text u-marg-bot-2'>
-              Click on a session to start it up again
-            </h3>
-            <div className='table u-center-block'>
-              <div className='table-row table-row--heading'>
-                <h4 className='table-cell'>Language</h4>
-                <h4 className='table-cell'>Lines</h4>
-                <h4 className='table-cell'>Last Accessed</h4>
-              </div>
-              {cSessions}
-            </div>
+            {showCSessions
+              ? <div>
+                  <h3 className='u-center-text u-marg-bot-2'>
+                    Click on a session to start it up again
+                  </h3>
+                  <div className='table u-center-block'>
+                    <div className='table-row table-row--heading'>
+                      <h4 className='table-cell'>Language</h4>
+                      <h4 className='table-cell'>Lines</h4>
+                      <h4 className='table-cell'>Last Accessed</h4>
+                    </div>
+                    {cSessions}
+                  </div>
+                </div>
+              : <div>
+                  <h3 className='u-center-text u-marg-top-3'>
+                    No sessions yet
+                  </h3>
+                </div>}
           </div>
        : <div className='pane-message-unauthed'>
            <span
@@ -80,19 +89,28 @@ function CodeSessions ({ authed, setShowAuth }) {
   }
 
   async function buildSessionList () {
-    const { codeSessions } = await getCodeSessions();
+    const { sessionCount, codeSessions } = await getCodeSessions();
     console.log(JSON.stringify(codeSessions));
     if (isCanceled.current) {
       return;
     }
-    formattedSessions = formatSessionList(codeSessions);
+    if (sessionCount === 0) {
+      // Clear code sessions for the unlikely case that a user
+      // has signed out of a session with saved code sessions and
+      // signed in with another username without saved code
+      // sessions
+      setCSessions([]);
+      setShowCSessions(false);
+      return;
+    }
+    const formattedSessions = formatSessionList(codeSessions);
     setCSessions(formattedSessions);
     // Recalculate time since code session was accessed, at interval
     // Update interval in seconds
     const updateIntervalTime = 20;
     const intervalHandle = setInterval(() => {
       const formattedSessions = formatSessionList(codeSessions);
-      if (isCanceled.current) {
+      if (isCanceled.current || !showCSessions) {
         clearInterval(intervalHandle);
         console.log('Clearing code sessions interval');
         return;

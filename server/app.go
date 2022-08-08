@@ -250,6 +250,7 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	}
 
 	type responseModel struct {
+		SessionCount int           `json:"sessionCount"`
 		CodeSessions []codeSession `json:"codeSessions"`
 	}
 
@@ -259,8 +260,10 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	var lang string
 	var content string
 	var when_accessed int64
+	sessionCount := 0
 	queryLines :=
-		[]string{"SELECT id, lang, editor_contents, when_accessed",
+		[]string{
+			"SELECT id, lang, editor_contents, when_accessed",
 			"FROM coding_sessions WHERE user_id = $1",
 			"ORDER BY when_accessed DESC LIMIT 5"}
 	query := strings.Join(queryLines, " ")
@@ -269,6 +272,7 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		logger.Println("Query unsuccessful: ", err)
 	}
 	for rows.Next() {
+		sessionCount += 1
 		values, err := rows.Values()
 		if err != nil {
 			logger.Println("Error iterating dataset: ", err)
@@ -298,7 +302,10 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		}
 		cSessions = append(cSessions, cSession)
 	}
+
+	logger.Println("Number of code sessions found: ", sessionCount)
 	response := &responseModel{
+		SessionCount: sessionCount,
 		CodeSessions: cSessions,
 	}
 	jsonResp, err := json.Marshal(response)
