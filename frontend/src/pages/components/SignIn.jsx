@@ -163,7 +163,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 type='password'
                 size={inputFieldSize}
                 value={newPassword}
-                placeholder='Choose a new password'
+                placeholder='New password'
                 ref={newPasswordInput}
                 data-validation='Password'
                 required
