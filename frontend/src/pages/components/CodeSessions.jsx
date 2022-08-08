@@ -42,11 +42,11 @@ function CodeSessions ({ authed, setShowAuth }) {
               Click on a session to start it up again
             </h3>
             <div className='table u-center-block'>
-              <p className='table-row table-row--heading'>
+              <div className='table-row table-row--heading'>
                 <h4 className='table-cell'>Language</h4>
-                <h4 className='table-cell'>LOC</h4>
+                <h4 className='table-cell'>Lines</h4>
                 <h4 className='table-cell'>Last Accessed</h4>
-              </p>
+              </div>
               {cSessions}
             </div>
           </div>
