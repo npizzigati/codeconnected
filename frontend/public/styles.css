@@ -96,11 +96,19 @@ body.is-resizing {
     width: auto;
 }
 
+.media__image--tinier {
+    height: 2em;
+    width: auto;
+}
 
 .media__text {
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+.media__text--constrained {
+    width: 19.5em;
 }
 
 .site-name {
@@ -283,15 +291,6 @@ body.is-resizing {
     line-height: 1.5em;
 }
 
-.table-row--error {
-    height: 1em;
-    margin-top: 0.2em;
-    line-height: 0.5em;
-    font-family: 'Lato', sans-serif;
-    font-size: 0.8rem;
-    vertical-align: middle;
-}
-
 .table-row--heading {
     text-align: center;
 }
@@ -339,10 +338,10 @@ body.is-resizing {
     background-color: black;
 }
 
-.home .pre-launch-dialog-container {
-}
-
-.home .pre-launch-dialog {
+.popup-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     z-index: 1000;
     position: fixed;
     margin: 15vh auto 0;
@@ -359,61 +358,53 @@ body.is-resizing {
     -webkit-user-select: none;
 }
 
-.home .pre-launch-dialog .message-container {
-    display: flex;
-    width: 95%;
-    margin: 0 auto 1em;
-    padding-left: 1em;
-}
-
-.home .pre-launch-dialog .message-container .attention-image {
-    width: 4.5em;
-    background-image: url('./attention.png');
-    background-size: 2.5em;
-    background-repeat: no-repeat;
-    background-position: center top 0.4em;
-}
-
-.home .pre-launch-dialog .message-container .message {
+.popup-dialog__text {
     font-family: 'Lato', sans-serif;
     font-size: 1.3em;
-    line-height: 1.2em;
-    margin-left: 0.5em;
-    user-select: none;
-    -webkit-user-select: none;
 }
 
-.home .pre-launch-dialog .options {
-    margin-left: 3em;
+.popup-dialog__text--small {
+    font-family: 'Lato', sans-serif;
+    font-size: 1em;
 }
 
-.home .pre-launch-dialog .option-row {
+.aligned-block {
+    display: table;
+}
+
+.aligned-block__row {
     display: table-row;
     line-height: 2em;
 }
 
-.home .pre-launch-dialog .option-row .arrow {
-    height: 1.2em;
-    width: 1.2em;
-    padding-top: 0.7em;
+.aligned-block__row--selectable {
+    cursor: pointer;
 }
 
-.home .pre-launch-dialog .option {
+.aligned-block__row--selectable:hover {
+    background-color: #333;
+}
+
+.aligned-block__cell {
     display: table-cell;
     vertical-align: middle;
-    padding-left: 0.5em;
-    font-family: 'Lato', sans-serif;
-    font-size: 1.3em;
-    font-weight: 600;
-    color: white;
-    text-decoration: underline;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
 }
 
-.home .pre-launch-dialog .option:hover {
-    color: #d737ff
+.aligned-block__image {
+    vertical-align: middle;
+    height: 5.5em;
+    width: auto;
+    object-fit: scale-down;
+}
+
+.aligned-block__image--tiny {
+    height: 2em;
+    width: auto;
+}
+
+.aligned-block__image--tinier {
+    height: 1.5em;
+    width: auto;
 }
 
 .code-area .header-bar .logo {
@@ -1120,6 +1111,14 @@ body.is-resizing {
     padding-top: 2em;
 }
 
+.u-pad-left-1 {
+    padding-left: 0.3em;
+}
+
+.u-pad-left-2 {
+    padding-left: 0.6em;
+}
+
 .u-pad-bot-1 {
     padding-bottom: 0.3em;
 }
@@ -1145,9 +1144,17 @@ body.is-resizing {
     text-align: center;
 }
 
+.u-right-align-text {
+    text-align: right;
+}
+
 .u-center-block {
     margin-left: auto;
     margin-right: auto;
+}
+
+.u-pointer {
+    cursor: pointer;
 }
 
 @media (max-width: 500px), (max-height: 220px) {

@@ -46,34 +46,54 @@ function Home () {
               config={preLaunchLanguage === null ? {} : { successCallback: () => launch(preLaunchLanguage) }}
             />}
           {showPreLaunchDialog &&
-            <div className='pre-launch-dialog-container'>
+            <div>
               <div className='backdrop' onPointerDown={abortPreLaunch} />
-              <div className='pre-launch-dialog'>
-                <div className='message-container'>
-                  <div className='attention-image' />
-                  <div className='message'>
-                    Rooms created by unregistered users have a 15-minute time limit.
+              <div className='popup-dialog'>
+                <div className='media'>
+                  <div className='media__image-container'>
+                    <img
+                      className='media__image media__image--small'
+                      src='./attention.png'
+                      alt='Attention'
+                    />
+                  </div>
+                  <div className='media__text media__text--constrained'>
+                    <div>
+                      <span className='popup-dialog__text'>
+                        Rooms created by unregistered users have a 15-minute time limit.
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className='options'>
-                  <p className='option-row'>
-                    <img
-                      className='arrow'
-                      src='./arrow_forward.png'
-                    />
-                    <span className='option' onPointerDown={preLaunchSignIn}>
-                      Sign in to remove time limit
-                    </span>
-                  </p>
-                  <p className='option-row'>
-                    <img
-                      className='arrow'
-                      src='./arrow_forward.png'
-                    />
-                    <span className='option' onPointerDown={continueAnyway}>
-                      Continue to time-limited room
-                    </span>
-                  </p>
+                <div className='aligned-block'>
+                  <div className='aligned-block__row aligned-block__row--selectable u-marg-top-2' onPointerDown={preLaunchSignIn}>
+                    <div className='aligned-block__cell u-right-align-text'>
+                      <img
+                        className='aligned-block__image aligned-block__image--tinier'
+                        src='./login.png'
+                        alt='Login'
+                      />
+                    </div>
+                    <div className='aligned-block__cell u-pad-left-2'>
+                      <span className='popup-dialog__text popup-dialog__text--small'>
+                        Sign in to remove time limit
+                      </span>
+                    </div>
+                  </div>
+                  <div className='aligned-block__row aligned-block__row--selectable u-marg-top-2' onPointerDown={continueAnyway}>
+                    <div className='aligned-block__cell u-right-align-text'>
+                      <img
+                        className='aligned-block__image aligned-block__image--tinier'
+                        src='./hourglass.png'
+                        alt='Time-limited'
+                      />
+                    </div>
+                    <div className='aligned-block__cell u-pad-left-2'>
+                      <span className='popup-dialog__text popup-dialog__text--small'>
+                        Continue to time-limited room
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>}
@@ -81,7 +101,7 @@ function Home () {
             <div className='flex-pane'>
               <div className='media'>
                 <div className='media__image-container'>
-                  <img className='media__image--small u-marg-top-2' src='./codeconnected.png' alt='Logo' />
+                  <img className='media__image media__image--small u-marg-top-2' src='./codeconnected.png' alt='Logo' />
                 </div>
                 <div className='media__text'>
                   <div>

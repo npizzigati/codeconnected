@@ -62,10 +62,14 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
   function handleTabClick (ev) {
     switch (ev.target.id) {
     case 'sign-up-tab':
-      setSelectedTab('signUp');
+      if (selectedTab === 'signIn') {
+        setSelectedTab('signUp');
+      }
       break;
     case 'sign-in-tab':
-      setSelectedTab('signIn');
+      if (selectedTab === 'signUp') {
+        setSelectedTab('signIn');
+      }
       break;
     }
   }
