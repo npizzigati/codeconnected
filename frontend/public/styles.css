@@ -205,6 +205,19 @@ body.is-resizing {
     overflow: hidden;
 }
 
+.flex-pane__message {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.2rem;
+    background-color: #2f2d3a;
+    padding: 0.3em;
+}
+
+.flex-pane__sign-in-link {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
 .flex-pane--wide {
     flex: 2;
 }
@@ -254,38 +267,6 @@ body.is-resizing {
 
 .list-item:hover {
     background-color: #2e2c38;
-}
-
-.pane-header {
-    flex: 1
-    font-family: 'Lato', sans-serif;
-    font-size: 2rem;
-    margin-top: 1em;
-    text-align: center;
-}
-
-.pane-subheader {
-    flex: 1
-    font-family: 'Lato', sans-serif;
-    font-size: 1rem;
-    margin-top: 0.2em;
-    margin-bottom: 1em;
-    text-align: center;
-}
-
-.pane-message-unauthed {
-    flex: 1
-    font-family: 'Lato', sans-serif;
-    font-size: 1.5rem;
-    margin-top: 2em;
-    text-align: center;
-    background-color: #2f2d3a;
-    padding: 1em;
-}
-
-.pane-message-unauthed .sign-in-link {
-    text-decoration: underline;
-    cursor: pointer;
 }
 
 .table {
@@ -1128,6 +1109,10 @@ body.is-resizing {
 
 .u-pad-top-3 {
     padding-top: 0.9em;
+}
+
+.u-pad-top-4 {
+    padding-top: 1.2em;
 }
 
 .u-pad-top-4 {
