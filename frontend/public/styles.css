@@ -374,7 +374,7 @@ body.is-resizing {
 
 .aligned-block__row {
     display: table-row;
-    line-height: 2em;
+    line-height: 3em;
 }
 
 .aligned-block__row--selectable {
