@@ -1018,9 +1018,9 @@ body.is-resizing {
     padding: 0.3em 0.4em;
     font-family: 'Lato', sans-serif;
     font-weight: 600;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     color: black;
-    background-color: white;
+    background-color: #6975a2;
     border-radius: 4px;
     transition: opacity .5s;
 }
