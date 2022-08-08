@@ -220,7 +220,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               />
               <div className='form__error-item form__error-item--code u-center-text'>{codeValidationError}</div>
             </div>
-            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Reset password</button>
+            <button className='form__submit-button u-center-block u-marg-top-1' type='submit'>Reset password</button>
             <span
               className='form__bottom-link u-marg-top-3'
               onPointerDown={goBackToSignIn}
