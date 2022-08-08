@@ -40,7 +40,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
       {activationStatus === 'pre' &&
         <form noValidate className='form' ref={form} onSubmit={handleSubmit}>
           <p className='form__row'>
-            <label htmlFor='username'>
+            <label className='form__label' htmlFor='username'>
               <img
                 className='form__label-img'
                 src='./blank_avatar.png'
@@ -66,7 +66,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <span className='form__error-item'>{usernameValidationError}</span>
           </p>
           <p className='form__row'>
-            <label htmlFor='email'>
+            <label className='form__label' htmlFor='email'>
               <img
                 className='form__label-img'
                 src='./mail.png'
@@ -92,7 +92,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <span className='form__error-item'>{emailValidationError}</span>
           </p>
           <p className='form__row'>
-            <label htmlFor='password'>
+            <label className='form__label' htmlFor='password'>
               <img
                 className='form__label-img'
                 src='./key_icon.png'
@@ -119,7 +119,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <span className='form__error-item'>{passwordValidationError}</span>
           </p>
           <p className='form__row'>
-            <label htmlFor='passwordDup'>
+            <label className='form__label' htmlFor='passwordDup'>
               <img
                 className='form__label-img'
                 src='./key_icon.png'
@@ -144,9 +144,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <span className='form__blank-item' />
             <span className='form__error-item'>{passwordDupValidationError}</span>
           </p>
-          <p className='form__row'>
-            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign up</button>
-          </p>
+          <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign up</button>
         </form>}
       {activationStatus === 'underway' &&
         <div className='activation'>
@@ -154,7 +152,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <div className='form__subheading u-pad-bot-1'>
               A verification code has been sent to:
             </div>
-            <div className='email u-marg-bot-3'>
+            <div className='form__subheading form__subheading-medium u-center-text u-marg-bot-3'>
               {email}
             </div>
             <div>
@@ -175,7 +173,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
               />
               <div className='form__error-item form__error-item--code u-center-text'>{codeValidationError}</div>
             </div>
-            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Complete Registration</button>
+            <button className='form__submit-button u-center-block u-marg-top-1' type='submit'>Complete Registration</button>
             <span
               className='form__bottom-link u-marg-top-3'
               onPointerDown={resendEmail}
@@ -191,7 +189,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
           </form>
         </div>}
       {activationStatus === 'success' &&
-        <div className='activation-success'>
+        <div>
           <form noValidate className='form' onSubmit={handleGetStartedSubmit}>
             <span className='form__subheading'>You are now registered and signed in!</span>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
@@ -199,8 +197,8 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
         </div>}
 
       {activationStatus === 'failure' &&
-        <div className='activation-failure'>
-          <span className='message'>Your activation request has timed out.</span>
+        <div>
+          <span className='form_subheading'>Your activation request has timed out.</span>
           <span
             className='form__bottom-link u-marg-top-3'
             onPointerDown={goBackToSignUp}
