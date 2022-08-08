@@ -57,15 +57,12 @@ function CodeSessions ({ authed, setShowAuth }) {
                   <span className='flex-pane__message'>No sessions yet</span>
                 </div>}
           </div>
-       : <div className='flex-pane__message'>
+       : <div className='u-center-text u-pad-top-4'>
            <span
-             className='flex-pane__sign-in-link'
+             className='flex-pane__message'
              onPointerDown={() => setShowAuth(true)}
            >
-             Sign in
-           </span>
-           <span>
-             &nbsp;to access previous sessions
+             <span className='flex-pane__sign-in-link'>Sign in</span> to access previous sessions
            </span>
          </div>}
     </div>
