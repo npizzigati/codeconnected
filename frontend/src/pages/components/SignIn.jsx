@@ -35,7 +35,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
   }, [status]);
 
   return (
-    <div className='sign-in'>
+    <>
       <div className='popup-container'>
         <div className='popup'>{popupMessage}</div>
       </div>
@@ -64,7 +64,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             />
           </p>
           <p className='form__row form__row--error'>
-            <span className='form__error-item' />
+            <span className='form__blank-item' />
             <span className='form__error-item'>{emailValidationError}</span>
           </p>
           <p className='form__row'>
@@ -90,10 +90,10 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             />
           </p>
           <p className='form__row form__row--error'>
-            <span className='form__error-item' />
+            <span className='form__blank-item' />
             <span className='form__error-item'>{passwordValidationError}</span>
           </p>
-          <button className='form__submit-button' type='submit'>Sign in</button>
+          <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign in</button>
           <span
             className='form__bottom-link'
             onPointerDown={showForgotPassword}
@@ -103,10 +103,10 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
         </form>}
       {status === 'forgotPassword' &&
         <div>
-          <div className='form__subheading'>
-            To reset your password, please first verify your email address:
-          </div>
-          <form noValidate onSubmit={handleSubmitForgotPassword}>
+          <form noValidate className='form' onSubmit={handleSubmitForgotPassword}>
+            <div className='form__subheading u-pad-bottom-3'>
+              To reset your password, please first verify your email address:
+            </div>
             <p className='form__row'>
               <label className='form__label' htmlFor='email'>
                 <img
@@ -116,6 +116,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 />
               </label>
               <input
+                className='form__input'
                 id='email'
                 name='forgotPasswordEmail'
                 type='email'
@@ -129,12 +130,12 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               />
             </p>
             <p className='form__row form__row--error'>
-              <span className='form__error-item' />
-              <span>{emailForgotPwValidationError}</span>
+              <span className='form__blank-item' />
+              <span className='form__error-item'>{emailForgotPwValidationError}</span>
             </p>
-            <button className='submit-button' type='submit'>Verify</button>
+            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Verify</button>
             <span
-              className='bottom-link'
+              className='form__bottom-link'
               onPointerDown={goBackToSignIn}
             >
               Go back to sign-in form
@@ -143,14 +144,10 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
         </div>}
       {status === 'resetPassword' &&
         <div>
-          <div className='form__subheading'>
-            <p>
-              A reset code has been sent to your email,&nbsp;
-              if your account could be found.
-            </p>
-            <p>Please enter your new password below and provide the reset code.</p>
-          </div>
           <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
+            <div className='form__subheading form__subheading--large u-pad-bottom-3'>
+              Choose a new password
+            </div>
             <p className='form__row'>
               <label className='form__label' htmlFor='password'>
                 <img
@@ -161,6 +158,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               </label>
               <input
                 id='password'
+                className='form__input'
                 name='newPassword'
                 type='password'
                 size={inputFieldSize}
@@ -174,8 +172,8 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               />
             </p>
             <p className='form__row form__row--error'>
-              <span className='form__item-placeholder' />
-              <span>{newPasswordValidationError}</span>
+              <span className='form__blank-item' />
+              <span className='form__error-item'>{newPasswordValidationError}</span>
             </p>
             <p className='form__row'>
               <label className='form__label' htmlFor='passwordDup'>
@@ -187,6 +185,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               </label>
               <input
                 id='passwordDup'
+                className='form__input'
                 name='newPasswordDup'
                 type='password'
                 size={inputFieldSize}
@@ -200,15 +199,16 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
               />
             </p>
             <p className='form__row form__row--error'>
-              <span className='form__item-placeholder' />
-              <span>{newPasswordDupValidationError}</span>
+              <span className='form__blank-item' />
+              <span className='form__error-item'>{newPasswordDupValidationError}</span>
             </p>
-            <div className='code-field'>
-              <label className='form__label' htmlFor='resetCode'>
-                Enter code:
+            <div>
+              <label className='form__label form__label--code u-center-text u-marg-bot-1' htmlFor='resetCode'>
+                Code sent to your email:
               </label>
               <input
                 id='resetCode'
+                className='form__input form__input--code u-center-block'
                 name='resetCode'
                 type='text'
                 size='5'
@@ -218,11 +218,9 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
                 required
                 onChange={handlePasswordResetChange}
               />
-              <p className='form__row form__row--error'>
-                {codeValidationError}
-              </p>
+              <div className='form__error-item form__error-item--code u-center-text'>{codeValidationError}</div>
             </div>
-            <button className='form__submit-button' type='submit'>Reset password</button>
+            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Reset password</button>
             <span
               className='form__bottom-link'
               onPointerDown={goBackToSignIn}
@@ -233,7 +231,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
         </div>}
       {status === 'success' &&
         <div>
-          <span className='form__subheading form__subheading--large'>Password successfully reset!</span>
+          <span className='form__subheading form__subheading--large u-pad-top-4 u-pad-bottom-4'>Password successfully reset!</span>
           <span
             className='form__bottom-link'
             onPointerDown={goBackToSignIn}
@@ -241,7 +239,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
             Go to sign-in form
           </span>
         </div>}
-    </div>
+    </>
   );
 
   function goBackToSignIn () {
@@ -409,6 +407,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
         console.log('forgotpassword status: ' + json.status);
         if (json.status === 'success') {
           console.log('email address found and reset email sent');
+          showPopup('Reset email sent (if account found)');
           setStatus('resetPassword');
         } else {
           console.log('email address not found and reset email not sent');

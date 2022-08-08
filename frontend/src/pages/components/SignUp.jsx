@@ -33,21 +33,22 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
   }, [activationStatus]);
 
   return (
-    <div className='sign-up'>
+    <>
       <div className='popup-container'>
         <div className='popup'>{resendPopupMessage}</div>
       </div>
       {activationStatus === 'pre' &&
-        <form noValidate ref={form} onSubmit={handleSubmit}>
-          <p>
+        <form noValidate className='form' ref={form} onSubmit={handleSubmit}>
+          <p className='form__row'>
             <label htmlFor='username'>
               <img
-                className='avatar'
+                className='form__label-img'
                 src='./blank_avatar.png'
                 alt='avatar'
               />
             </label>
             <input
+              className='form__input'
               id='username'
               name='username'
               type='text'
@@ -60,19 +61,20 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
               onChange={handleChange}
             />
           </p>
-          <p className='error'>
-            <span className='col-placeholder' />
-            <span>{usernameValidationError}</span>
+          <p className='form__row form__row--error'>
+            <span className='form__blank-item' />
+            <span className='form__error-item'>{usernameValidationError}</span>
           </p>
-          <p>
+          <p className='form__row'>
             <label htmlFor='email'>
               <img
-                className='email-icon'
+                className='form__label-img'
                 src='./mail.png'
                 alt='email icon'
               />
             </label>
             <input
+              className='form__input'
               id='email'
               name='email'
               type='email'
@@ -85,19 +87,20 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
               onChange={handleChange}
             />
           </p>
-          <p className='error'>
-            <span className='col-placeholder' />
-            <span>{emailValidationError}</span>
+          <p className='form__row form__row--error'>
+            <span className='form__blank-item' />
+            <span className='form__error-item'>{emailValidationError}</span>
           </p>
-          <p>
+          <p className='form__row'>
             <label htmlFor='password'>
               <img
-                className='password-icon'
+                className='form__label-img'
                 src='./key_icon.png'
                 alt='password icon'
               />
             </label>
             <input
+              className='form__input'
               id='password'
               name='password'
               type='password'
@@ -111,19 +114,20 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
               onChange={handleChange}
             />
           </p>
-          <p className='error'>
-            <span className='col-placeholder' />
-            <span>{passwordValidationError}</span>
+          <p className='form__row form__row--error'>
+            <span className='form__blank-item' />
+            <span className='form__error-item'>{passwordValidationError}</span>
           </p>
-          <p>
+          <p className='form__row'>
             <label htmlFor='passwordDup'>
               <img
-                className='password-icon'
+                className='form__label-img'
                 src='./key_icon.png'
                 alt='password icon'
               />
             </label>
             <input
+              className='form__input'
               id='passwordDup'
               name='passwordDup'
               type='password'
@@ -136,13 +140,12 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
               onChange={handleChange}
             />
           </p>
-          <p className='error'>
-            <span className='col-placeholder' />
-            <span>{passwordDupValidationError}</span>
+          <p className='form__row form__row--error'>
+            <span className='form__blank-item' />
+            <span className='form__error-item'>{passwordDupValidationError}</span>
           </p>
-          <p>
-            <span className='col-placeholder' />
-            <button className='submit-button' type='submit'>Sign up</button>
+          <p className='form__row'>
+            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Sign up</button>
           </p>
         </form>}
       {activationStatus === 'underway' &&
@@ -154,7 +157,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             <div className='email'>
               {email}
             </div>
-            <div className='code-field'>
+            <div className='form__code-field'>
               <label htmlFor='activationCode'>
                 Enter code:
               </label>
@@ -171,9 +174,9 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
               />
               <div className='error'>{codeValidationError}</div>
             </div>
-            <button className='submit-button' type='submit'>Complete Registration</button>
+            <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Complete Registration</button>
             <span
-              className='bottom-link'
+              className='form__bottom-link'
               onPointerDown={resendEmail}
             >
               Resend activation code
@@ -188,9 +191,9 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
         </div>}
       {activationStatus === 'success' &&
         <div className='activation-success'>
-          <form noValidate onSubmit={handleGetStartedSubmit}>
+          <form noValidate className='form' onSubmit={handleGetStartedSubmit}>
             <span className='message'>You are now registered and signed in!</span>
-            <button className='submit-button' type='submit'>Continue</button>
+            <button className='submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
           </form>
         </div>}
 
@@ -204,7 +207,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
             Go back to sign-up form
           </span>
         </div>}
-    </div>
+    </>
   );
 
   function handleGetStartedSubmit (ev) {
