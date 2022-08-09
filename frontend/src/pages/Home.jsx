@@ -70,7 +70,10 @@ function Home () {
                   </div>
                 </div>
                 <div className='aligned-block'>
-                  <div className='aligned-block__row aligned-block__row--selectable' onPointerDown={preLaunchSignIn}>
+                  <div
+                    className='aligned-block__row aligned-block__row--clickable'
+                    onPointerDown={preLaunchSignIn}
+                  >
                     <div className='aligned-block__cell u-right-align-text'>
                       <img
                         className='aligned-block__image aligned-block__image--tinier'
@@ -84,7 +87,10 @@ function Home () {
                       </span>
                     </div>
                   </div>
-                  <div className='aligned-block__row aligned-block__row--selectable' onPointerDown={continueAnyway}>
+                  <div
+                    className='aligned-block__row aligned-block__row--clickable'
+                    onPointerDown={continueAnyway}
+                  >
                     <div className='aligned-block__cell u-right-align-text'>
                       <img
                         className='aligned-block__image aligned-block__image--tinier'
