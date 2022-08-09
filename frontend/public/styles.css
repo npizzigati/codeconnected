@@ -377,11 +377,11 @@ body.is-resizing {
     line-height: 2.5em;
 }
 
-.aligned-block__row--selectable {
+.aligned-block__row--clickable {
     cursor: pointer;
 }
 
-.aligned-block__row--selectable:hover {
+.aligned-block__row--clickable:hover {
     background-color: #333;
 }
 
