@@ -2,8 +2,11 @@
     --main-bg-color: #1c1b22;
     --modal-background-color: #111;
     --modal-border: 2px solid #555;
-/* z-indexes */
-    --modal-z-index: 1001;
+    /* z-indexes */
+    --tabbed-modal-z-index: 1001;
+    --popup-dialog-z-index: 1010;
+    --backdrop-z-index: 999;
+    --backdrop--level2-z-index: 1005;
 }
 
 /* Base rules */
@@ -329,7 +332,7 @@ body.is-resizing {
 
 .backdrop {
     position: fixed;
-    z-index: 999;
+    z-index: var(--backdrop-z-index);
     top: 0;
     right: 0;
     height: 100%;
@@ -338,11 +341,15 @@ body.is-resizing {
     background-color: black;
 }
 
+.backdrop--level2 {
+    z-index: var(--backdrop--level2-z-index);
+    opacity: 0.4;
+}
+
 .popup-dialog {
     display: flex;
     flex-direction: column;
     align-items: center;
-    z-index: 1000;
     position: fixed;
     margin: 15vh auto 0;
     padding: 1em;
@@ -356,6 +363,7 @@ body.is-resizing {
     border-radius: 5px;
     user-select: none;
     -webkit-user-select: none;
+    z-index: var(--popup-dialog-z-index)
 }
 
 .popup-dialog__text {
@@ -927,7 +935,7 @@ body.is-resizing {
 .tabbed-modal {
     --unselected-tab-bkg-color: #444;
     position: fixed;
-    z-index: var(--modal-z-index);
+    z-index: var(--tabbed-modal-z-index);
     margin-top: 15vh;
     left: 50%;
     transform: translate(-50%, 0);
