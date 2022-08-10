@@ -842,7 +842,7 @@ body.is-resizing {
 .form__input {
     display: table-cell;
     font-family: 'Lato', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.5em;
     width: 13em;
     border: 1.5px solid white;
     border-radius: 0.2em;
@@ -912,7 +912,7 @@ body.is-resizing {
 }
 
 .form__subheading {
-    width: 17em;
+    width: 100%;
     margin: 0 auto;
     line-height: 1.4em;
     text-align: center;
@@ -939,13 +939,16 @@ body.is-resizing {
     margin-top: 15vh;
     left: 50%;
     transform: translate(-50%, 0);
-    min-width: 25em;
+    /* min-width: 25em; */
+    width: 25em;
     min-height: 10em;
     background-color: var(--modal-background-color);
     border-radius: 0.7rem;
 }
 
 .tabbed-modal__content {
+    display: flex;
+    justify-content: center;
     border-bottom: var(--modal-border);
     border-right: var(--modal-border);
     border-left: var(--modal-border);

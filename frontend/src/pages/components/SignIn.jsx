@@ -143,92 +143,90 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
           </form>
         </div>}
       {status === 'resetPassword' &&
-        <div>
-          <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
-            <div className='form__subheading form__subheading--large u-pad-bot-3'>
-              Choose a new password
-            </div>
-            <p className='form__row'>
-              <label className='form__label' htmlFor='password'>
-                <img
-                  className='form__label-img'
-                  src='./key_icon.png'
-                  alt='password icon'
-                />
-              </label>
-              <input
-                id='password'
-                className='form__input'
-                name='newPassword'
-                type='password'
-                size={inputFieldSize}
-                value={newPassword}
-                placeholder='New password'
-                ref={newPasswordInput}
-                data-validation='Password'
-                required
-                minLength='6'
-                onChange={handlePasswordResetChange}
+        <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
+          <div className='form__subheading form__subheading--large u-pad-bot-3'>
+            Choose a new password
+          </div>
+          <p className='form__row'>
+            <label className='form__label' htmlFor='password'>
+              <img
+                className='form__label-img'
+                src='./key_icon.png'
+                alt='password icon'
               />
-            </p>
-            <p className='form__row form__row--error'>
-              <span className='form__blank-item' />
-              <span className='form__error-item'>{newPasswordValidationError}</span>
-            </p>
-            <p className='form__row'>
-              <label className='form__label' htmlFor='passwordDup'>
-                <img
-                  className='form__label-img'
-                  src='./key_icon.png'
-                  alt='password icon'
-                />
-              </label>
-              <input
-                id='passwordDup'
-                className='form__input'
-                name='newPasswordDup'
-                type='password'
-                size={inputFieldSize}
-                value={newPasswordDup}
-                placeholder='Repeat new password'
-                ref={newPasswordDupInput}
-                data-validation='Repeat password'
-                required
-                minLength='6'
-                onChange={handlePasswordResetChange}
+            </label>
+            <input
+              id='password'
+              className='form__input'
+              name='newPassword'
+              type='password'
+              size={inputFieldSize}
+              value={newPassword}
+              placeholder='New password'
+              ref={newPasswordInput}
+              data-validation='Password'
+              required
+              minLength='6'
+              onChange={handlePasswordResetChange}
+            />
+          </p>
+          <p className='form__row form__row--error'>
+            <span className='form__blank-item' />
+            <span className='form__error-item'>{newPasswordValidationError}</span>
+          </p>
+          <p className='form__row'>
+            <label className='form__label' htmlFor='passwordDup'>
+              <img
+                className='form__label-img'
+                src='./key_icon.png'
+                alt='password icon'
               />
-            </p>
-            <p className='form__row form__row--error'>
-              <span className='form__blank-item' />
-              <span className='form__error-item'>{newPasswordDupValidationError}</span>
-            </p>
-            <div>
-              <label className='form__label form__label--code u-center-text u-marg-bot-1' htmlFor='resetCode'>
-                Code sent to your email:
-              </label>
-              <input
-                id='resetCode'
-                className='form__input form__input--code u-center-block'
-                name='resetCode'
-                type='text'
-                size='5'
-                value={resetCode}
-                ref={resetCodeInput}
-                data-validation='Code'
-                required
-                onChange={handlePasswordResetChange}
-              />
-              <div className='form__error-item form__error-item--code u-center-text'>{codeValidationError}</div>
-            </div>
-            <button className='form__submit-button u-center-block u-marg-top-1' type='submit'>Reset password</button>
-            <span
-              className='form__bottom-link u-marg-top-3'
-              onPointerDown={goBackToSignIn}
-            >
-              Go back to sign-in form
-            </span>
-          </form>
-        </div>}
+            </label>
+            <input
+              id='passwordDup'
+              className='form__input'
+              name='newPasswordDup'
+              type='password'
+              size={inputFieldSize}
+              value={newPasswordDup}
+              placeholder='Repeat new password'
+              ref={newPasswordDupInput}
+              data-validation='Repeat password'
+              required
+              minLength='6'
+              onChange={handlePasswordResetChange}
+            />
+          </p>
+          <p className='form__row form__row--error'>
+            <span className='form__blank-item' />
+            <span className='form__error-item'>{newPasswordDupValidationError}</span>
+          </p>
+          <div>
+            <label className='form__label form__label--code u-center-text u-marg-bot-1' htmlFor='resetCode'>
+              Code sent to your email:
+            </label>
+            <input
+              id='resetCode'
+              className='form__input form__input--code u-center-block'
+              name='resetCode'
+              type='text'
+              size='5'
+              value={resetCode}
+              ref={resetCodeInput}
+              data-validation='Code'
+              required
+              onChange={handlePasswordResetChange}
+            />
+            <div className='form__error-item form__error-item--code u-center-text'>{codeValidationError}</div>
+          </div>
+          <button className='form__submit-button u-center-block u-marg-top-1' type='submit'>Reset password</button>
+          <span
+            className='form__bottom-link u-marg-top-3'
+            onPointerDown={goBackToSignIn}
+          >
+            Go back to sign-in form
+          </span>
+        </form>}
       {status === 'success' &&
         <div className='u-pad-top-4 u-pad-bot-4 u-center-text'>
           <span className='form__subheading form__subheading--large'>Password successfully reset!</span>
