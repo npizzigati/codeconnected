@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 
-function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStatus, config }) {
+function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
@@ -16,7 +16,7 @@ function SignIn ({ setShowAuth, setAuthed, savedSignInStatus, setSavedSignInStat
   const [newPasswordDupValidationError, setNewPasswordDupValidationError] = useState('');
   const [codeValidationError, setCodeValidationError] = useState('');
   const [popupMessage, setPopupMessage] = useState('');
-  const [status, setStatus] = useState(savedSignInStatus);
+  const [status, setStatus] = useState('pre');
   const forgotPasswordEmailInput = useRef(null);
   const emailInput = useRef(null);
   const passwordInput = useRef(null);

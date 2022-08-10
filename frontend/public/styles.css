@@ -343,7 +343,7 @@ body.is-resizing {
 
 .backdrop--level2 {
     z-index: var(--backdrop--level2-z-index);
-    opacity: 0.4;
+    opacity: 0.6;
 }
 
 .popup-dialog {
@@ -1141,6 +1141,14 @@ body.is-resizing {
 
 .u-pad-bot-4 {
     padding-bottom: 2em;
+}
+
+.u-pad-right-1 {
+    padding-right: 0.3em;
+}
+
+.u-pad-right-2 {
+    padding-right: 0.6em;
 }
 
 .u-no-select {

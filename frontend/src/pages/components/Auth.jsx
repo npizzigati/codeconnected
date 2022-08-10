@@ -26,7 +26,7 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
               <div className='media__text media__text--constrained'>
                 <div>
                   <span className='popup-dialog__text'>
-                    If you switch tabs now, you will lose any information you've entered
+                    If you switch tabs now, the current process will be aborted
                   </span>
                 </div>
               </div>
@@ -38,12 +38,12 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
               >
                 <div className='aligned-block__cell u-right-align-text'>
                   <img
-                    className='aligned-block__image aligned-block__image--tinier'
-                    src='./login.png'
+                    className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
+                    src='./stay.png'
                     alt='Login'
                   />
                 </div>
-                <div className='aligned-block__cell u-pad-left-2'>
+                <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                   <span className='popup-dialog__text popup-dialog__text--small'>
                     Stay on current tab
                   </span>
@@ -56,11 +56,11 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
                 <div className='aligned-block__cell u-right-align-text'>
                   <img
                     className='aligned-block__image aligned-block__image--tinier'
-                    src='./run.png'
+                    src='./switchTab.png'
                     alt='Time-limited'
                   />
                 </div>
-                <div className='aligned-block__cell u-pad-left-2'>
+                <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                   <span className='popup-dialog__text popup-dialog__text--small'>
                     Switch tabs anyway&nbsp;&nbsp;
                   </span>
@@ -96,14 +96,12 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
             ? <SignIn
                 setShowAuth={setShowAuth}
                 setAuthed={setAuthed}
-                savedSignInStatus={savedSignInStatus}
                 setSavedSignInStatus={setSavedSignInStatus}
                 config={config}
               />
             : <SignUp
                 setShowAuth={setShowAuth}
                 setAuthed={setAuthed}
-                savedActivationStatus={savedActivationStatus}
                 setSavedActivationStatus={setSavedActivationStatus}
                 config={config}
               />}
@@ -132,13 +130,21 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
     closeTabSwitchDialog();
   }
 
+  function isSignInUnderway() {
+    return savedSignInStatus === 'resetPassword';
+  }
+
+  function isSignUpUnderway() {
+    return savedActivationStatus === 'underway';
+  }
+
   function handleTabClick (ev) {
     switch (ev.target.id) {
     case 'sign-up-tab':
       if (selectedTab !== 'signIn') {
         return;
       }
-      if (savedSignInStatus === 'resetPassword') {
+      if (isSignInUnderway()) {
         setShowTabSwitchDialog(true);
         return;
       }
@@ -147,7 +153,7 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
       if (selectedTab !== 'signUp') {
         return;
       }
-      if (savedActivationStatus === 'underway') {
+      if (isSignUpUnderway()) {
         setShowTabSwitchDialog(true);
         return;
       }

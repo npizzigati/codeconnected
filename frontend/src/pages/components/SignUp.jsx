@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 
-function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActivationStatus, config }) {
+function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordDup, setPasswordDup] = useState('');
@@ -12,7 +12,7 @@ function SignUp ({ setShowAuth, setAuthed, savedActivationStatus, setSavedActiva
   const [passwordValidationError, setPasswordValidationError] = useState('');
   const [passwordDupValidationError, setPasswordDupValidationError] = useState('');
   const [codeValidationError, setCodeValidationError] = useState('');
-  const [activationStatus, setActivationStatus] = useState(savedActivationStatus);
+  const [activationStatus, setActivationStatus] = useState('pre');
   const [activationCode, setActivationCode] = useState('');
   const [resendPopupMessage, setResendPopupMessage] = useState('');
   const usernameInput = useRef(null);
