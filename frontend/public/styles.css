@@ -410,12 +410,10 @@ body.is-resizing {
 
 .aligned-block__image--tiny {
     height: 2em;
-    width: auto;
 }
 
 .aligned-block__image--tinier {
     height: 1.5em;
-    width: auto;
 }
 
 .code-area .header-bar .logo {
