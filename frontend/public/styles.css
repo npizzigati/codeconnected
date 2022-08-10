@@ -837,6 +837,8 @@ body.is-resizing {
     height: 1.3em;
     width: 1.3em;
     padding-right: 0.5em;
+    position: relative;
+    top: 0.1em;
 }
 
 .form__input {
