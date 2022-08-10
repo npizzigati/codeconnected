@@ -239,6 +239,7 @@ body.is-resizing {
 .flex-pane--boxed {
     border: 1px solid #444;
     background-color: #22212a;
+    background: linear-gradient(#181a25, #22212a);
 }
 
 .flex-pane--right-justified {
