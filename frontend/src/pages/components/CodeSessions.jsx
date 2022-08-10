@@ -41,11 +41,11 @@ function CodeSessions ({ authed, setShowAuth }) {
             <h1 className='u-center-text u-marg-top-1'>Resume a session</h1>
             {showCSessions
               ? <div>
-                  <h3 className='u-center-text u-marg-bot-2'>
+                  <div className='u-center-text u-marg-bot-2 u-marg-top-2'>
                     <span className='flex-pane__message flex-pane__message--small'>
                       Click on a session to start it up again
                     </span>
-                  </h3>
+                  </div>
                   <div className='table u-center-block'>
                     <div className='table-row table-row--heading'>
                       <h4 className='table-cell'>Language</h4>
