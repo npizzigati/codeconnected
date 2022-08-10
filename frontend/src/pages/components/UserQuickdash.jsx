@@ -14,9 +14,7 @@ function UserQuickdash ({ setAuthed }) {
       if (!quickdash.current) {
         return;
       }
-      const isPointerOutsideQuickdash = ev.target !== avatar.current &&
-            !ev.target.classList.contains('user-quickdash');
-      if (isPointerOutsideQuickdash) {
+      if (!quickdash.current.contains(ev.target) && ev.target !== avatar.current) {
         hideQuickdash();
       }
     }
@@ -44,45 +42,53 @@ function UserQuickdash ({ setAuthed }) {
   }, []);
 
   return (
-    <div className='user-quickdash'>
+    <>
       <img
-        className='icon'
+        className='account-circle'
         src='./account_circle.png'
         alt='account circle'
         ref={avatar}
         onPointerDown={toggleQuickdash}
       />
-      <main
+      <div
         ref={quickdash}
-        className={showQuickdash ? 'visible' : 'hidden'}
+        className={'user-quickdash ' + (showQuickdash ? 'visible' : 'hidden')}
       >
-        <div className='heading'>
+        <div className='user-quickdash__heading'>
           Signed in as:
         </div>
-        <div className='items'>
-          <p>
+        <div className='aligned-block__row'>
+          <div className='aligned-block__cell'>
             <img
-              className='user-icon'
+              className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
               src='./blank_avatar.png'
+              alt='User'
             />
-            <span className='username-text'>{username}</span>
-          </p>
-          <p>
+          </div>
+          <div className='aligned-block__cell'>
+            <span className='user-quickdash__text'>{username}</span>
+          </div>
+        </div>
+        <div className='aligned-block__row'>
+          <div className='aligned-block__cell'>
             <img
-              className='email-icon'
+              className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
               src='./mail.png'
+              alt='email'
             />
-            <span className='email-text'>{email}</span>
-          </p>
+          </div>
+          <div className='aligned-block__cell'>
+            <span className='user-quickdash__text'>{email}</span>
+          </div>
         </div>
         <button
-          className='sign-out-button'
+          className='user-quickdash__sign-out-button'
           onPointerDown={signOut}
         >
           Sign out
         </button>
-      </main>
-    </div>
+      </div>
+    </>
   );
 
   async function signOut () {
