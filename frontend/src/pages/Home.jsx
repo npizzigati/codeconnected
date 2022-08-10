@@ -81,7 +81,7 @@ function Home () {
                         alt='Login'
                       />
                     </div>
-                    <div className='aligned-block__cell u-pad-left-2'>
+                    <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                       <span className='popup-dialog__text popup-dialog__text--small'>
                         Sign in to remove time limit
                       </span>
@@ -98,7 +98,7 @@ function Home () {
                         alt='Time-limited'
                       />
                     </div>
-                    <div className='aligned-block__cell u-pad-left-2'>
+                    <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                       <span className='popup-dialog__text popup-dialog__text--small'>
                         Continue to time-limited room&nbsp;&nbsp;
                       </span>
