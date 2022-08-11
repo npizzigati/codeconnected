@@ -161,11 +161,11 @@ function CodeArea () {
           </div>
           <div
             ref={resizeBarDOMRef}
-            id='resizer'
+            className='resizer'
             onPointerDown={startResize}
             onPointerUp={stopResize}
           >
-            <div id='resizer-handle' />
+            <div className='resizer__handle' />
           </div>
           <div
             id='terminal-container'

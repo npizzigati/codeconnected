@@ -940,7 +940,7 @@ body.is-resizing {
     transition: opacity .5s;
 }
 
-#resizer{
+.resizer {
     background: var(--main-bg-color);
     cursor: col-resize;
     height: 100%;
@@ -951,7 +951,7 @@ body.is-resizing {
     align-items: center;
 }
 
-#resizer-handle{
+.resizer__handle {
     height: 25px;
     width: 2px;
     border-right: 2px gray dotted;
