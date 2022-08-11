@@ -114,7 +114,9 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
     setShowAuth(false);
     // Reset prelaunch language to null to abort any launching of
     // language room the next time user signs in.
-    setPreLaunchLanguage(null);
+    if (setPreLaunchLanguage !== undefined) {
+      setPreLaunchLanguage(null);
+    }
   }
 
   function closeTabSwitchDialog () {
