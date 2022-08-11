@@ -49,7 +49,7 @@ function CodeArea () {
   const [minCmWidth, minTermWidth] = [450, 350];
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
-  const [showMain, setShowMain] = useState(false);
+  const [showContent, setShowContent] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showCodeMirror, setShowCodeMirror] = useState(false);
   const [runnerReady, setRunnerReady] = useState(false);
@@ -82,7 +82,7 @@ function CodeArea () {
   }, []);
 
   return (
-    <div className='code-area'>
+    <>
       {!runnerReady &&
         <div>
           <div className='spinner-container'>
@@ -94,38 +94,38 @@ function CodeArea () {
           </div>
           <div className='backdrop' />
         </div>}
-      <main
-        className={showMain ? 'main visible' : 'main hidden'}
+      <div
+        id='code-area'
+        className={showContent ? 'visible' : 'hidden'}
       >
         {showAuth &&
           <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
-        <div className='header-bar'>
-          <Link className='logo' to='/' />
-          <div className='logo-text'>
-            <span className='site-name site-name--small site-name--color1'>code</span>
-            <span className='site-name site-name--small site-name--color2'>connected</span>
+        <header>
+          <div className='flex-pane'>
+            <div className='media'>
+              <div className='media__image-container'>
+                <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
+              </div>
+              <div className='media__text'>
+                <div className='site-name site-name--small'>
+                  <span className='site-name--color1'>code</span>
+                  <span className='site-name--color2'>connected</span>
+                </div>
+              </div>
+            </div>
           </div>
-          {runnerReady &&
-            <div className='right-side'>
-              {timeLeftDisplay !== null &&
-                <div className='time-remaining'>
-                  Time remaining: {timeLeftDisplay}
+          <div className='flex-pane flex-pane--right-justified flex-pane--vert-centered u-marg-right-1 u-marg-top-1'>
+            {authed
+              ? <UserQuickdash setAuthed={setAuthed} />
+              : <div
+                  className='sign-in-link'
+                  onPointerDown={() => setShowAuth(true)}
+                >
+                  Sign in
                 </div>}
-              {authed
-                ? <div className='user-quickdash-container'>
-                    <UserQuickdash setAuthed={setAuthed} />
-                  </div>
-                : <div
-                    className='sign-in-link'
-                    onPointerDown={() => setShowAuth(true)}
-                  >
-                    Sign in
-                  </div>}
-            </div>}
-        </div>
-        <div
-          id='main-container'
-        >
+          </div>
+        </header>
+        <main>
           <div
             ref={cmContainerDOMRef}
             id='codemirror-container'
@@ -188,9 +188,9 @@ function CodeArea () {
                 Terminal has expired.
               </div>}
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 
   function executeReplAction (ev) {
@@ -359,7 +359,7 @@ function CodeArea () {
 
     // Get room status. If room isn't ready (connected to
     // container), send request for it to be made ready.
-    setShowMain(true);
+    setShowContent(true);
     const { status } = await getRoomStatus(roomID);
     console.log(status);
     let initialContent = '';
