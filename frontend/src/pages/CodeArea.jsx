@@ -115,6 +115,10 @@ function CodeArea () {
             </div>
           </div>
           <div className='flex-pane flex-pane--right-justified flex-pane--vert-centered u-marg-right-1 u-marg-top-1'>
+            {timeLeftDisplay !== null &&
+              <div className='code-area__time-remaining'>
+                Time remaining: {timeLeftDisplay}
+              </div>}
             {authed
               ? <UserQuickdash setAuthed={setAuthed} />
               : <div

@@ -437,17 +437,16 @@ body.is-resizing {
     padding: 0.5em;
 }
 
-/* .code-area .header-bar .time-remaining { */
-/*     margin-top: 0.9em; */
-/*     margin-right: 7em; */
-/*     color: white; */
-/*     height: fit-content; */
-/*     font-family: 'Lato', sans-serif; */
-/*     font-size: 1.1em; */
-/*     padding: 0.3em; */
-/*     border-radius: 0.2em; */
-/*     background-color: #5e499b */
-/* } */
+.code-area__time-remaining {
+    margin-right: 7em;
+    color: white;
+    height: fit-content;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.1em;
+    padding: 0.3em;
+    border-radius: 0.2em;
+    background-color: #5e499b
+}
 
 .spinner-container {
     position: fixed;
