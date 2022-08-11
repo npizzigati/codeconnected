@@ -197,7 +197,7 @@ function Home () {
             </div>
           </main>
           <footer>
-            <div className='media'>
+            <div className='media u-pad-bot-1'>
               <div className='media__text'>
                 <div className='site-name'>
                   <span className='site-name site-name--color1 site-name--micro'>code</span>
