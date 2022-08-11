@@ -102,7 +102,7 @@ function CodeArea () {
           <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
         <header>
           <div className='flex-pane'>
-            <div className='media'>
+            <div className='media u-marg-left-1'>
               <div className='media__image-container'>
                 <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
               </div>
