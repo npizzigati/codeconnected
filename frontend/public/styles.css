@@ -1,6 +1,6 @@
 :root {
     --main-bg-color: #1c1b22;
-    --modal-background-color: #111;
+    --modal-background: linear-gradient(#181a25, #22212a);
     --modal-border: 2px solid #555;
     /* z-indexes */
     --tabbed-modal-z-index: 1001;
@@ -240,7 +240,7 @@ body.is-resizing {
 .flex-pane--boxed {
     border: 1px solid #444;
     background-color: #22212a;
-    background: linear-gradient(#181a25, #22212a);
+    background: var(--modal-background);
 }
 
 .flex-pane--right-justified {
@@ -860,7 +860,7 @@ body.is-resizing {
 }
 
 .tabbed-modal {
-    --unselected-tab-bkg-color: #444;
+    --unselected-tab-bkg-color: #4e5578;
     position: fixed;
     z-index: var(--tabbed-modal-z-index);
     margin-top: 15vh;
@@ -869,7 +869,7 @@ body.is-resizing {
     /* min-width: 25em; */
     width: 25em;
     min-height: 10em;
-    background-color: var(--modal-background-color);
+    background: var(--modal-background);
     border-radius: 0.7rem;
 }
 
@@ -896,7 +896,7 @@ body.is-resizing {
     text-align: center;
     font-family: 'Lato', sans-serif;
     font-size: 1.5rem;
-    color: #777;
+    color: #d6d2e5;
     background-color: var(--unselected-tab-bkg-color);
     border-top: none;
     border-left: none;
@@ -908,7 +908,7 @@ body.is-resizing {
 
 .tabbed-modal__tab.selected {
     flex: 1;
-    background-color: var(--modal-background-color);
+    background-color: #181a25;
     color: white;
     border-top: var(--modal-border);
     border-left: var(--modal-border);
