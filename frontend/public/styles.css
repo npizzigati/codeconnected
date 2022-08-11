@@ -159,6 +159,7 @@ body.is-resizing {
     flex-direction: column;
     background-color: var(--main-bg-color);
     height: 100vh;
+    overflow: hidden;
 }
 
 #home > header {
@@ -169,7 +170,7 @@ body.is-resizing {
 }
 
 #home > main {
-    flex: 8;
+    flex: 14;
     display: flex;
     gap: 1em;
     margin: 1em 1em 0 1em;
@@ -413,6 +414,7 @@ body.is-resizing {
     flex-direction: column;
     background-color: var(--main-bg-color);
     height: 100vh;
+    overflow: hidden;
 }
 
 #code-area.hidden {
