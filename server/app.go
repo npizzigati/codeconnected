@@ -46,6 +46,8 @@ type containerDetails struct {
 	bufReader           *bufio.Reader
 	runnerReaderActive  bool
 	runnerReaderRestart bool
+	ttyRows             int
+	ttyCols             int
 }
 
 type eventConfig struct {
@@ -467,6 +469,7 @@ func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Para
 func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
+		Rows   int
 	}
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
@@ -501,7 +504,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
 
-	if err = startContainer(room.lang, roomID); err != nil {
+	if err = startContainer(room.lang, roomID, rm.Rows); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		logger.Printf("Could not start container for room %s", roomID)
 		return
@@ -902,7 +905,7 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // TODO: Move error handling to createRoom (return error here
 // along with containerDetails)
-func startContainer(lang, roomID string) error {
+func startContainer(lang, roomID string, rows int) error {
 	room := rooms[roomID]
 	cn := room.container
 	ctx := context.Background()
@@ -926,8 +929,14 @@ func startContainer(lang, roomID string) error {
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		panic(err)
 	}
+
 	logger.Println("Setting new container id to: ", resp.ID)
 	cn.ID = resp.ID
+
+	logger.Println("Will try to set rows to: ", rows)
+	if err := resizeTTY(cn, 80, rows); err != nil {
+		logger.Println("Error setting initial tty size: ", err)
+	}
 	// Sql container needs a pause to startup postgres
 	// This will give openLanguageConnection a better chance of
 	// correctly opening psql on the first try
@@ -941,16 +950,60 @@ func startContainer(lang, roomID string) error {
 	return nil
 }
 
-func resizeTTY(cn *containerDetails, rows int, cols int) error {
+func resizeTTY(cn *containerDetails, cols, rows int) error {
 	ctx := context.Background()
 	resizeOpts := types.ResizeOptions{
 		Height: uint(rows),
 		Width:  uint(cols),
 	}
 
-	err := cli.ContainerExecResize(ctx, cn.execID, resizeOpts)
-	return err
+	if err := cli.ContainerResize(ctx, cn.ID, resizeOpts); err != nil {
+		return err
+	}
+	return nil
 }
+
+// func adjustTerminalSize(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+// 	queryValues := r.URL.Query()
+// 	roomID := queryValues.Get("roomID")
+// 	rowsStr := queryValues.Get("rows")
+// 	colsStr := queryValues.Get("cols")
+
+// 	var rows, cols int
+// 	var err error
+// 	if rows, err = strconv.Atoi(rowsStr); err != nil {
+// 		logger.Println("Conversion error: ", err)
+// 	}
+// 	if cols, err = strconv.Atoi(colsStr); err != nil {
+// 		logger.Println("Conversion error: ", err)
+// 	}
+
+// 	room := rooms[roomID]
+// 	cn := room.container
+
+// 	// Abort if tty is already the requested size, e.g., when two
+// 	// clients request the same change one after the other.
+// 	if cn.ttyRows == rows && cn.ttyCols == cols {
+// 		sendStringJsonResponse(w, map[string]string{"status": "no change"})
+// 		return
+// 	}
+
+// 	prevRows := cn.ttyRows
+// 	prevCols := cn.ttyCols
+
+// 	cn.ttyRows = rows
+// 	cn.ttyCols = cols
+
+// 	if err := resizeTTY(cn, cols, rows); err != nil {
+// 		logger.Println("Error resizing tty: ", err)
+// 		cn.ttyRows = prevRows
+// 		cn.ttyCols = prevCols
+// 		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+// 		return
+// 	}
+
+// 	sendStringJsonResponse(w, map[string]string{"status": "success"})
+// }
 
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
@@ -1901,6 +1954,7 @@ func main() {
 	router.GET("/api/get-code-sessions", getCodeSessions)
 	router.POST("/api/get-code-session-id", getCodeSessionID)
 	router.POST("/api/set-room-status-open", setRoomStatusOpen)
+	// router.POST("/api/adjust-terminal-size", adjustTerminalSize)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Printf("Starting server on port %d\n", port)

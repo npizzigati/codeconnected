@@ -29,6 +29,7 @@ function CodeArea () {
   const navigate = useNavigate();
   const params = useParams();
   const roomID = params.roomID;
+  const initialTermRows = 100;
   const codeAreaDOMRef = useRef(null);
   const termDomRef = useRef(null);
   const termContainerDomRef = useRef(null);
@@ -58,6 +59,7 @@ function CodeArea () {
   const [username, setUsername] = useState(null);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const cmContainerDOMRef = useRef(null);
+  let termWriteTimeout
 
   useEffect(() => {
     let isCanceled = false;
@@ -323,7 +325,7 @@ function CodeArea () {
   }
 
   async function prepareRoom (roomID, isCanceled) {
-    const body = JSON.stringify({ roomID });
+    const body = JSON.stringify({ roomID, rows: initialTermRows });
     const options = {
       method: 'POST',
       mode: 'cors',
@@ -437,10 +439,13 @@ function CodeArea () {
     showTitles(initialLang);
     term.current = new Terminal();
     term.current.open(termDomRef.current);
-    term.current.write(initialHist);
+    term.current.resize(term.current.cols, initialTermRows);
+
+    writeToTerminal(initialHist);
     term.current.onData((data) => {
       ws.current.send(data.toString());
     });
+
     ws.current = openWs(roomID);
 
     // Collaborative editing
@@ -623,6 +628,70 @@ function CodeArea () {
     }
   }
 
+  function scrollAsNeeded () {
+    // Do nothing if termainal has expired
+    if (termDomRef.current === null) {
+      return;
+    }
+    const { lastLineNum } = getLastTermLineAndNumber();
+    let heightPercent = lastLineNum / initialTermRows;
+    if (heightPercent > 1) {
+      heightPercent = 1;
+    }
+    const lastLineHeight = heightPercent * termDomRef.current.scrollHeight;
+    const offset = 35;
+    // If last line heignt is beyond the bottom of the viewable
+    // area, scroll down
+    if (lastLineHeight > (termDomRef.current.clientHeight - offset)) {
+      termDomRef.current.scroll(
+        { top: lastLineHeight - termDomRef.current.clientHeight + offset, left: 0, behavior: 'instant' }
+      );
+    // Else scroll to top
+    } else {
+      termDomRef.current.scroll(
+        { top: 0, left: 0, behavior: 'instant' }
+      );
+    }
+  }
+
+  // If on last row of terminal, add another row and scroll
+  // to bottom
+  // function addRowIfNeeded () {
+  //   const { lastLineNum } = getLastTermLineAndNumber();
+  //   if (lastLineNum >= term.current.rows - 1) {
+  //     console.log('should add a row');
+  //     term.current.resize(term.current.cols, initialTermRows);
+  //     // Adjust remote terminal size to match client terminal
+  //     adjustRemoteTerminalSize(term.current.cols, lastLineNum + 2);
+
+  //     // Do nothing if termainal has expired
+  //     if (termDomRef.current === null) {
+  //       return;
+  //     }
+
+  //     // Scroll to bottom
+  //     termDomRef.current.scroll(
+  //       { top: termDomRef.current.scrollHeight, left: 0, behavior: 'instant' }
+  //     );
+  //   }
+  // }
+
+  // async function adjustRemoteTerminalSize (cols, rows) {
+  //   const options = {
+  //     method: 'POST',
+  //     mode: 'cors',
+  //     headers: { 'Content-Length': '0' }
+  //   };
+
+  //   try {
+  //     const response = await fetch(`/api/adjust-terminal-size?roomID=${roomID}&rows=${rows}&cols=${cols}`, options);
+  //     const json = await response.json();
+  //     console.log(JSON.stringify(json));
+  //   } catch (error) {
+  //     console.error('Error adjusting remote terminal size: ', error);
+  //   }
+  // }
+
   function switchLanguage (lang) {
     codeOptions.current.set('language', lang);
 
@@ -647,7 +716,6 @@ function CodeArea () {
   // TODO: Make this work for Ctrl-L too
   function clearTerminal () {
     term.current.clear();
-    termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
     const { lastLine } = getLastTermLineAndNumber();
     const roomID = params.roomID;
     console.log('lastLine: ' + lastLine);
@@ -667,6 +735,8 @@ function CodeArea () {
         console.log(response);
         flags.current.set('signal', '');
       });
+
+    termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
   }
 
   function resetTerminal () {
@@ -710,6 +780,14 @@ function CodeArea () {
       });
   }
 
+  function writeToTerminal (data) {
+    term.current.write(data);
+    clearTimeout(termWriteTimeout);
+    termWriteTimeout = setTimeout(() => {
+      scrollAsNeeded();
+    }, 100);
+  }
+
   function openWs (roomID) {
     // const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
     //                          `/api/openreplws?lang=${language}`);
@@ -720,15 +798,7 @@ function CodeArea () {
         resetTerminal();
         return;
       }
-      term.current.write(ev.data);
-      term.current.scrollToBottom();
-      const { lastLineNum } = getLastTermLineAndNumber();
-      const totalLines = term.current.rows;
-      // If terminal is almost or totally full, make sure we
-      // scroll all the way down when new text is entered
-      if (lastLineNum > totalLines - 10) {
-        termDomRef.current.scrollBy(0, 5000);
-      }
+      writeToTerminal(ev.data);
     };
 
     return ws;
