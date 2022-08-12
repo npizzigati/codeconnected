@@ -452,6 +452,95 @@ body.is-resizing {
     background-color: #5e499b
 }
 
+.xterm .xterm-viewport {
+    /* Disable xterm.js scrollbar The built in scrollbar is hard to
+    theme and position (position moves during resizing) Better to
+    disable completely and implement a custom solution if needed. */
+    overflow: hidden !important;
+}
+
+#terminal-wrapper {
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: auto;
+    width: 100%;
+    height: 100%;
+    /* display: flex; */
+    /* align-items: flex-start; */
+    padding-bottom: 5px;
+}
+
+#terminal-container {
+    --term-background: black;
+    background-color: var(--term-background);
+    box-sizing: border-box;
+    flex: 1;
+    margin: 0 5px 0px 0;
+    position: relative;
+    border: 2px #333 solid;
+}
+
+.terminal-expired {
+    width: 20em;
+    margin: 20% auto 0;
+    color: white;
+    text-align: center;
+}
+
+.title-row {
+    opacity: 1;
+    position: absolute;
+    top: -1.7em;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 3px 3px 3px 3px;
+    height: 1.5em;
+    color: #999;
+    transition: opacity .5s;
+}
+
+.title-row.hidden {
+    opacity: 0;
+}
+
+#terminal-container .title-row {
+    top: -1.8em;
+}
+
+.editor-and-repl-title {
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    color: #999;
+    padding-right: 20px;
+}
+
+.editor-lang-label {
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    color: #999;
+}
+
+#codemirror-wrapper {
+    box-sizing: border-box;
+    border: 2px #333 solid;
+    /* height: calc(100% - var(--code-titlebar-height)); */
+    height: 100%;
+}
+
+#codemirror-container {
+    position: relative;
+    box-sizing: border-box;
+    margin: 0 0 0 5px;
+    height: 100%;
+    width: 50%;
+    background-color: black;
+}
+
 .spinner-container {
     position: fixed;
     height: 15rem;
@@ -622,98 +711,6 @@ body.is-resizing {
     background-color: #8537d3;
     color: #ebebeb;
     cursor: pointer;
-}
-
-/* Disable xterm.js scrollbar The built in scrollbar is hard to
-   theme and position (position moves during resizing) Better to
-   disable completely and implement a custom solution if needed. */
-.xterm .xterm-viewport {
-    overflow: hidden !important;
-}
-
-#terminal-wrapper {
-    box-sizing: border-box;
-    overflow-y: auto;
-    overflow-x: auto;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: flex-start;
-    padding-bottom: 5px;
-}
-
-#terminal-container {
-    --term-background: black;
-    background-color: var(--term-background);
-    box-sizing: border-box;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    margin: 0 5px 0px 0;
-    position: relative;
-    border: 2px #333 solid;
-}
-
-.terminal-expired {
-    width: 20em;
-    margin: 20% auto 0;
-    color: white;
-    text-align: center;
-}
-
-.title-row {
-    opacity: 1;
-    position: absolute;
-    top: -1.7em;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    padding: 3px 3px 3px 3px;
-    height: 1.5em;
-    color: #999;
-    transition: opacity .5s;
-}
-
-.title-row.hidden {
-    opacity: 0;
-}
-
-#terminal-container .title-row {
-    top: -1.8em;
-}
-
-.editor-and-repl-title {
-    user-select: none;
-    -webkit-user-select: none;
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    color: #999;
-    padding-right: 20px;
-}
-
-.editor-lang-label {
-    user-select: none;
-    -webkit-user-select: none;
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    color: #999;
-}
-
-#codemirror-wrapper {
-    box-sizing: border-box;
-    border: 2px #333 solid;
-    /* height: calc(100% - var(--code-titlebar-height)); */
-    height: 100%;
-}
-
-#codemirror-container {
-    position: relative;
-    box-sizing: border-box;
-    margin: 0 0 0 5px;
-    height: 100%;
-    width: 50%;
-    background-color: black;
 }
 
 .form {
