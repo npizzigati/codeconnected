@@ -963,48 +963,6 @@ func resizeTTY(cn *containerDetails, cols, rows int) error {
 	return nil
 }
 
-// func adjustTerminalSize(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-// 	queryValues := r.URL.Query()
-// 	roomID := queryValues.Get("roomID")
-// 	rowsStr := queryValues.Get("rows")
-// 	colsStr := queryValues.Get("cols")
-
-// 	var rows, cols int
-// 	var err error
-// 	if rows, err = strconv.Atoi(rowsStr); err != nil {
-// 		logger.Println("Conversion error: ", err)
-// 	}
-// 	if cols, err = strconv.Atoi(colsStr); err != nil {
-// 		logger.Println("Conversion error: ", err)
-// 	}
-
-// 	room := rooms[roomID]
-// 	cn := room.container
-
-// 	// Abort if tty is already the requested size, e.g., when two
-// 	// clients request the same change one after the other.
-// 	if cn.ttyRows == rows && cn.ttyCols == cols {
-// 		sendStringJsonResponse(w, map[string]string{"status": "no change"})
-// 		return
-// 	}
-
-// 	prevRows := cn.ttyRows
-// 	prevCols := cn.ttyCols
-
-// 	cn.ttyRows = rows
-// 	cn.ttyCols = cols
-
-// 	if err := resizeTTY(cn, cols, rows); err != nil {
-// 		logger.Println("Error resizing tty: ", err)
-// 		cn.ttyRows = prevRows
-// 		cn.ttyCols = prevCols
-// 		sendStringJsonResponse(w, map[string]string{"status": "failure"})
-// 		return
-// 	}
-
-// 	sendStringJsonResponse(w, map[string]string{"status": "success"})
-// }
-
 func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	queryValues := r.URL.Query()
 	lang := queryValues.Get("lang")
@@ -1954,7 +1912,6 @@ func main() {
 	router.GET("/api/get-code-sessions", getCodeSessions)
 	router.POST("/api/get-code-session-id", getCodeSessionID)
 	router.POST("/api/set-room-status-open", setRoomStatusOpen)
-	// router.POST("/api/adjust-terminal-size", adjustTerminalSize)
 	port := 8080
 	portString := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Printf("Starting server on port %d\n", port)

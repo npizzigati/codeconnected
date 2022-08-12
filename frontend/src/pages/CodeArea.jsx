@@ -654,44 +654,6 @@ function CodeArea () {
     }
   }
 
-  // If on last row of terminal, add another row and scroll
-  // to bottom
-  // function addRowIfNeeded () {
-  //   const { lastLineNum } = getLastTermLineAndNumber();
-  //   if (lastLineNum >= term.current.rows - 1) {
-  //     console.log('should add a row');
-  //     term.current.resize(term.current.cols, initialTermRows);
-  //     // Adjust remote terminal size to match client terminal
-  //     adjustRemoteTerminalSize(term.current.cols, lastLineNum + 2);
-
-  //     // Do nothing if termainal has expired
-  //     if (termDomRef.current === null) {
-  //       return;
-  //     }
-
-  //     // Scroll to bottom
-  //     termDomRef.current.scroll(
-  //       { top: termDomRef.current.scrollHeight, left: 0, behavior: 'instant' }
-  //     );
-  //   }
-  // }
-
-  // async function adjustRemoteTerminalSize (cols, rows) {
-  //   const options = {
-  //     method: 'POST',
-  //     mode: 'cors',
-  //     headers: { 'Content-Length': '0' }
-  //   };
-
-  //   try {
-  //     const response = await fetch(`/api/adjust-terminal-size?roomID=${roomID}&rows=${rows}&cols=${cols}`, options);
-  //     const json = await response.json();
-  //     console.log(JSON.stringify(json));
-  //   } catch (error) {
-  //     console.error('Error adjusting remote terminal size: ', error);
-  //   }
-  // }
-
   function switchLanguage (lang) {
     codeOptions.current.set('language', lang);
 
