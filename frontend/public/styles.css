@@ -410,31 +410,33 @@ body.is-resizing {
 }
 
 #code-area {
-    display: flex;
-    flex-direction: column;
     background-color: var(--main-bg-color);
     height: 100vh;
-    overflow: hidden;
+    --header-height: 3.6em;
+    --header-padding-top: 0.5em;
+    --bottom-margin: 1em;
 }
 
 #code-area.hidden {
     opacity: 0;
 }
 
-.code-area.visible {
+#code-area.visible {
     opacity: 1;
     transition: opacity .5s;
 }
 
 #code-area > header {
-    flex: 1;
+    height: var(--header-height);
     display: flex;
-    padding: 0.5em;
-    margin-bottom: 1em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    padding-top: var(--header-padding-top);
 }
 
 #code-area > main {
-    flex: 20;
+    /* flex: 20; */
+    height: calc(100vh - var(--header-height) - var(--header-padding-top) - var(--bottom-margin));
     display: flex;
     padding: 0.5em;
 }
