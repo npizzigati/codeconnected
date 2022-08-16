@@ -999,6 +999,11 @@ body.is-resizing {
     width: 3px;
 }
 
+/* Remove white dot in corner */
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
 /* Track */
 ::-webkit-scrollbar-track {
   background: black;
