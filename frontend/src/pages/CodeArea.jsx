@@ -37,6 +37,7 @@ function CodeArea () {
   const termContainerDomRef = useRef(null);
   const termViewportDomRef = useRef(null);
   const termScrollLayerDomRef = useRef(null);
+  const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
@@ -522,13 +523,33 @@ function CodeArea () {
     setRunnerReady(true);
     setRoomStatusOpen(roomID);
     setupTerminalViewport();
-    window.addEventListener('resize', scrollAsNeeded);
+    setupResizeEventListener();
+    setPrevTermClientHeight();
+  }
+
+  function setPrevTermClientHeight () {
+    // termDomRef.current.clientHeight may initially be
+    // "undefined", so try until it is a number
+    const interval = setInterval(() => {
+      const clientHeight = termDomRef.current.clientHeight;
+      if (typeof clientHeight !== 'number') {
+        return;
+      }
+      prevTermClientHeight.current = clientHeight;
+      clearInterval(interval);
+    }, 100);
   }
 
   function focusTerminal (ev) {
     ev.preventDefault();
     console.log('trying to focus on terminal');
     term.current?.focus();
+  }
+
+  function setupResizeEventListener () {
+    window.addEventListener('resize', () => {
+      handleResize();
+    });
   }
 
   function setupTerminalViewport () {
@@ -727,13 +748,29 @@ function CodeArea () {
     return modifiedDelta;
   }
 
-  function scrollAsNeeded () {
+  function handleResize () {
+    const threshold = 10;
+    const delta = termDomRef.current.clientHeight - prevTermClientHeight.current;
+    const distancePastBottom = getDistancePastBottom();
+    // If last line was previously aligned to bottom, keep it that way
+    if (distancePastBottom + delta > -threshold && distancePastBottom + delta < threshold) {
+      alignLastLineToBottom();
+    // Else if resize makes last line float above bottom, align
+    // it to bottom
+    } else if (distancePastBottom < -threshold) {
+      alignLastLineToBottom();
+    }
+    prevTermClientHeight.current = termDomRef.current.clientHeight;
+  }
+
+  function alignLastLineToBottom () {
     // Do nothing if termainal has expired
     if (termDomRef.current === null) {
       return;
     }
+    const bottomMargin = 5;
     const distancePastBottom = getDistancePastBottom();
-    termDomRef.current.scrollBy(0, distancePastBottom);
+    termDomRef.current.scrollBy(0, distancePastBottom + bottomMargin);
     if (distancePastBottom > 0) {
       // Also scroll xterm.js internal scrolling to bottom
       term.current.scrollToBottom();
@@ -832,7 +869,7 @@ function CodeArea () {
     term.current.write(data);
     clearTimeout(termWriteTimeout);
     termWriteTimeout = setTimeout(() => {
-      scrollAsNeeded();
+      alignLastLineToBottom();
     }, 100);
   }
 
