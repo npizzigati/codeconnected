@@ -35,7 +35,7 @@ function CodeArea () {
   const codeAreaDOMRef = useRef(null);
   const termDomRef = useRef(null);
   const termContainerDomRef = useRef(null);
-  const termViewportDomRef = useRef(null);
+  const termScrollportDomRef = useRef(null);
   const termScrollLayerDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
@@ -190,10 +190,10 @@ function CodeArea () {
               />
             </div>
             {termEnabled &&
-              <div className='terminal-viewport-container'>
+              <div className='terminal-scrollport-container'>
                 <div
-                  className='terminal-viewport'
-                  ref={termViewportDomRef}
+                  className='terminal-scrollport'
+                  ref={termScrollportDomRef}
                   onScroll={handleTermViewportScroll}
                 >
                   <div
@@ -554,13 +554,13 @@ function CodeArea () {
 
   function setupTerminalViewport () {
     termScrollLayerDomRef.current.style.height = fakeScrollHeight + 'px';
-    termViewportDomRef.current.scrollTop = fakeScrollMidpoint;
+    termScrollportDomRef.current.scrollTop = fakeScrollMidpoint;
   }
 
   function handleTermViewportScroll (ev) {
     ev.preventDefault();
     console.log('scrolling term viewport');
-    const delta = termViewportDomRef.current.scrollTop - fakeScrollMidpoint;
+    const delta = termScrollportDomRef.current.scrollTop - fakeScrollMidpoint;
     // Do not respond to very small deltas, to avoid noise
     if (delta > -1 && delta < 1) {
       return;
@@ -585,7 +585,7 @@ function CodeArea () {
       termDomRef.current.scrollBy(0, delta);
     }
     // Reset fake scroll bar back to midpoint
-    termViewportDomRef.current.scrollTop = fakeScrollMidpoint;
+    termScrollportDomRef.current.scrollTop = fakeScrollMidpoint;
 
     function getLinesToScroll (delta) {
       const lines = Math.round(delta / 2);

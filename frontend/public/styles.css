@@ -10,7 +10,7 @@
     --user-quickdash-z-index: 1001;
     --select-dropdown-z-index: 1000;
     --spinner-z-index: 10000;
-    --terminal-viewport-z-index: 998;
+    --terminal-scrollport-z-index: 998;
 }
 
 /* Base rules */
@@ -460,22 +460,22 @@ body.is-resizing {
     overflow: hidden !important;
 }
 
-.terminal-viewport-container {
+.terminal-scrollport-container {
     height: 100%;
     width: 100%;
 }
 
-.terminal-viewport {
+.terminal-scrollport {
     position: absolute;
     width: 100%;
     height: 100%;
     overflow: scroll;
-    z-index: var(--terminal-viewport-z-index);
+    z-index: var(--terminal-scrollport-z-index);
     /* Disable vertical scrollbar on terminal in Firefox */
     scrollbar-width: none;
 }
 
-.terminal-viewport::-webkit-scrollbar {
+.terminal-scrollport::-webkit-scrollbar {
     /* Disable vertical scrollbar on terminal in Webkit/Chrome */
     width: 0px;
 }
