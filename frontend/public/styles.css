@@ -471,7 +471,9 @@ body.is-resizing {
     height: 100%;
     overflow: scroll;
     z-index: var(--terminal-scrollport-z-index);
-    /* Disable vertical scrollbar in Firefox */
+    /* Hide vertical scrollbar in Firefox */
+    /* Actually hides both scroll bars */
+    /* There is no simple way to hide only vertical */
     scrollbar-width: none;
 }
 
@@ -481,7 +483,6 @@ body.is-resizing {
 }
 
 .terminal-scroll-layer {
-    width: 100%;
 }
 
 #terminal-wrapper {
@@ -491,7 +492,9 @@ body.is-resizing {
     width: 100%;
     height: 100%;
     padding-bottom: 5px;
-    /* Disable vertical scrollbar in Firefox */
+    /* Hide vertical scrollbar in Firefox */
+    /* Actually hides both scroll bars */
+    /* There is no simple way to hide only vertical */
     scrollbar-width: none;
 }
 

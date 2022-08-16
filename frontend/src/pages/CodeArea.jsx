@@ -194,7 +194,7 @@ function CodeArea () {
                 <div
                   className='terminal-scrollport'
                   ref={termScrollportDomRef}
-                  onScroll={handleTermViewportScroll}
+                  onScroll={handleTerminalScroll}
                 >
                   <div
                     className='terminal-scroll-layer'
@@ -522,7 +522,7 @@ function CodeArea () {
     }
     setRunnerReady(true);
     setRoomStatusOpen(roomID);
-    setupTerminalViewport();
+    setupTerminalScroll();
     setupResizeEventListener();
     setPrevTermClientHeight();
   }
@@ -552,14 +552,19 @@ function CodeArea () {
     });
   }
 
-  function setupTerminalViewport () {
+  function setupTerminalScroll () {
     termScrollLayerDomRef.current.style.height = fakeScrollHeight + 'px';
+    const xtermViewportEl = document.querySelector('.xterm-viewport');
+    termScrollLayerDomRef.current.style.width = xtermViewportEl.style.width;
     termScrollportDomRef.current.scrollTop = fakeScrollMidpoint;
   }
 
-  function handleTermViewportScroll (ev) {
+  function handleTerminalScroll (ev) {
     ev.preventDefault();
-    console.log('scrolling term viewport');
+    // Horizontal scroll
+    termDomRef.current.scrollLeft = termScrollportDomRef.current.scrollLeft;
+
+    // Vertical scroll
     const delta = termScrollportDomRef.current.scrollTop - fakeScrollMidpoint;
     // Do not respond to very small deltas, to avoid noise
     if (delta > -1 && delta < 1) {
