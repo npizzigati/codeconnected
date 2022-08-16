@@ -29,10 +29,14 @@ function CodeArea () {
   const navigate = useNavigate();
   const params = useParams();
   const roomID = params.roomID;
-  const initialTermRows = 100;
+  const initialTermRows = 200;
+  const fakeScrollHeight = 100000;
+  const fakeScrollMidpoint = 50000;
   const codeAreaDOMRef = useRef(null);
   const termDomRef = useRef(null);
   const termContainerDomRef = useRef(null);
+  const termViewportDomRef = useRef(null);
+  const termScrollLayerDomRef = useRef(null);
   const term = useRef(null);
   const ws = useRef(null);
   const flags = useRef(null);
@@ -59,7 +63,7 @@ function CodeArea () {
   const [username, setUsername] = useState(null);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const cmContainerDOMRef = useRef(null);
-  let termWriteTimeout
+  let termWriteTimeout;
 
   useEffect(() => {
     let isCanceled = false;
@@ -185,10 +189,23 @@ function CodeArea () {
               />
             </div>
             {termEnabled &&
-              <div
-                ref={termDomRef}
-                id='terminal-wrapper'
-              />}
+              <div className='terminal-viewport-container'>
+                <div
+                  className='terminal-viewport'
+                  ref={termViewportDomRef}
+                  onScroll={handleTermViewportScroll}
+                >
+                  <div
+                    className='terminal-scroll-layer'
+                    ref={termScrollLayerDomRef}
+                    onPointerDown={focusTerminal}
+                  />
+                </div>
+                <div
+                  ref={termDomRef}
+                  id='terminal-wrapper'
+                />
+              </div>}
             {!termEnabled &&
               <div className='terminal-expired'>
                 Terminal has expired.
@@ -504,6 +521,56 @@ function CodeArea () {
     }
     setRunnerReady(true);
     setRoomStatusOpen(roomID);
+    setupTerminalViewport();
+    window.addEventListener('resize', scrollAsNeeded);
+  }
+
+  function focusTerminal (ev) {
+    ev.preventDefault();
+    console.log('trying to focus on terminal');
+    term.current?.focus();
+  }
+
+  function setupTerminalViewport () {
+    termScrollLayerDomRef.current.style.height = fakeScrollHeight + 'px';
+    termViewportDomRef.current.scrollTop = fakeScrollMidpoint;
+  }
+
+  function handleTermViewportScroll (ev) {
+    ev.preventDefault();
+    console.log('scrolling term viewport');
+    const delta = termViewportDomRef.current.scrollTop - fakeScrollMidpoint;
+    // Do not respond to very small deltas, to avoid noise
+    if (delta > -1 && delta < 1) {
+      return;
+    }
+    console.log('delta: ' + delta);
+    const direction = (delta > 0) ? 'down' : 'up';
+    console.log('direction: ' + direction);
+    console.log('current term scrollTop: ' + termDomRef.current.scrollTop);
+    // Subtract 1 from scrollHeight - clientHeight to provide a
+    // range threshold, to account for fact that these properties
+    // are integers and scrollTop is fractional
+    const maxScrollTop = (termDomRef.current.scrollHeight - termDomRef.current.clientHeight) - 1;
+    if (direction === 'up' && termDomRef.current.scrollTop === 0) {
+      term.current.scrollLines(getLinesToScroll(delta));
+    } else if (direction === 'down' && termDomRef.current.scrollTop > maxScrollTop) {
+      term.current.scrollLines(getLinesToScroll(delta));
+    } else if (direction === 'down') {
+      // Do not allow scrolling below point where last line is visible
+      termDomRef.current.scrollBy(0, getAdjustedScrollDownDelta(delta));
+    } else {
+      // Default case
+      termDomRef.current.scrollBy(0, delta);
+    }
+    // Reset fake scroll bar back to midpoint
+    termViewportDomRef.current.scrollTop = fakeScrollMidpoint;
+
+    function getLinesToScroll (delta) {
+      const lines = Math.round(delta / 2);
+      console.log(lines);
+      return lines;
+    }
   }
 
   function setCmLanguage () {
@@ -628,29 +695,48 @@ function CodeArea () {
     }
   }
 
+  // Returns the distance in pixels from tne last line with code
+  // to the bottom edge of the xterm viewport
+  function getDistancePastBottom () {
+    const { lastLineNum } = getLastTermLineAndNumber();
+    // Last line num is zero indexed, so add one
+    let heightRatio = (lastLineNum + 1) / initialTermRows;
+    if (heightRatio > 1) {
+      heightRatio = 1;
+    }
+    const lastLineHeight = heightRatio * termDomRef.current.scrollHeight;
+    const lastLineScreenHeight = lastLineHeight - termDomRef.current.scrollTop;
+    const bottomEdge = termDomRef.current.clientHeight;
+    return lastLineScreenHeight - bottomEdge;
+  }
+
+  // Get the remainder to scroll down to the point where the line
+  // in question is visible on the screen
+  function getAdjustedScrollDownDelta (delta) {
+    const distancePastBottom = getDistancePastBottom();
+    let modifiedDelta;
+    if (delta < distancePastBottom) {
+      modifiedDelta = delta;
+    } else if (distancePastBottom > 0) {
+      // Limit scroll down
+      modifiedDelta = distancePastBottom;
+    } else {
+      // Prevent scroll down
+      modifiedDelta = 0;
+    }
+    return modifiedDelta;
+  }
+
   function scrollAsNeeded () {
     // Do nothing if termainal has expired
     if (termDomRef.current === null) {
       return;
     }
-    const { lastLineNum } = getLastTermLineAndNumber();
-    let heightPercent = lastLineNum / initialTermRows;
-    if (heightPercent > 1) {
-      heightPercent = 1;
-    }
-    const lastLineHeight = heightPercent * termDomRef.current.scrollHeight;
-    const offset = 35;
-    // If last line heignt is beyond the bottom of the viewable
-    // area, scroll down
-    if (lastLineHeight > (termDomRef.current.clientHeight - offset)) {
-      termDomRef.current.scroll(
-        { top: lastLineHeight - termDomRef.current.clientHeight + offset, left: 0, behavior: 'instant' }
-      );
-    // Else scroll to top
-    } else {
-      termDomRef.current.scroll(
-        { top: 0, left: 0, behavior: 'instant' }
-      );
+    const distancePastBottom = getDistancePastBottom();
+    termDomRef.current.scrollBy(0, distancePastBottom);
+    if (distancePastBottom > 0) {
+      // Also scroll xterm.js internal scrolling to bottom
+      term.current.scrollToBottom();
     }
   }
 

@@ -10,6 +10,7 @@
     --user-quickdash-z-index: 1001;
     --select-dropdown-z-index: 1000;
     --spinner-z-index: 10000;
+    --terminal-viewport-z-index: 998;
 }
 
 /* Base rules */
@@ -459,10 +460,28 @@ body.is-resizing {
     overflow: hidden !important;
 }
 
+.terminal-viewport-container {
+    height: 100%;
+    width: 100%;
+}
+
+.terminal-viewport {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: scroll;
+    z-index: var(--terminal-viewport-z-index);
+}
+
+.terminal-scroll-layer {
+    width: 100%;
+}
+
 #terminal-wrapper {
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: auto;
+    /* overflow: hidden; */
     width: 100%;
     height: 100%;
     /* display: flex; */
