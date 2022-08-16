@@ -471,6 +471,13 @@ body.is-resizing {
     height: 100%;
     overflow: scroll;
     z-index: var(--terminal-viewport-z-index);
+    /* Disable vertical scrollbar on terminal in Firefox */
+    scrollbar-width: none;
+}
+
+.terminal-viewport::-webkit-scrollbar {
+    /* Disable vertical scrollbar on terminal in Webkit/Chrome */
+    width: 0px;
 }
 
 .terminal-scroll-layer {
@@ -487,6 +494,13 @@ body.is-resizing {
     /* display: flex; */
     /* align-items: flex-start; */
     padding-bottom: 5px;
+    /* Disable vertical scrollbar on terminal in Firefox */
+    scrollbar-width: none;
+}
+
+#terminal-wrapper::-webkit-scrollbar {
+    /* Disable vertical scrollbar on terminal in Webkit/Chrome */
+    width: 0px;
 }
 
 #terminal-container {
@@ -986,11 +1000,6 @@ body.is-resizing {
 ::-webkit-scrollbar {
     height: 3px;
     width: 3px;
-}
-
-#terminal-wrapper::-webkit-scrollbar {
-    /* Disable vertical scrollbar on terminal in Chrome */
-    width: 0px;
 }
 
 /* Track */
