@@ -105,6 +105,10 @@ function CodeArea () {
         id='code-area'
         className={showContent ? 'visible' : 'hidden'}
       >
+        {timeLeftDisplay !== null &&
+          <div className='time-remaining'>
+            Time remaining: {timeLeftDisplay}
+          </div>}
         {showAuth &&
           <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
         <header>
@@ -121,15 +125,11 @@ function CodeArea () {
               </div>
             </div>
           </div>
-          <div className='flex-pane flex-pane--right-justified flex-pane--vert-centered u-marg-right-1 u-marg-top-1'>
-            {timeLeftDisplay !== null &&
-              <div className='code-area__time-remaining'>
-                Time remaining: {timeLeftDisplay}
-              </div>}
+          <div className='flex-pane flex-pane--right-justified u-marg-right-1 u-marg-top-1'>
             {authed
-              ? <UserQuickdash setAuthed={setAuthed} />
+              ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuthed} /></div>
               : <div
-                  className='sign-in-link'
+                  className='sign-in-link u-marg-left-auto'
                   onPointerDown={() => setShowAuth(true)}
                 >
                   Sign in

@@ -442,8 +442,12 @@ body.is-resizing {
     padding: 0.5em;
 }
 
-.code-area__time-remaining {
-    margin-right: 7em;
+.time-remaining {
+    position: fixed;
+    text-align: center;
+    top: 2em;
+    right: 10em;
+    width: 11em;
     color: white;
     height: fit-content;
     font-family: 'Lato', sans-serif;
@@ -588,6 +592,7 @@ body.is-resizing {
 }
 
 .account-circle {
+    display: block;
     height: 2em;
     width: 2em;
     cursor: pointer;
@@ -596,11 +601,12 @@ body.is-resizing {
 }
 
 .user-quickdash {
-    position: absolute;
+    position: fixed;
     display: flex;
     flex-direction: column;
     padding: 1em;
-    top: 4em;
+    top: 3.7em;
+    right: 2.2em;
     min-width: 3em;
     height: auto;
     border: var(--modal-border);
@@ -1132,6 +1138,10 @@ body.is-resizing {
 
 .u-pointer {
     cursor: pointer;
+}
+
+.u-marg-left-auto {
+    margin-left: auto;
 }
 
 /* @media (max-width: 500px), (max-height: 220px) { */

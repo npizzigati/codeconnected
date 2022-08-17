@@ -126,9 +126,9 @@ function Home () {
             </div>
             <div className='flex-pane flex-pane--right-justified flex-pane--vert-centered u-marg-right-2'>
               {auth
-                ? <UserQuickdash setAuthed={setAuth} />
+                ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuth} /></div>
                 : <div
-                    className='sign-in-link'
+                    className='sign-in-link u-marg-left-auto'
                     onPointerDown={() => setShowAuth(true)}
                   >
                     Sign in
