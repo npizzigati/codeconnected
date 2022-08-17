@@ -355,7 +355,8 @@ body.is-resizing {
     left: 0;
     right: 0;
     color: white;
-    background-color: var(--modal-background-color);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     border: var(--modal-border);
     border-radius: 5px;
     user-select: none;
@@ -379,7 +380,7 @@ body.is-resizing {
 
 .aligned-block__row {
     display: table-row;
-    line-height: 2.5em;
+    line-height: 1.5em;
 }
 
 .aligned-block__row--clickable {
@@ -387,7 +388,7 @@ body.is-resizing {
 }
 
 .aligned-block__row--clickable:hover {
-    background-color: #333;
+    background-color: rgba(78, 85, 120, 0.2)
 }
 
 .aligned-block__cell {
@@ -402,12 +403,16 @@ body.is-resizing {
     object-fit: scale-down;
 }
 
+.aligned-block__image--medium {
+    height: 4.5em;
+}
+
 .aligned-block__image--tiny {
     height: 2em;
 }
 
 .aligned-block__image--tinier {
-    height: 1.5em;
+    height: 1em;
 }
 
 #code-area {
@@ -611,7 +616,8 @@ body.is-resizing {
     height: auto;
     border: var(--modal-border);
     border-radius: 5px;
-    background: var(--modal-background);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: var(--user-quickdash-z-index);
 }
 
@@ -763,16 +769,16 @@ body.is-resizing {
 }
 
 .form__row--error {
-    height: 1.3em;
-    margin-top: 0.2em;
-    line-height: 0.5em;
+    height: 1em;
+    margin-top: 0.1em;
+    line-height: 0.3em;
     font-family: 'Lato', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.6rem;
 }
 
 .form__error-item {
     display: table-cell;
-    padding-top: 0.3em;
+    padding-top: 0.2em;
 }
 
 .form__error-item--code {
@@ -780,6 +786,7 @@ body.is-resizing {
     height: 1.3em;
     margin: 0 auto;
     padding-top: 0.3em;
+    font-size: 0.6rem;
 }
 
 .form__blank-item {
@@ -801,13 +808,13 @@ body.is-resizing {
     width: 1.3em;
     padding-right: 0.5em;
     position: relative;
-    top: 0.1em;
+    top: 0.2em;
 }
 
 .form__input {
     display: table-cell;
     font-family: 'Lato', sans-serif;
-    font-size: 1.5em;
+    font-size: 1rem;
     width: 13em;
     border: 1.5px solid white;
     border-radius: 0.2em;
@@ -817,11 +824,12 @@ body.is-resizing {
 
 .form__input:focus {
     outline: #675ce4 2px solid;
+    webkit-border-radius: 0.2em;
 }
 
 .form__input::placeholder {
     color: #666;
-    font-size: 1.2rem;
+    font-size: 0.8rem;
     font-weight: 400;
     vertical-align: middle;
 }
@@ -833,17 +841,18 @@ body.is-resizing {
 .form__input--code {
     display: block;
     width: 4em;
+    text-align: center;
 }
 
 .form__submit-button {
     font-family: 'Lato', sans-serif;
-    font-size: 1.6rem;
+    font-size: 1rem;
     color: white;
     display: block;
-    padding: 0 .5em;
-    border: none;
+    padding: .1em .5em .2em;
+    border: 1px #777 solid;
+    background-color: black;
     border-radius: 0.3em;
-    background-color: #6258d7;
 }
 
 .form__submit-button:focus {
@@ -865,7 +874,7 @@ body.is-resizing {
 .form__bottom-link {
     display: block;
     text-align: center;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     text-decoration: underline;
     cursor: pointer;
 }
@@ -877,7 +886,7 @@ body.is-resizing {
 }
 
 .form__subheading {
-    width: 100%;
+    width: 15em;
     margin: 0 auto;
     line-height: 1.4em;
     text-align: center;
@@ -890,14 +899,15 @@ body.is-resizing {
 }
 
 .form__subheading--medium {
-    font-size: 1.2rem;
+    font-size: 1rem;
 }
 
 .form__subheading--large {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
 }
 
 .tabbed-modal {
+    --tabbed-modal-background: rgba(0, 0, 0, 0.1);
     --unselected-tab-bkg-color: #4e5578;
     position: fixed;
     z-index: var(--tabbed-modal-z-index);
@@ -905,10 +915,21 @@ body.is-resizing {
     left: 50%;
     transform: translate(-50%, 0);
     /* min-width: 25em; */
-    width: 25em;
+    width: fit-content;
+    min-width: 18em;
     min-height: 10em;
-    background: var(--modal-background);
+    /* background: var(--modal-background); */
+    background: var(--tabbed-modal-background);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: var(--modal-border);
+    /* border-color: #333; */
+    border-style: dotted;
     border-radius: 0.7rem;
+}
+
+.tabbed-modal__inner-wrapper {
+    margin: -2px;
 }
 
 .tabbed-modal__content {
@@ -921,32 +942,38 @@ body.is-resizing {
 }
 
 .tabbed-modal__tab-container {
+    /* border-top: var(--modal-border); */
+    /* border-right: var(--modal-border); */
+    /* border-left: var(--modal-border); */
     display: flex;
-    background-color: var(--unselected-tab-bkg-color);
-    border-top-left-radius: 0.7rem;
-    border-top-right-radius: 0.7rem;
+    position: relative;
+    /* background-color: var(--tabbed-modal-background); */
+    /* border-top-left-radius: 0.7rem; */
+    /* border-top-right-radius: 0.7rem; */
 }
 
 .tabbed-modal__tab {
     flex: 1;
-    height: 1.2em;
+    height: 1em;
     padding-top: .2em;
+    padding-bottom: .2em;
     text-align: center;
     font-family: 'Lato', sans-serif;
-    font-size: 1.5rem;
-    color: #d6d2e5;
-    background-color: var(--unselected-tab-bkg-color);
-    border-top: none;
-    border-left: none;
-    border-right: none;
+    font-size: 1rem;
+    color: #888;
+    background-color: var(--tabbed-modal-background);
+    /* border-top: var(--modal-border); */
+    /* border-left: var(--modal-border); */
+    /* border-right: var(--modal-border); */
     border-bottom: var(--modal-border);
     border-top-left-radius: 0.7rem;
     border-top-right-radius: 0.7rem;
+    cursor: pointer;
 }
 
 .tabbed-modal__tab.selected {
     flex: 1;
-    background-color: #181a25;
+    /* background-color: var(--tabbed-modal-background); */
     color: white;
     border-top: var(--modal-border);
     border-left: var(--modal-border);
@@ -970,9 +997,9 @@ body.is-resizing {
 .popup:not(:empty) {
     padding: 0.3em 0.4em;
     font-family: 'Lato', sans-serif;
-    font-weight: 600;
+    font-weight: 400;
     font-size: 0.9rem;
-    color: black;
+    color: white;
     background-color: #6975a2;
     border-radius: 4px;
     transition: opacity .5s;

@@ -144,13 +144,13 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
             <span className='form__blank-item' />
             <span className='form__error-item'>{passwordDupValidationError}</span>
           </p>
-          <button className='form__submit-button u-center-block u-marg-top-2 u-marg-bot-2' type='submit'>Sign up</button>
+          <button className='form__submit-button u-center-block u-marg-top-1 u-marg-bot-2' type='submit'>Sign up</button>
         </form>}
       {activationStatus === 'underway' &&
         <div className='activation'>
           <form className='form' noValidate onSubmit={handleCodeSubmit}>
             <div className='form__subheading u-pad-bot-1'>
-              A verification code has been sent to:
+              A verification code has been sent to your email address:
             </div>
             <div className='form__subheading form__subheading-medium u-center-text u-marg-bot-3'>
               {email}
@@ -191,7 +191,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       {activationStatus === 'success' &&
         <div>
           <form noValidate className='form' onSubmit={handleGetStartedSubmit}>
-            <div className='form__subheading'>You are now registered and signed in!</div>
+            <div className='form__subheading form__subheading--medium'>You are now registered and signed in!</div>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
           </form>
         </div>}

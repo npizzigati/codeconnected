@@ -72,39 +72,41 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
 
       <div className='backdrop' />
       <div className='tabbed-modal'>
-        <div className='close-button__container'>
-          <div className='close-button' onPointerDown={closeAuth} />
-        </div>
-        <div className='tabbed-modal__tab-container'>
-          <div
-            id='sign-in-tab'
-            className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signIn') ? ' selected' : '')}
-            onPointerDown={handleTabClick}
-          >
-            Sign in
+        <div className='tabbed-modal__inner-wrapper'>
+          <div className='close-button__container'>
+            <div className='close-button' onPointerDown={closeAuth} />
           </div>
-          <div
-            id='sign-up-tab'
-            className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signUp') ? ' selected' : '')}
-            onPointerDown={handleTabClick}
-          >
-            Sign up
+          <div className='tabbed-modal__tab-container'>
+            <div
+              id='sign-in-tab'
+              className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signIn') ? ' selected' : '')}
+              onPointerDown={handleTabClick}
+            >
+              Sign in
+            </div>
+            <div
+              id='sign-up-tab'
+              className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signUp') ? ' selected' : '')}
+              onPointerDown={handleTabClick}
+            >
+              Sign up
+            </div>
           </div>
-        </div>
-        <div className='tabbed-modal__content'>
-          {selectedTab === 'signIn'
-            ? <SignIn
-                setShowAuth={setShowAuth}
-                setAuthed={setAuthed}
-                setSavedSignInStatus={setSavedSignInStatus}
-                config={config}
-              />
-            : <SignUp
-                setShowAuth={setShowAuth}
-                setAuthed={setAuthed}
-                setSavedActivationStatus={setSavedActivationStatus}
-                config={config}
-              />}
+          <div className='tabbed-modal__content'>
+            {selectedTab === 'signIn'
+              ? <SignIn
+                  setShowAuth={setShowAuth}
+                  setAuthed={setAuthed}
+                  setSavedSignInStatus={setSavedSignInStatus}
+                  config={config}
+                />
+              : <SignUp
+                  setShowAuth={setShowAuth}
+                  setAuthed={setAuthed}
+                  setSavedActivationStatus={setSavedActivationStatus}
+                  config={config}
+                />}
+          </div>
         </div>
       </div>
     </>

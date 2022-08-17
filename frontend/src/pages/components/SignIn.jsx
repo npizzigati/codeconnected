@@ -93,7 +93,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
             <span className='form__blank-item' />
             <span className='form__error-item'>{passwordValidationError}</span>
           </p>
-          <button className='form__submit-button u-center-block u-marg-top-2 u-marg-bot-2' type='submit'>Sign in</button>
+          <button className='form__submit-button u-center-block u-marg-top-1 u-marg-bot-2' type='submit'>Sign in</button>
           <span
             className='form__bottom-link u-marg-top-3'
             onPointerDown={showForgotPassword}
@@ -144,7 +144,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
         </div>}
       {status === 'resetPassword' &&
         <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
-          <div className='form__subheading form__subheading--large u-pad-bot-3'>
+          <div className='form__subheading form__subheading-medium u-pad-bot-3'>
             Choose a new password
           </div>
           <p className='form__row'>
@@ -203,7 +203,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
           </p>
           <div>
             <label className='form__label form__label--code u-center-text u-marg-bot-1' htmlFor='resetCode'>
-              Code sent to your email:
+              Reset code:
             </label>
             <input
               id='resetCode'
@@ -229,7 +229,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
         </form>}
       {status === 'success' &&
         <div className='u-pad-top-4 u-pad-bot-4 u-center-text'>
-          <span className='form__subheading form__subheading--large'>Password successfully reset!</span>
+          <span className='form__subheading form__subheading--medium'>Password successfully reset!</span>
           <span
             className='form__bottom-link u-marg-top-3'
             onPointerDown={goBackToSignIn}
