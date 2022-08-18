@@ -40,11 +40,11 @@ function CodeSessions ({ authed, setShowAuth }) {
         ? <div>
             <h1 className='u-center-text u-marg-top-3 u-marg-bot-2 '>Resume a session</h1>
             {showCSessions
-              ? <div>
-                  <div className='table u-center-block'>
+              ? <div className='u-pad-right-2 u-pad-left-2'>
+                  <div className='table'>
                     <div className='table-row table-row--heading'>
-                      <h4 className='table-cell'>Language</h4>
-                      <h4 className='table-cell'>Lines</h4>
+                      <h4 className='table-cell u-width-2'></h4>
+                      <h4 className='table-cell u-width-1'>Lines</h4>
                       <h4 className='table-cell'>Last Accessed</h4>
                     </div>
                     {cSessions}
@@ -72,7 +72,7 @@ function CodeSessions ({ authed, setShowAuth }) {
         onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
       >
         <span className='table-cell'>{langNameTrans(cSession.lang)}</span>
-        <span className='table-cell u-center-text'>{getLOC(cSession.content)}</span>
+        <span className='table-cell'>{getLOC(cSession.content)}</span>
         <span className='table-cell'>{dateTrans(cSession.when_accessed)}</span>
       </p>
     );

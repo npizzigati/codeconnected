@@ -293,6 +293,7 @@ body.is-resizing {
 
 .thin-font {
     font-family: 'Jost', sans-serif;
+    font-weight: 200;
     font-size: 1.5rem;
 }
 
@@ -307,6 +308,9 @@ body.is-resizing {
 
 .table {
     display: table;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 1em;
 }
 
 .table-row {
@@ -315,26 +319,33 @@ body.is-resizing {
 }
 
 .table-row--heading {
-    text-align: center;
+    background-color: #b83d62;
+    line-height: 1.3em;
 }
 
 .table-row--items {
     font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    background-color: white;
+    color: #3c3b4d;
 }
 
 .table-row--items:hover {
-    background-color: #2e2c38;
+    background-color: #02428f;
+    color: white;
     cursor: pointer;
 }
 
 .table-cell {
     display: table-cell;
-    padding: 0 0 0 1em;
+    padding-left: 0.3em;
 }
 
 .sign-in-link {
     color: white;
     font-family: 'Lato', sans-serif;
+    font-weight: 700;
     font-size: 1.3em;
     text-decoration: underline;
 }
@@ -1152,6 +1163,22 @@ body.is-resizing {
     padding-left: 0.6em;
 }
 
+.u-pad-left-3 {
+    padding-left: 0.9em;
+}
+
+.u-pad-left-4 {
+    padding-left: 1.2em;
+}
+
+.u-pad-left-5 {
+    padding-left: 1.5em;
+}
+
+.u-pad-left-6 {
+    padding-left: 1.8em;
+}
+
 .u-pad-bot-1 {
     padding-bottom: 0.3em;
 }
@@ -1198,6 +1225,13 @@ body.is-resizing {
     cursor: pointer;
 }
 
+.u-width-1 {
+    width: 20%
+}
+
+.u-width-2 {
+    width: 35%
+}
 /* @media (max-width: 500px), (max-height: 220px) { */
 /*     :root { */
 /*         font-size: calc(0.5em + .5vh); */
