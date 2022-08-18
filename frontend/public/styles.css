@@ -939,7 +939,7 @@ body.is-resizing {
 
 .tabbed-modal {
     --tabbed-modal-background: rgba(0, 0, 0, 0.1);
-    --tabbed-modal-border: 2px solid #016972;
+    --tabbed-modal-border: 3px solid #016972;
     --unselected-tab-bkg-color: #4e5578;
     position: fixed;
     z-index: var(--tabbed-modal-z-index);
@@ -961,7 +961,7 @@ body.is-resizing {
 }
 
 .tabbed-modal__inner-wrapper {
-    margin: -2px;
+    margin: -3px;
 }
 
 .tabbed-modal__content {
