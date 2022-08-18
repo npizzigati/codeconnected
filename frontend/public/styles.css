@@ -332,7 +332,7 @@ body.is-resizing {
 }
 
 .table-row--items:hover {
-    background-color: #02428f;
+    background-color: #4582d1;
     color: white;
     cursor: pointer;
 }
