@@ -1,7 +1,7 @@
 :root {
     --main-bg-color: #1c1b22;
     --modal-background: transparent;
-    --modal-border: 2px solid #555;
+    --modal-border: 1px #777 solid;
     /* z-indexes */
     --tabbed-modal-z-index: 1001;
     --popup-dialog-z-index: 1010;
