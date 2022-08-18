@@ -328,7 +328,7 @@ body.is-resizing {
     font-size: 0.9rem;
     font-weight: 400;
     background-color: white;
-    color: #3c3b4d;
+    color: #222;
 }
 
 .table-row--items:hover {
