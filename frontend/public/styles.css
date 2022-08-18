@@ -656,13 +656,10 @@ body.is-resizing {
 }
 
 .user-quickdash.visible {
-    opacity: 1;
-    transition: opacity .5s;
 }
 
 .user-quickdash.hidden {
     display: none;
-    opacity: 0;
 }
 
 .user-quickdash__heading {
