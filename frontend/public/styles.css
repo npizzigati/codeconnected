@@ -422,7 +422,7 @@ body.is-resizing {
 }
 
 .aligned-block__row--clickable:hover {
-    background-color: rgba(78, 85, 120, 0.2)
+    background-color: rgba(78, 85, 120, 0.4)
 }
 
 .aligned-block__cell {
@@ -680,7 +680,7 @@ body.is-resizing {
     font-family: 'Lato', sans-serif;
     font-size: 1rem;
     color: white;
-    border: 1px solid #999;
+    border: 1px solid #777;
     border-radius: 0.5em;
     padding: 0.2em 1.5em 0.3em;
     background-color: transparent;
@@ -804,7 +804,7 @@ body.is-resizing {
     margin-top: 0.1em;
     line-height: 0.3em;
     font-family: 'Lato', sans-serif;
-    font-size: 0.6rem;
+    font-size: 0.7rem;
 }
 
 .form__error-item {
@@ -817,7 +817,7 @@ body.is-resizing {
     height: 1.3em;
     margin: 0 auto;
     padding-top: 0.3em;
-    font-size: 0.6rem;
+    font-size: 0.7rem;
 }
 
 .form__blank-item {
@@ -831,7 +831,7 @@ body.is-resizing {
 .form__label--code {
     display: block;
     font-family: 'Lato', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .form__label-img {
@@ -845,7 +845,7 @@ body.is-resizing {
 .form__input {
     display: table-cell;
     font-family: 'Lato', sans-serif;
-    font-size: 1rem;
+    font-size: 1.1rem;
     width: 13em;
     border: 1.5px solid white;
     border-radius: 0.2em;
@@ -860,7 +860,7 @@ body.is-resizing {
 
 .form__input::placeholder {
     color: #666;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 400;
     vertical-align: middle;
 }
@@ -877,11 +877,11 @@ body.is-resizing {
 
 .form__submit-button {
     font-family: 'Lato', sans-serif;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: white;
     display: block;
     padding: .1em .5em .2em;
-    border: 1px #777 solid;
+    border: 1px #016972 solid;
     background-color: transparent;
     border-radius: 0.3em;
 }
@@ -905,7 +905,7 @@ body.is-resizing {
 .form__bottom-link {
     display: block;
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     text-decoration: underline;
     cursor: pointer;
 }
@@ -922,23 +922,24 @@ body.is-resizing {
     line-height: 1.4em;
     text-align: center;
     font-family: 'Lato', sans-serif;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 .form__subheading--small {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
 }
 
 .form__subheading--medium {
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 .form__subheading--large {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
 }
 
 .tabbed-modal {
     --tabbed-modal-background: rgba(0, 0, 0, 0.1);
+    --tabbed-modal-border: 2px solid #016972;
     --unselected-tab-bkg-color: #4e5578;
     position: fixed;
     z-index: var(--tabbed-modal-z-index);
@@ -947,13 +948,13 @@ body.is-resizing {
     transform: translate(-50%, 0);
     /* min-width: 25em; */
     width: fit-content;
-    min-width: 18em;
-    min-height: 10em;
+    min-width: 24em;
+    min-height: 15em;
     /* background: var(--modal-background); */
     background: var(--tabbed-modal-background);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-    border: var(--modal-border);
+    border: var(--tabbed-modal-border);
     /* border-color: #333; */
     border-style: dotted;
     border-radius: 0.7rem;
@@ -966,9 +967,9 @@ body.is-resizing {
 .tabbed-modal__content {
     display: flex;
     justify-content: center;
-    border-bottom: var(--modal-border);
-    border-right: var(--modal-border);
-    border-left: var(--modal-border);
+    border-bottom: var(--tabbed-modal-border);
+    border-right: var(--tabbed-modal-border);
+    border-left: var(--tabbed-modal-border);
     border-radius: 0 0 0.7rem 0.7rem;
 }
 
@@ -990,13 +991,13 @@ body.is-resizing {
     padding-bottom: .2em;
     text-align: center;
     font-family: 'Lato', sans-serif;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: #888;
     background-color: var(--tabbed-modal-background);
     /* border-top: var(--modal-border); */
     /* border-left: var(--modal-border); */
     /* border-right: var(--modal-border); */
-    border-bottom: var(--modal-border);
+    border-bottom: var(--tabbed-modal-border);
     border-top-left-radius: 0.7rem;
     border-top-right-radius: 0.7rem;
     cursor: pointer;
@@ -1006,9 +1007,9 @@ body.is-resizing {
     flex: 1;
     /* background-color: var(--tabbed-modal-background); */
     color: white;
-    border-top: var(--modal-border);
-    border-left: var(--modal-border);
-    border-right: var(--modal-border);
+    border-top: var(--tabbed-modal-border);
+    border-left: var(--tabbed-modal-border);
+    border-right: var(--tabbed-modal-border);
     border-bottom: none;
 }
 

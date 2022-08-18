@@ -191,7 +191,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       {activationStatus === 'success' &&
         <div>
           <form noValidate className='form' onSubmit={handleGetStartedSubmit}>
-            <div className='form__subheading form__subheading--medium'>You are now registered and signed in!</div>
+            <div className='form__subheading form__subheading--medium'>You are now registered and signed&nbsp;in!</div>
             <button className='form__submit-button u-center-block u-marg-top-3' type='submit'>Continue</button>
           </form>
         </div>}
