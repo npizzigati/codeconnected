@@ -139,15 +139,15 @@ function Home () {
             <div className='flex-pane flex-pane--boxed flex-pane--wide'>
               <div className='flex-pane flex-container flex-container--col u-no-select'>
                 <div>
-                  <h1 className='u-marg-top-1 u-center-text'>Start a new coding session</h1>
+                  <h1 className='u-marg-top-3 u-marg-bot-2 u-center-text'>Start a new coding session</h1>
                 </div>
-                <ul className='flex-container'>
+                <ul className='flex-container flex-container--wide-horiz-margins'>
                   <li
                     className='list-item'
                     onPointerDown={() => preLaunch('ruby')}
                   >
-                    <div className='media'>
-                      <div className='media__image-container'>
+                    <div className='media media--bordered media--centered media--constrained'>
+                      <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
                         <img className='media__image media__image--small' src='./ruby.png' alt='Ruby icon' />
                       </div>
                       <div className='media__text'>
@@ -161,7 +161,7 @@ function Home () {
                     className='list-item'
                     onPointerDown={() => preLaunch('node')}
                   >
-                    <div className='media'>
+                    <div className='media media--bordered media--centered media--constrained'>
                       <div className='media__image-container'>
                         <img className='media__image' src='./node.png' alt='Node icon' />
                       </div>
@@ -176,7 +176,7 @@ function Home () {
                     className='list-item'
                     onPointerDown={() => preLaunch('postgres')}
                   >
-                    <div className='media'>
+                    <div className='media media--bordered media--centered media--constrained'>
                       <div className='media__image-container'>
                         <img className='media__image media__image--small' src='./postgres.png' alt='Postgres icon' />
                       </div>
