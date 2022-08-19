@@ -180,6 +180,15 @@ body.is-resizing {
     background-size: cover;
     height: 100vh;
     overflow: hidden;
+    /* Don't show scrollbars on Firefox*/
+    scrollbar-width: none;
+}
+
+/* Don't show scrollbars on home page */
+/* Works on Chrome, Edge, and Safari */
+#home::-webkit-scrollbar {
+    height: 0px;
+    width: 0px;
 }
 
 #home > header {
