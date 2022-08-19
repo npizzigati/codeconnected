@@ -46,13 +46,15 @@ body {
     color: white;
     box-sizing: border-box;
     font-size: calc(0.5em + 1vh);
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 /* Prevent text from being selected when user is resizing code
    containers */
 body.is-resizing {
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none !important;
+    -webkit-user-select: none !important;
 }
 
 .close-button__container {
@@ -141,8 +143,6 @@ body.is-resizing {
     font-family: 'Saira Condensed', sans-serif;
     font-size: 2.7em;
     color: white;
-    user-select: none;
-    -webkit-user-select: none;
 }
 
 .site-name--color1 {
@@ -170,8 +170,6 @@ body.is-resizing {
     font-size: 1.3em;
     color: white;
     display: block;
-    user-select: none;
-    -webkit-user-select: none;
 }
 
 #home {
@@ -393,8 +391,6 @@ body.is-resizing {
     -webkit-backdrop-filter: blur(5px);
     border: var(--modal-border);
     border-radius: 5px;
-    user-select: none;
-    -webkit-user-select: none;
     z-index: var(--popup-dialog-z-index)
 }
 
@@ -539,6 +535,8 @@ body.is-resizing {
     /* Actually hides both scroll bars */
     /* There is no simple way to hide only vertical */
     scrollbar-width: none;
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 #terminal-wrapper::-webkit-scrollbar {
@@ -585,8 +583,6 @@ body.is-resizing {
 }
 
 .editor-and-repl-title {
-    user-select: none;
-    -webkit-user-select: none;
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
     color: #999;
@@ -594,8 +590,6 @@ body.is-resizing {
 }
 
 .editor-lang-label {
-    user-select: none;
-    -webkit-user-select: none;
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
     color: #999;
@@ -606,6 +600,8 @@ body.is-resizing {
     border: 2px #333 solid;
     /* height: calc(100% - var(--code-titlebar-height)); */
     height: 100%;
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 #codemirror-container {
@@ -635,8 +631,6 @@ body.is-resizing {
     height: 2em;
     width: 2em;
     cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
 }
 
 .user-quickdash {
@@ -725,8 +719,6 @@ body.is-resizing {
     font-size: 1rem;
     background-color: inherit;
     color: #999;
-    user-select: none;
-    -webkit-user-select: none;
     display: flex;
 }
 
@@ -779,8 +771,6 @@ body.is-resizing {
 .select-dropdown-item {
     padding: 5px 5px;
     color: #999;
-    user-select: none;
-    -webkit-user-select: none;
 }
 
 .select-dropdown-item:hover {
@@ -1201,9 +1191,6 @@ body.is-resizing {
     padding-right: 0.6em;
 }
 
-.u-no-select {
-    user-select: none;
-    -webkit-user-select: none;
 }
 
 .u-center-text {
