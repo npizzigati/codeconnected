@@ -163,7 +163,7 @@ function Home () {
                   >
                     <div className='media media--bordered media--centered media--constrained'>
                       <div className='media__image-container'>
-                        <img className='media__image' src='./node.png' alt='Node icon' />
+                        <img className='media__image media__image--small' src='./node.png' alt='Node icon' />
                       </div>
                       <div className='media__text'>
                         <div>
@@ -186,18 +186,18 @@ function Home () {
                         </div>
                       </div>
                     </div>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className='flex-pane flex-pane--boxed flex-pane--narrow'>
+            <div className='flex-pane flex-pane--wide'>
               <div>
                 <CodeSessions authed={auth} setShowAuth={setShowAuth} />
               </div>
             </div>
           </main>
           <footer>
-            <div className='media u-pad-bot-2'>
+            <div className='media u-pad-bot-4'>
               <div className='media__text'>
                 <div className='site-name'>
                   <span className='site-name site-name--color1 site-name--micro'>code</span>

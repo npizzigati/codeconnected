@@ -79,7 +79,7 @@ body.is-resizing {
 }
 
 .media--bordered {
-    border: 2px solid #042853;
+    border: 1px solid #cbcbcb;
     border-radius: 4em;
     padding: 0.5em 2em;
 }
@@ -94,7 +94,8 @@ body.is-resizing {
 }
 
 .media--bordered:hover {
-    background-color: #042853;
+    background-color: #f4f4f4;
+    border: none;
 }
 
 .media__image-container {
