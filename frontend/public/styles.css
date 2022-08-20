@@ -1,5 +1,5 @@
 :root {
-    --main-bg-color: #1c1b22;
+    --main-bg-color: white;
     --modal-background: transparent;
     --modal-border: 1px #777 solid;
     /* z-indexes */
@@ -43,7 +43,7 @@ h4 {
 
 body {
     background-color: var(--main-bg-color);
-    color: white;
+    color: #555;
     box-sizing: border-box;
     font-size: calc(0.5em + 1vh);
     user-select: none;
@@ -176,7 +176,7 @@ body.is-resizing {
     display: flex;
     flex-direction: column;
     /* background-color: var(--main-bg-color); */
-    background: no-repeat url("./circuit-board_dark.jpg");
+    /* background: no-repeat url("./circuit-board.jpg"); */
     background-size: cover;
     height: 100vh;
     overflow: hidden;
