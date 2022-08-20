@@ -1179,6 +1179,30 @@ body.is-resizing {
     padding-left: 1.8em;
 }
 
+.u-pad-left-7 {
+    padding-left: 2.1em;
+}
+
+.u-pad-left-8 {
+    padding-left: 2.4em;
+}
+
+.u-pad-left-9 {
+    padding-left: 2.7em;
+}
+
+.u-pad-left-10 {
+    padding-left: 3.1em;
+}
+
+.u-pad-left-11 {
+    padding-left: 3.4em;
+}
+
+.u-pad-left-12 {
+    padding-left: 3.7em;
+}
+
 .u-pad-bot-1 {
     padding-bottom: 0.3em;
 }
@@ -1203,6 +1227,44 @@ body.is-resizing {
     padding-right: 0.6em;
 }
 
+.u-pad-right-3 {
+    padding-right: 0.9em;
+}
+
+.u-pad-right-4 {
+    padding-right: 1.2em;
+}
+
+.u-pad-right-5 {
+    padding-right: 1.5em;
+}
+
+.u-pad-right-6 {
+    padding-right: 1.8em;
+}
+
+.u-pad-right-7 {
+    padding-right: 2.1em;
+}
+
+.u-pad-right-8 {
+    padding-right: 2.4em;
+}
+
+.u-pad-right-9 {
+    padding-right: 2.7em;
+}
+
+.u-pad-right-10 {
+    padding-right: 3.1em;
+}
+
+.u-pad-right-11 {
+    padding-right: 3.4em;
+}
+
+.u-pad-right-12 {
+    padding-right: 3.7em;
 }
 
 .u-center-text {
