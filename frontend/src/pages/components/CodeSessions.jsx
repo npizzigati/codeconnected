@@ -40,7 +40,7 @@ function CodeSessions ({ authed, setShowAuth }) {
         ? <div>
             <h1 className='u-center-text u-marg-top-3 u-marg-bot-2 '>Resume a session</h1>
             {showCSessions
-              ? <div className='u-pad-right-2 u-pad-left-2'>
+              ? <div className='table-wrapper'>
                   <div className='table'>
                     <div className='table-row table-row--heading'>
                       <h4 className='table-cell u-width-2'></h4>
