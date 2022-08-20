@@ -324,6 +324,11 @@ body.is-resizing {
     border-spacing: 0 1em;
 }
 
+.table-wrapper {
+    max-width: 50em;
+    margin: 0 auto;
+}
+
 .table-row {
     display: table-row;
     line-height: 1.5em;
@@ -331,6 +336,7 @@ body.is-resizing {
 
 .table-row--heading {
     background-color: #b83d62;
+    color: white;
     line-height: 1.3em;
 }
 
@@ -338,19 +344,19 @@ body.is-resizing {
     font-family: 'Jost', sans-serif;
     font-size: 0.9rem;
     font-weight: 400;
-    background-color: white;
-    color: #777;
+    background-color: #eeeeee;
+    color: #444;
 }
 
 .table-row--items:hover {
-    background-color: #4582d1;
-    color: white;
+    background-color: #dddddd;
     cursor: pointer;
 }
 
 .table-cell {
     display: table-cell;
     padding-left: 0.3em;
+    padding-top: 0.2em;
 }
 
 .sign-in-link {
