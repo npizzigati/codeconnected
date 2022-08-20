@@ -180,7 +180,6 @@ body.is-resizing {
     /* background: no-repeat url("./circuit-board.jpg"); */
     background-size: cover;
     height: 100vh;
-    overflow: hidden;
     /* Don't show scrollbars on Firefox*/
     scrollbar-width: none;
 }
