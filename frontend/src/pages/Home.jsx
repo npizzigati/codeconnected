@@ -136,13 +136,13 @@ function Home () {
             </div>
           </header>
           <main>
-            <div className='flex-pane flex-pane--boxed flex-pane--wide'>
-              <div className='flex-pane flex-container flex-container--col u-no-select'>
+            <div className='flex-pane flex-pane--narrow'>
+              <div className='flex-container flex-container--col'>
                 <div>
                   <h1 className='u-marg-top-3 u-marg-bot-2 u-center-text'>Start a new coding session</h1>
                 </div>
-                <ul className='flex-container flex-container--wide-horiz-margins'>
-                  <li
+                <div className='flex-container flex-container-wrap'>
+                  <div
                     className='list-item'
                     onPointerDown={() => preLaunch('ruby')}
                   >
@@ -156,8 +156,8 @@ function Home () {
                         </div>
                       </div>
                     </div>
-                  </li>
-                  <li
+                  </div>
+                  <div
                     className='list-item'
                     onPointerDown={() => preLaunch('node')}
                   >
@@ -171,8 +171,8 @@ function Home () {
                         </div>
                       </div>
                     </div>
-                  </li>
-                  <li
+                  </div>
+                  <div
                     className='list-item'
                     onPointerDown={() => preLaunch('postgres')}
                   >
