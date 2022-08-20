@@ -147,7 +147,8 @@ body.is-resizing {
 }
 
 .site-name--color1 {
-    color: #ec19ff;
+    /* color: #ec19ff; */
+    color: #d26043;
 }
 
 .site-name--color2 {
