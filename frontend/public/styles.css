@@ -679,10 +679,9 @@ body.is-resizing {
     right: 2.2em;
     min-width: 3em;
     height: auto;
-    border: var(--modal-border);
+    border: 1px solid #999;
     border-radius: 5px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: white;
     z-index: var(--user-quickdash-z-index);
 }
 
