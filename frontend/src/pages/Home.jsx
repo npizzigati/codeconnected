@@ -146,7 +146,7 @@ function Home () {
                     className='list-item'
                     onPointerDown={() => preLaunch('ruby')}
                   >
-                    <div className='media media--bordered media--centered media--constrained'>
+                    <div className='media media--with-background media--centered media--constrained'>
                       <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
                         <img className='media__image media__image--small' src='./ruby.png' alt='Ruby icon' />
                       </div>
@@ -161,7 +161,7 @@ function Home () {
                     className='list-item'
                     onPointerDown={() => preLaunch('node')}
                   >
-                    <div className='media media--bordered media--centered media--constrained'>
+                    <div className='media media--with-background media--centered media--constrained'>
                       <div className='media__image-container'>
                         <img className='media__image media__image--small' src='./node.png' alt='Node icon' />
                       </div>
@@ -176,7 +176,7 @@ function Home () {
                     className='list-item'
                     onPointerDown={() => preLaunch('postgres')}
                   >
-                    <div className='media media--bordered media--centered media--constrained'>
+                    <div className='media media--with-background media--centered media--constrained'>
                       <div className='media__image-container'>
                         <img className='media__image media__image--small' src='./postgres.png' alt='Postgres icon' />
                       </div>

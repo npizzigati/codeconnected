@@ -84,6 +84,12 @@ body.is-resizing {
     padding: 0.5em 2em;
 }
 
+.media--with-background {
+    background-color: #eeeeee;
+    border-radius: 4em;
+    padding: 0.5em 2em;
+}
+
 .media--centered {
     justify-content: center;
 }
@@ -93,8 +99,8 @@ body.is-resizing {
     width: 12em;
 }
 
-.media--bordered:hover {
-    background-color: #f4f4f4;
+.media--with-background:hover {
+    background-color: #dddddd;
     border: none;
 }
 
