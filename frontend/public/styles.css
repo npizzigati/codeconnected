@@ -872,7 +872,7 @@ body.is-resizing {
     font-family: 'Lato', sans-serif;
     font-size: 1.1rem;
     width: 13em;
-    border: 1.5px solid white;
+    border: 1px solid #999;
     border-radius: 0.2em;
     background-color: white;
     color: #222;
@@ -906,8 +906,8 @@ body.is-resizing {
     color: white;
     display: block;
     padding: .1em .5em .2em;
-    border: 1px #016972 solid;
-    background-color: transparent;
+    background-color: #336791;
+    border: none;
     border-radius: 0.3em;
 }
 
