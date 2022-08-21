@@ -727,7 +727,8 @@ body.is-resizing {
     display: inline-block;
     margin-top: 0.1em;
     padding-top: 0em;
-    height: 1em;
+    padding-bottom: 0.1em;
+    height: 1.1em;
     font-family: 'Roboto', sans-serif;
     font-size: 0.9rem;
     color: white;
