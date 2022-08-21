@@ -336,7 +336,7 @@ body.is-resizing {
 
 .table-row--heading {
     color: #336791;
-    line-height: 1.3em;
+    line-height: 0.5em;
 }
 
 .table-row--items {
