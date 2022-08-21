@@ -60,7 +60,7 @@ function UserQuickdash ({ setAuthed }) {
         <div className='aligned-block__row'>
           <div className='aligned-block__cell'>
             <img
-              className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
+              className='aligned-block__image aligned-block__image--tinier u-pad-right-1 u-pad-bot-1'
               src='./blank_avatar.png'
               alt='User'
             />
@@ -72,7 +72,7 @@ function UserQuickdash ({ setAuthed }) {
         <div className='aligned-block__row'>
           <div className='aligned-block__cell'>
             <img
-              className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
+              className='aligned-block__image aligned-block__image--tinier u-pad-right-1 u-pad-bot-1'
               src='./mail.png'
               alt='email'
             />
