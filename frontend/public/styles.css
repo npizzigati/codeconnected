@@ -725,16 +725,16 @@ body.is-resizing {
 
 #run-button {
     font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: white;
-    border-radius: 5px;
+    border-radius: 0.2em;
     border: none;
-    background-color: #3cb73c;
+    background-color: #2bb297;
     margin-left: 20px;
 }
 
 #run-button:hover {
-    background-color: #48db48;
+    background-color: #2fc3a6;
     cursor: pointer;
 }
 
