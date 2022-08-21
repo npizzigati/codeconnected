@@ -574,8 +574,6 @@ body.is-resizing {
     /* Actually hides both scroll bars */
     /* There is no simple way to hide only vertical */
     scrollbar-width: none;
-    user-select: text;
-    -webkit-user-select: text;
 }
 
 #terminal-wrapper::-webkit-scrollbar {
