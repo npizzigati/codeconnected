@@ -692,7 +692,7 @@ body.is-resizing {
 .user-quickdash__heading {
     font-family: 'Lato', sans-serif;
     font-size: 1.2rem;
-    color: white;
+    color: #444;
     text-align: center;
     margin-bottom: 0.5em;
 }
@@ -700,22 +700,22 @@ body.is-resizing {
 .user-quickdash__text {
     font-family: 'Lato', sans-serif;
     font-size: 0.8rem;
-    color: white;
+    color: #444;
 }
 
 .user-quickdash__sign-out-button {
     font-family: 'Lato', sans-serif;
     font-size: 1rem;
-    color: white;
-    border: 1px solid #777;
-    border-radius: 0.5em;
+    color: #444;
+    background-color: d9d9d9;
+    border: none;
+    border-radius: 0.8em;
     padding: 0.2em 1.5em 0.3em;
-    background-color: transparent;
     margin: 1em auto;
 }
 
 .user-quickdash__sign-out-button:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: #cfcfcf;
     cursor: pointer;
 }
 
