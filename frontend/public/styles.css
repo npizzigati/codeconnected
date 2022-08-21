@@ -1,5 +1,7 @@
 :root {
     --main-bg-color: white;
+    --code-area-bg-color: #0d1117;
+    --code-area-border-color: #1e262e;
     --modal-background: transparent;
     --modal-border: 1px #777 solid;
     /* z-indexes */
@@ -485,7 +487,7 @@ body.is-resizing {
 }
 
 #code-area {
-    background-color: var(--main-bg-color);
+    background: var(--code-area-bg-color);
     height: 100vh;
     --header-height: 3.6em;
     --header-padding-top: 0.5em;
@@ -588,7 +590,7 @@ body.is-resizing {
     flex: 1;
     margin: 0 5px 0px 0;
     position: relative;
-    border: 2px #333 solid;
+    border: 1px solid var(--code-area-border-color);
 }
 
 .terminal-expired {
@@ -607,7 +609,6 @@ body.is-resizing {
     align-items: center;
     padding: 3px 3px 3px 3px;
     height: 1.5em;
-    color: #999;
     transition: opacity .5s;
 }
 
@@ -620,25 +621,24 @@ body.is-resizing {
 }
 
 .editor-and-repl-title {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    color: #999;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #666;
     padding-right: 20px;
 }
 
 .editor-lang-label {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    color: #999;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #666;
 }
 
 #codemirror-wrapper {
     box-sizing: border-box;
-    border: 2px #333 solid;
-    /* height: calc(100% - var(--code-titlebar-height)); */
+    border: 1px solid var(--code-area-border-color);
     height: 100%;
-    user-select: text;
-    -webkit-user-select: text;
 }
 
 #codemirror-container {
@@ -1048,7 +1048,7 @@ body.is-resizing {
 }
 
 .resizer {
-    background: var(--main-bg-color);
+    background: var(--code-area-bg-color);
     cursor: col-resize;
     height: 100%;
     width: auto;
