@@ -764,7 +764,7 @@ body.is-resizing {
 .select-button {
     text-align: center;
     font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
+    font-size: 0.9rem;
     background-color: inherit;
     color: #999;
     display: flex;
