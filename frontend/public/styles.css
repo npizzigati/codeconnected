@@ -724,6 +724,10 @@ body.is-resizing {
 }
 
 #run-button {
+    display: inline-block;
+    margin-top: 0.1em;
+    padding-top: 0em;
+    height: 1em;
     font-family: 'Roboto', sans-serif;
     font-size: 0.9rem;
     color: white;
