@@ -335,8 +335,7 @@ body.is-resizing {
 }
 
 .table-row--heading {
-    background-color: #b83d62;
-    color: white;
+    color: #336791;
     line-height: 1.3em;
 }
 
@@ -355,8 +354,23 @@ body.is-resizing {
 
 .table-cell {
     display: table-cell;
+    border: solid 1px white;
+    border-style: solid none;
     padding-left: 0.3em;
     padding-top: 0.2em;
+}
+
+/* Round table row corners */
+.table-cell:first-child {
+    border-left-style: solid;
+    border-top-left-radius: 0.8em;
+    border-bottom-left-radius: 0.8em;
+}
+
+.table-cell:last-child {
+    border-right-style: solid;
+    border-top-right-radius: 0.8em;
+    border-bottom-right-radius: 0.8em;
 }
 
 .sign-in-link {
