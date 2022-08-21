@@ -5,10 +5,9 @@ import React, { useState, useRef, useEffect } from 'react';
 function Select ({ options, title, callback, config }) {
   const dropdown = useRef(null);
   const button = useRef(null);
-  const arrow = useRef(null);
   const titlePart = useRef(null);
   const [displayDropdown, setDisplayDropdown] = useState(false);
-  const downArrow = '▼';
+  const arrow = useRef(null);
 
   useEffect(() => {
     document.addEventListener('pointerdown', (ev) => {
@@ -29,16 +28,14 @@ function Select ({ options, title, callback, config }) {
 
   function hideDropdown () {
     setDisplayDropdown(false);
-    if (dropdown.current && arrow.current) {
+    if (dropdown.current) {
       dropdown.current.className = 'select-dropdown-hidden';
-      arrow.current.className = 'select-arrow-down';
     }
   }
 
   function showDropdown () {
     setDisplayDropdown(true);
     dropdown.current.className = 'select-dropdown';
-    arrow.current.className = 'select-arrow-up';
   }
 
   function toggleDropdown () {
@@ -58,7 +55,7 @@ function Select ({ options, title, callback, config }) {
           onPointerDown={toggleDropdown}
         >
           <div ref={titlePart} className='select-title'>{title}</div>
-          <div ref={arrow} className='select-arrow-down'>{downArrow}</div>
+          <img className='select__expand-icon' ref={arrow} src='./expand_more.png' alt='expand icon' />
         </div>
         <div
           ref={dropdown}
