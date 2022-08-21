@@ -428,8 +428,8 @@ body.is-resizing {
     color: white;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-    border: var(--modal-border);
-    border-radius: 5px;
+    border: 1px solid white;
+    border-radius: 1em;
     z-index: var(--popup-dialog-z-index)
 }
 
@@ -457,7 +457,7 @@ body.is-resizing {
 }
 
 .aligned-block__row--clickable:hover {
-    background-color: rgba(78, 85, 120, 0.4)
+    background-color: rgba(182, 182, 182, 0.4)
 }
 
 .aligned-block__cell {
