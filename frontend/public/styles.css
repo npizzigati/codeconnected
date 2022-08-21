@@ -504,8 +504,8 @@ body.is-resizing {
 #code-area > header {
     height: var(--header-height);
     display: flex;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
+    padding-left: 0.6em;
+    padding-right: 0.6em;
     padding-top: var(--header-padding-top);
 }
 
