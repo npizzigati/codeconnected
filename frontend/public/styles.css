@@ -780,7 +780,7 @@ body.is-resizing {
     position: absolute;
     top: 22px;
     z-index: var(--select-dropdown-z-index);
-    background-color: #777;
+    background-color: #32404d;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
@@ -802,13 +802,12 @@ body.is-resizing {
 .select-dropdown-item {
     font-family: 'Jost', sans-serif;
     font-weight: 400;
-    color: #ebebeb;
+    color: #c5c5c5;
     padding: 5px 5px;
 }
 
 .select-dropdown-item:hover {
-    background-color: #c5c5c5;
-    color: #555;
+    background-color: #435667;
     cursor: pointer;
 }
 
