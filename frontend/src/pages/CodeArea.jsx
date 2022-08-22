@@ -12,6 +12,7 @@ import { WebsocketProvider } from 'y-websocket';
 import CodeMirror from 'codemirror/lib/codemirror.js';
 import 'codemirror/addon/edit/closebrackets.js';
 import 'codemirror/addon/comment/comment.js';
+import 'codemirror/addon/scroll/simplescrollbars.js';
 import 'codemirror/mode/ruby/ruby.js';
 import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/mode/sql/sql.js';
@@ -449,7 +450,8 @@ function CodeArea () {
       lineNumbers: true,
       autoCloseBrackets: true,
       theme: 'tomorrow-night-bright',
-      keyMap: 'sublime'
+      keyMap: 'sublime',
+      scrollbarStyle: 'overlay'
     });
 
     cm.setSize('100%', '100%');
