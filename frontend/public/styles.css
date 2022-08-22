@@ -343,6 +343,8 @@ body.is-resizing {
 }
 
 .table-row--heading {
+    font-family: 'Jost', sans-serif;
+    font-size: 0.9rem;
     color: #336791;
     line-height: 0.5em;
 }
