@@ -98,7 +98,7 @@ var sesCli *sesv2.Client
 
 // Timeouts in minutes
 const activationTimeout = 5
-const anonRoomTimeout = 1
+const anonRoomTimeout = 15
 
 // Logger
 var logger = log.New(os.Stderr, "LOG: ", log.Ldate|log.Ltime|log.Lshortfile)
