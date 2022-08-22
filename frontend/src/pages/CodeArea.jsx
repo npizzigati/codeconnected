@@ -245,7 +245,6 @@ function CodeArea () {
   }
 
   function openAuth () {
-    console.log('opening auth');
     setShowAuth(true);
   }
 
@@ -309,7 +308,6 @@ function CodeArea () {
     document.body.classList.add('is-resizing');
 
     const elem = resizeBarDOMRef.current;
-    console.log('clientX: ' + event.clientX);
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
     elem.onpointermove = (moveEvent) => resize(moveEvent, event);
@@ -436,9 +434,7 @@ function CodeArea () {
     // codeSessionID now for purposes of saving the session
     if (isAuthedCreator && codeSessionID.current === -1) {
       codeSessionID.current = await getCodeSessionID(roomID);
-      console.log('codeSessionID: ' + codeSessionID.current);
     }
-    console.log('isAuthedCreator: ' + isAuthedCreator);
     if (expiry !== -1) {
       expiryCountDown(expiry);
     }
@@ -499,11 +495,9 @@ function CodeArea () {
     // y.js connection providers
     const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc);
     // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
-    console.log('About to create WebSocketProvider');
     wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
-    console.log('Just created WebSocketProvider');
     wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
 
     const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.current.awareness);
@@ -522,7 +516,6 @@ function CodeArea () {
       lang.current = ev.target.get('language');
       setLanguage(lang.current);
       setCmLanguage();
-      console.log('language is now: ' + lang.current);
     });
     // Copy a reference to React state
     codeOptions.current = yCodeOptions;
@@ -565,7 +558,6 @@ function CodeArea () {
 
   function focusTerminal (ev) {
     ev.preventDefault();
-    console.log('trying to focus on terminal');
     term.current?.focus();
   }
 
@@ -593,10 +585,7 @@ function CodeArea () {
     if (delta > -1 && delta < 1) {
       return;
     }
-    console.log('delta: ' + delta);
     const direction = (delta > 0) ? 'down' : 'up';
-    console.log('direction: ' + direction);
-    console.log('current term scrollTop: ' + termDomRef.current.scrollTop);
     // Subtract 1 from scrollHeight - clientHeight to provide a
     // range threshold, to account for fact that these properties
     // are integers and scrollTop is fractional
@@ -617,7 +606,6 @@ function CodeArea () {
 
     function getLinesToScroll (delta) {
       const lines = Math.round(delta / 2);
-      console.log(lines);
       return lines;
     }
   }
@@ -639,7 +627,6 @@ function CodeArea () {
   }
 
   async function updateCodeSession () {
-    console.log('going to update code session');
     const content = cmRef.current.getValue();
     const body = JSON.stringify({ codeSessionID: codeSessionID.current, language: lang.current, content });
     const options = {
@@ -651,10 +638,8 @@ function CodeArea () {
     try {
       const response = await fetch('/api/update-code-session', options);
       const json = await response.json();
-      console.log(JSON.stringify(json));
       const status = json.status;
       if (status === 'success') {
-        console.log('Code session successfully updated');
       } else {
         console.error('Error updating code session.');
       }
@@ -831,7 +816,6 @@ function CodeArea () {
     term.current.clear();
     const { lastLine } = getLastTermLineAndNumber();
     const roomID = params.roomID;
-    console.log('lastLine: ' + lastLine);
     // TODO: Send a post request to server with the last line in
     // xterm.js, for server to clear history and insert that last
     // line into history (the prompt line at the top of the screen)
@@ -933,7 +917,6 @@ function CodeArea () {
     const content = cmRef.current.getValue();
     const lines = cmRef.current.lineCount();
     let filename;
-    console.log('In executeContent, language is: ' + lang.current);
     switch (lang.current) {
     case ('ruby'):
       filename = 'code.rb';
