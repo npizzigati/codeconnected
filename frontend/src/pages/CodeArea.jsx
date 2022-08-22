@@ -441,6 +441,11 @@ function CodeArea () {
 
     cm.setSize('100%', '100%');
 
+    // Use Ctrl-Enter to run code
+    cm.setOption('extraKeys', {
+      'Ctrl-Enter': executeContent
+    });
+
     // Copy a reference to code mirror editor to React state
     cmRef.current = cm;
 
@@ -867,7 +872,7 @@ function CodeArea () {
       mode: 'cors',
       headers: { 'Content-Length': '0' }
     };
-    fetch(`/api/runfile?roomID=${params.roomID}&lang=${language}&lines=${lines}`, options)
+    fetch(`/api/runfile?roomID=${params.roomID}&lang=${lang.current}&lines=${lines}`, options)
       .then(response => {
         console.log(response);
       });
@@ -913,7 +918,8 @@ function CodeArea () {
     const content = cmRef.current.getValue();
     const lines = cmRef.current.lineCount();
     let filename;
-    switch (language) {
+    console.log('In executeContent, language is: ' + lang.current);
+    switch (lang.current) {
     case ('ruby'):
       filename = 'code.rb';
       break;
