@@ -7,15 +7,14 @@
 }
 .remote-caret > div {
   position: relative;
-  top: -1.05em;
-  font-size: 0.6rem;
+  top: 1.1em;
+  font-size: 0.5rem;
   font-family: 'Jost', sans-serif;
   font-style: normal;
   font-weight: normal;
-  line-height: normal;
   user-select: none;
   color: white;
-  padding-left: 2px;
-  padding-right: 2px;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
   z-index: 3;
 }
