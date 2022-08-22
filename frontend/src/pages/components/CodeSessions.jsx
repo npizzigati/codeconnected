@@ -83,14 +83,12 @@ function CodeSessions ({ authed, setShowAuth }) {
 
   function handleMouseEnter (ev) {
     Array.from(ev.currentTarget.children).forEach((child) => {
-      console.log(child);
       child.classList.add('shade');
     });
   }
 
   function handleMouseLeave (ev) {
     Array.from(ev.currentTarget.children).forEach((child) => {
-      console.log(child);
       child.classList.remove('shade');
     });
   }
