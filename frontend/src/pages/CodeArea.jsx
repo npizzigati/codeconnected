@@ -100,7 +100,9 @@ function CodeArea () {
       } else {
         username.current = 'Guest';
       }
-      wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
+      if (wsProvider.current !== null) {
+        wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
+      }
     })();
   }, [authed]);
 
