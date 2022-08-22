@@ -42,6 +42,7 @@ function CodeArea () {
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const ws = useRef(null);
+  const wsProvider = useRef(null);
   const flags = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
@@ -89,6 +90,18 @@ function CodeArea () {
       isCanceled = true;
     };
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const userInfo = await getUserInfo();
+      if (userInfo.auth === true) {
+        username.current = userInfo.username;
+      } else {
+        username.current = 'Guest';
+      }
+      wsProvider.current.awareness.setLocalStateField('user', { color: 'gray', name: username.current });
+    })();
+  }, [authed]);
 
   return (
     <>
@@ -485,13 +498,13 @@ function CodeArea () {
     const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc);
     // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
     console.log('About to create WebSocketProvider');
-    const wsProvider = new WebsocketProvider(
+    wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
     console.log('Just created WebSocketProvider');
-    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: username.current });
+    wsProvider.current.awareness.setLocalStateField('user', { color: 'gray', name: username.current });
 
-    const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
+    const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.current.awareness);
 
     const yFlags = ydoc.getMap('flags');
     yFlags.observe(ev => {
