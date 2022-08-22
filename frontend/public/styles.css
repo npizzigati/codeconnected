@@ -825,6 +825,7 @@ body.is-resizing {
 .form {
     padding: 2.5em 1.2em 1.2em 1.2em;
     margin: 0 auto;
+    min-height: 12em;
 }
 
 .form__row {
@@ -981,7 +982,6 @@ body.is-resizing {
     transform: translate(-50%, 0);
     width: fit-content;
     min-width: 24em;
-    min-height: 15em;
     border-radius: 0.7rem;
     box-shadow: 4px 4px 7px 1px #444;
 }
