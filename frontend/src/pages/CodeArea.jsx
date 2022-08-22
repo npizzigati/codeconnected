@@ -46,6 +46,7 @@ function CodeArea () {
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
   const lang = useRef(null);
+  const username = useRef(null);
   const codeSessionID = useRef(-1);
   const [language, setLanguage] = useState('');
   // FIXME: Do I need this? Am I using the ydocRef anywhere?
@@ -63,7 +64,6 @@ function CodeArea () {
   const [runnerReady, setRunnerReady] = useState(false);
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
-  const [username, setUsername] = useState(null);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const cmContainerDOMRef = useRef(null);
   let termWriteTimeout;
@@ -455,7 +455,7 @@ function CodeArea () {
     }
     if (userInfo.auth === true) {
       setAuthed(true);
-      setUsername(userInfo.username);
+      username.current = userInfo.username;
       console.log('signed in as: ' + userInfo.username);
     }
 
@@ -489,7 +489,7 @@ function CodeArea () {
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
     console.log('Just created WebSocketProvider');
-    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'user' });
+    wsProvider.awareness.setLocalStateField('user', { color: 'gray', name: username.current });
 
     const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.awareness);
 
