@@ -246,10 +246,6 @@ function CodeArea () {
     }
   }
 
-  function openAuth () {
-    setShowAuth(true);
-  }
-
   function expiryCountDown (expiry) {
     let secondsToExpiry = expiry - (Math.round(Date.now() / 1000));
     const interval = setInterval(() => {
