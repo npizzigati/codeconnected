@@ -1,6 +1,6 @@
 .remote-caret {
   position: absolute;
-  border-left: black;
+  border-left: white;
   border-left-style: solid;
   border-left-width: 2px;
   height: 1em;
@@ -8,9 +8,8 @@
 .remote-caret > div {
   position: relative;
   top: -1.05em;
-  font-size: 13px;
-  background-color: rgb(250, 129, 0);
-  font-family: serif;
+  font-size: 0.6rem;
+  font-family: 'Jost', sans-serif;
   font-style: normal;
   font-weight: normal;
   line-height: normal;
