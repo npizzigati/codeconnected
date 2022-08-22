@@ -476,7 +476,10 @@ function CodeArea () {
     lang.current = initialLang;
     setCmLanguage();
     showTitles(initialLang);
-    term.current = new Terminal();
+    term.current = new Terminal({
+      fontSize: 12,
+      fontFamily: 'courier, monospace'
+    });
     term.current.open(termDomRef.current);
     term.current.resize(term.current.cols, initialTermRows);
 
