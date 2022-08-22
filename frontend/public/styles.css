@@ -351,17 +351,19 @@ body.is-resizing {
     font-family: 'Jost', sans-serif;
     font-size: 0.9rem;
     font-weight: 400;
-    background-color: #eeeeee;
     color: #444;
 }
 
 .table-row--items:hover {
-    background-color: #dddddd;
     cursor: pointer;
 }
 
 .table-cell {
     display: table-cell;
+}
+
+.table-cell:not(.table-cell--heading) {
+    background-color: #eeeeee;
     border: solid 1px white;
     border-style: solid none;
     padding-left: 0.3em;
@@ -379,6 +381,10 @@ body.is-resizing {
     border-right-style: solid;
     border-top-right-radius: 0.8em;
     border-bottom-right-radius: 0.8em;
+}
+
+.table-cell.shade {
+    background-color: #e4e4e4;
 }
 
 .sign-in-link {

@@ -43,9 +43,9 @@ function CodeSessions ({ authed, setShowAuth }) {
               ? <div className='table-wrapper'>
                   <div className='table'>
                     <div className='table-row table-row--heading'>
-                      <h4 className='table-cell u-width-2'></h4>
-                      <h4 className='table-cell u-width-1'>Lines</h4>
-                      <h4 className='table-cell'>Last Accessed</h4>
+                      <h4 className='table-cell table-cell--heading u-width-2'></h4>
+                      <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
+                      <h4 className='table-cell table-cell--heading'>Last Accessed</h4>
                     </div>
                     {cSessions}
                   </div>
@@ -70,6 +70,8 @@ function CodeSessions ({ authed, setShowAuth }) {
         key={cSession.sessID}
         className='table-row table-row--items'
         onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <span className='table-cell'>{langNameTrans(cSession.lang)}</span>
         <span className='table-cell'>{getLOC(cSession.content)}</span>
@@ -77,6 +79,20 @@ function CodeSessions ({ authed, setShowAuth }) {
       </p>
     );
     return formattedSessions;
+  }
+
+  function handleMouseEnter (ev) {
+    Array.from(ev.currentTarget.children).forEach((child) => {
+      console.log(child);
+      child.classList.add('shade');
+    });
+  }
+
+  function handleMouseLeave (ev) {
+    Array.from(ev.currentTarget.children).forEach((child) => {
+      console.log(child);
+      child.classList.remove('shade');
+    });
   }
 
   async function buildSessionList () {
