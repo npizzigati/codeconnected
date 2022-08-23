@@ -42,6 +42,11 @@
   background: #1d252c;
 }
 
+.CodeMirror-overlayscroll-horizontal div, .CodeMirror-overlayscroll-vertical div:hover {
+  position: absolute;
+  background: #2f3e54;
+}
+
 .CodeMirror-overlayscroll-horizontal, .CodeMirror-overlayscroll-vertical {
   position: absolute;
   z-index: 6;
