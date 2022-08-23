@@ -514,9 +514,11 @@ function CodeArea () {
 
     const yCodeOptions = ydoc.getMap('code options');
     yCodeOptions.observe(ev => {
-      lang.current = ev.target.get('language');
-      setLanguage(lang.current);
-      setCmLanguage();
+      const newLang = ev.target.get('language');
+      lang.current = newLang;
+      setLanguage(newLang);
+      setCmLanguage(newLang);
+      showTitles(newLang);
     });
     // Copy a reference to React state
     codeOptions.current = yCodeOptions;
@@ -611,9 +613,9 @@ function CodeArea () {
     }
   }
 
-  function setCmLanguage () {
+  function setCmLanguage (newLang) {
     let cmLangMode;
-    switch (lang.current) {
+    switch (newLang) {
     case 'node':
       cmLangMode = 'javascript';
       break;
