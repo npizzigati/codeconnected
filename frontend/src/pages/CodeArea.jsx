@@ -439,24 +439,7 @@ function CodeArea () {
 
     setShowCodeMirror(true);
 
-    const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
-      value: '',
-      lineNumbers: true,
-      autoCloseBrackets: true,
-      theme: 'tomorrow-night-bright',
-      keyMap: 'sublime',
-      scrollbarStyle: 'overlay'
-    });
-
-    cm.setSize('100%', '100%');
-
-    // Use Ctrl-Enter to run code
-    cm.setOption('extraKeys', {
-      'Ctrl-Enter': executeContent
-    });
-
-    // Copy a reference to code mirror editor to React state
-    cmRef.current = cm;
+    cmRef.current = setupCodeMirror();
 
     const userInfo = await getUserInfo();
     if (isCanceled) {
@@ -544,6 +527,26 @@ function CodeArea () {
     setupTerminalScroll();
     setupResizeEventListener();
     setPrevTermClientHeight();
+  }
+
+  function setupCodeMirror () {
+    const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
+      value: '',
+      lineNumbers: true,
+      autoCloseBrackets: true,
+      lineWrapping: true,
+      theme: 'tomorrow-night-bright',
+      keyMap: 'sublime',
+      scrollbarStyle: 'overlay'
+    });
+
+    cm.setSize('100%', '100%');
+
+    // Use Ctrl-Enter to run code
+    cm.setOption('extraKeys', {
+      'Ctrl-Enter': executeContent
+    });
+    return cm;
   }
 
   function setPrevTermClientHeight () {
