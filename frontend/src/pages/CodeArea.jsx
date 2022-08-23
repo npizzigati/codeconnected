@@ -535,16 +535,19 @@ function CodeArea () {
       lineNumbers: true,
       autoCloseBrackets: true,
       lineWrapping: true,
+      indentUnit: 2,
+      tabSize: 2,
       theme: 'tomorrow-night-bright',
       keyMap: 'sublime',
-      scrollbarStyle: 'overlay'
+      scrollbarStyle: 'overlay',
     });
 
     cm.setSize('100%', '100%');
 
     // Use Ctrl-Enter to run code
     cm.setOption('extraKeys', {
-      'Ctrl-Enter': executeContent
+      'Ctrl-Enter': executeContent,
+      Tab: betterTab
     });
 
     // Make wrapped lines indent
@@ -557,6 +560,15 @@ function CodeArea () {
     });
 
     return cm;
+  }
+
+  function betterTab (editor) {
+    if (editor.somethingSelected()) {
+      editor.indentSelection('add');
+    } else {
+      const spaces = Array(editor.getOption('indentUnit') + 1).join(' ');
+      editor.replaceSelection(spaces);
+    }
   }
 
   function setPrevTermClientHeight () {
