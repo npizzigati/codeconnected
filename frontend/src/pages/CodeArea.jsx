@@ -453,7 +453,7 @@ function CodeArea () {
 
     setLanguage(initialLang);
     lang.current = initialLang;
-    setCmLanguage();
+    setCmLanguage(initialLang);
     showTitles(initialLang);
     term.current = new Terminal({
       fontSize: 12,
