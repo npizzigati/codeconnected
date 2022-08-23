@@ -484,7 +484,7 @@ function CodeArea () {
     );
     wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
 
-    const binding = new CodemirrorBinding(ytextCode, cm, wsProvider.current.awareness);
+    const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
 
     const yFlags = ydoc.getMap('flags');
     yFlags.observe(ev => {
@@ -520,7 +520,7 @@ function CodeArea () {
     }
 
     if (initialContent.length > 0) {
-      cm.setValue(initialContent);
+      cmRef.current.setValue(initialContent);
     }
     setRunnerReady(true);
     setRoomStatusOpen(roomID);
