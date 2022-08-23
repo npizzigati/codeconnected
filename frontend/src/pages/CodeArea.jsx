@@ -546,6 +546,16 @@ function CodeArea () {
     cm.setOption('extraKeys', {
       'Ctrl-Enter': executeContent
     });
+
+    // Make wrapped lines indent
+    const charWidth = cm.defaultCharWidth();
+    const basePadding = 4;
+    cm.on('renderLine', function (editor, line, elt) {
+      const off = CodeMirror.countColumn(line.text, null, editor.getOption('tabSize')) * charWidth;
+      elt.style.textIndent = '-' + off + 'px';
+      elt.style.paddingLeft = (basePadding + off) + 'px';
+    });
+
     return cm;
   }
 
