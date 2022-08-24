@@ -73,7 +73,7 @@ function CodeSessions ({ authed, setShowAuth }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className='table-cell'>{langNameTrans(cSession.lang)}</span>
+        <span className='table-cell'>&nbsp;{langNameTrans(cSession.lang)}</span>
         <span className='table-cell'>{getLOC(cSession.content)}</span>
         <span className='table-cell'>{dateTrans(cSession.when_accessed)}</span>
       </p>
