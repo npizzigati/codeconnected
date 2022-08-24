@@ -45,7 +45,7 @@ function PopupDialog ({ config }) {
           />
         </div>
         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-          <span className='popup-dialog__text popup-dialog__text--small'>
+          <span className='popup-dialog__text popup-dialog__text--small u-pad-right-1'>
             {option.text}
           </span>
         </div>
