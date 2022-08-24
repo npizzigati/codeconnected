@@ -530,7 +530,12 @@ function CodeArea () {
     term.current.resize(term.current.cols, initialTermRows);
     writeToTerminal(initialHist);
     term.current.onData((data) => {
-      ws.current.send(data.toString());
+      // If ctrl-l (lowecase L) pressed
+      if (data.charCodeAt() === 12) {
+        setTerminalClearFlag();
+      } else {
+        ws.current.send(data.toString());
+      }
     });
   }
 
