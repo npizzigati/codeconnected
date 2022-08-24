@@ -76,7 +76,7 @@ function CodeArea () {
   const popupDialogConfig = {
     message: {
       icon: { path: './attention.png', alt: 'Attention' },
-      text: 'Do you really want to leave this room?'
+      text: 'Do you really want to exit this session?'
     },
     options: [
       {
