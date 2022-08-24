@@ -23,6 +23,7 @@ import { Terminal } from 'xterm';
 import Select from './components/Select.jsx';
 import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
+import PopupDialog from './components/PopupDialog.jsx';
 
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
@@ -68,8 +69,35 @@ function CodeArea () {
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
+  const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const cmContainerDOMRef = useRef(null);
   let termWriteTimeout;
+
+  const popupDialogConfig = {
+    message: {
+      icon: { path: './attention.png', alt: 'Attention' },
+      text: 'Do you really want to leave this room?'
+    },
+    options: [
+      {
+        number: 1,
+        icon: { path: './run.png', alt: 'Login' },
+        text: 'Yes, take me back to the home page.',
+        callback: () => navigate('/')
+      },
+      {
+        number: 2,
+        icon: { path: './stop.png', alt: 'Time-limited' },
+        text: 'No, I want to stay here.',
+        callback: abortBackToHome
+      }
+    ],
+    abortCallback: abortBackToHome
+  };
+
+  function abortBackToHome () {
+    setShowBackToHomeDialog(false);
+  }
 
   useEffect(() => {
     let isCanceled = false;
@@ -130,9 +158,16 @@ function CodeArea () {
           </div>}
         {showAuth &&
           <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
+        {showBackToHomeDialog &&
+          <div>
+            <PopupDialog config={popupDialogConfig} />
+          </div>}
         <header>
           <div className='flex-pane'>
-            <div className='media u-marg-left-1'>
+            <div
+              className='media u-marg-left-1'
+              onPointerDown={() => { setShowBackToHomeDialog(true) }}
+            >
               <div className='media__image-container'>
                 <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
               </div>
