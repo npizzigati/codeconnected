@@ -42,7 +42,7 @@ function Home () {
   const popupDialogConfig = {
     message: {
       icon: { path: './attention.png', alt: 'Attention' },
-      text: 'Rooms created by unregistered users have a 15-minute time limit'
+      text: 'Sessions created by unregistered users have a 15-minute time limit'
     },
     options: [
       {
@@ -54,7 +54,7 @@ function Home () {
       {
         number: 2,
         icon: { path: './run.png', alt: 'Time-limited' },
-        text: 'Continue to time-limited room',
+        text: 'Continue to time-limited session',
         callback: continueAnyway
       }
     ],
