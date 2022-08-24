@@ -456,17 +456,8 @@ function CodeArea () {
     lang.current = initialLang;
     setCmLanguage(initialLang);
     showTitles(initialLang);
-    term.current = new Terminal({
-      fontSize: 12,
-      fontFamily: 'courier, monospace'
-    });
-    term.current.open(termDomRef.current);
-    term.current.resize(term.current.cols, initialTermRows);
 
-    writeToTerminal(initialHist);
-    term.current.onData((data) => {
-      ws.current.send(data.toString());
-    });
+    setupTerminal(initialHist);
 
     ws.current = openWs(roomID);
 
@@ -528,6 +519,19 @@ function CodeArea () {
     setupTerminalScroll();
     setupResizeEventListener();
     setPrevTermClientHeight();
+  }
+
+  function setupTerminal (initialHist) {
+    term.current = new Terminal({
+      fontSize: 12,
+      fontFamily: 'courier, monospace'
+    });
+    term.current.open(termDomRef.current);
+    term.current.resize(term.current.cols, initialTermRows);
+    writeToTerminal(initialHist);
+    term.current.onData((data) => {
+      ws.current.send(data.toString());
+    });
   }
 
   function setupCodeMirror () {
