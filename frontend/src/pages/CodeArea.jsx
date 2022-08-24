@@ -111,6 +111,9 @@ function CodeArea () {
     // has closed.
     window.addEventListener('online', onlineEventHandler);
 
+    // Escape key to close modal dialogs
+    document.addEventListener('keydown', closeModalsOnEscape);
+
     (async () => {
       await setup(isCanceled);
     })();
@@ -270,6 +273,14 @@ function CodeArea () {
       </div>
     </>
   );
+
+  function closeModalsOnEscape (event) {
+    console.log(event.keyCode);
+    if (event.keyCode !== 27) {
+      return;
+    }
+    setShowBackToHomeDialog(false);
+  }
 
   function executeReplAction (ev) {
     switch (ev.target.dataset.value) {
