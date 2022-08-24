@@ -150,10 +150,10 @@ function Home () {
                       onPointerDown={() => preLaunch('ruby')}
                     >
                       <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
-                        <img className='media__image media__image--small' src='./ruby.png' alt='Ruby icon' />
+                        <img className='media__image media__image--smaller' src='./ruby.png' alt='Ruby icon' />
                       </div>
                       <div className='media__text'>
-                        <div>
+                        <div className='u-pad-left-1'>
                           <span className='thin-font'>Ruby</span>
                         </div>
                       </div>
@@ -167,10 +167,10 @@ function Home () {
                       onPointerDown={() => preLaunch('node')}
                     >
                       <div className='media__image-container'>
-                        <img className='media__image media__image--small' src='./node.png' alt='Node icon' />
+                        <img className='media__image media__image--smaller' src='./node.png' alt='Node icon' />
                       </div>
                       <div className='media__text'>
-                        <div>
+                        <div className='u-pad-left-1'>
                           <span className='thin-font'>Javascript</span>
                         </div>
                       </div>
@@ -184,10 +184,10 @@ function Home () {
                       onPointerDown={() => preLaunch('postgres')}
                     >
                       <div className='media__image-container'>
-                        <img className='media__image media__image--small' src='./postgres.png' alt='Postgres icon' />
+                        <img className='media__image media__image--smaller' src='./postgres.png' alt='Postgres icon' />
                       </div>
                       <div className='media__text'>
-                        <div>
+                        <div className='u-pad-left-1'>
                           <span className='thin-font'>PostgreSQL</span>
                         </div>
                       </div>

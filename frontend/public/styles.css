@@ -87,7 +87,7 @@ body.is-resizing {
 }
 
 .media--with-background {
-    background-color: #eeeeee;
+    background: radial-gradient(#f8f8f8, #eeeeee);
     border-radius: 4em;
     padding: 0.5em 2em;
 }
@@ -98,11 +98,11 @@ body.is-resizing {
 
 .media--constrained {
     height: 5em;
-    width: 12em;
+    width: 14em;
 }
 
 .media--with-background:hover {
-    background-color: #dddddd;
+    background: #dddddd;
     border: none;
 }
 
@@ -125,6 +125,11 @@ body.is-resizing {
 
 .media__image--small {
     height: 3.5em;
+    width: auto;
+}
+
+.media__image--smaller {
+    height: 3em;
     width: auto;
 }
 
