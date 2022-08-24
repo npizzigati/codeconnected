@@ -771,7 +771,6 @@ function CodeArea () {
   // to the bottom edge of the xterm viewport
   function getDistancePastBottom () {
     const { lastLineNum } = getLastTermLineAndNumber();
-    console.log('lastLineNum: ' + lastLineNum);
     // Last line num is zero indexed, so add one
     let heightRatio = (lastLineNum + 1) / initialTermRows;
     if (heightRatio > 1) {
@@ -897,7 +896,6 @@ function CodeArea () {
   function insertHardLineBreaks (text) {
     let cnt = 0;
     const newArr = [];
-    console.log('initialTermCols: ' + initialTermCols);
     for (let i = 0; i < text.length; i++) {
       cnt++;
       if (cnt > initialTermCols) {
