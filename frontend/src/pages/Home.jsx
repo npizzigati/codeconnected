@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import UserQuickdash from './components/UserQuickdash.jsx';
+import PopupDialog from './components/PopupDialog.jsx';
 import Auth from './components/Auth.jsx';
 import CodeSessions from './components/CodeSessions.jsx';
 
@@ -38,6 +39,28 @@ function Home () {
     };
   }, []);
 
+  const popupDialogConfig = {
+    message: {
+      icon: { path: './attention.png', alt: 'Attention' },
+      text: 'Rooms created by unregistered users have a 15-minute time limit'
+    },
+    options: [
+      {
+        number: 1,
+        icon: { path: './login.png', alt: 'Login' },
+        text: 'Sign in to remove time limit',
+        callback: preLaunchSignIn
+      },
+      {
+        number: 2,
+        icon: { path: './run.png', alt: 'Time-limited' },
+        text: 'Continue to time-limited room',
+        callback: continueAnyway
+      }
+    ],
+    abortCallback: abortPreLaunch
+  };
+
   return (
     <>
       {authChecked &&
@@ -51,61 +74,7 @@ function Home () {
             />}
           {showPreLaunchDialog &&
             <div>
-              <div className='backdrop' onPointerDown={abortPreLaunch} />
-              <div className='popup-dialog'>
-                <div className='media'>
-                  <div className='media__image-container'>
-                    <img
-                      className='media__image media__image--small'
-                      src='./attention.png'
-                      alt='Attention'
-                    />
-                  </div>
-                  <div className='media__text media__text--constrained'>
-                    <div>
-                      <span className='popup-dialog__text'>
-                        Rooms created by unregistered users have a 15-minute time limit.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className='aligned-block'>
-                  <div
-                    className='aligned-block__row aligned-block__row--clickable'
-                    onPointerDown={preLaunchSignIn}
-                  >
-                    <div className='aligned-block__cell u-right-align-text'>
-                      <img
-                        className='aligned-block__image aligned-block__image--tinier'
-                        src='./login.png'
-                        alt='Login'
-                      />
-                    </div>
-                    <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                      <span className='popup-dialog__text popup-dialog__text--small'>
-                        Sign in to remove time limit
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className='aligned-block__row aligned-block__row--clickable'
-                    onPointerDown={continueAnyway}
-                  >
-                    <div className='aligned-block__cell u-right-align-text'>
-                      <img
-                        className='aligned-block__image aligned-block__image--tinier'
-                        src='./run.png'
-                        alt='Time-limited'
-                      />
-                    </div>
-                    <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                      <span className='popup-dialog__text popup-dialog__text--small'>
-                        Continue to time-limited room&nbsp;&nbsp;
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <PopupDialog config={popupDialogConfig} />
             </div>}
           <header>
             <div className='flex-pane'>
