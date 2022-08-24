@@ -171,7 +171,7 @@ function Home () {
                       </div>
                       <div className='media__text'>
                         <div>
-                          <span className='thin-font'>Node.js</span>
+                          <span className='thin-font'>Javascript</span>
                         </div>
                       </div>
                     </div>

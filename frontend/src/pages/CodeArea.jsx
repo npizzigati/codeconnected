@@ -166,7 +166,7 @@ function CodeArea () {
               <span className='editor-lang-label'>Language:&nbsp;</span>
               <Select
                 options={[{ value: 'ruby', label: 'Ruby' },
-                          { value: 'node', label: 'Node.js' },
+                          { value: 'node', label: 'Javascript' },
                           { value: 'postgres', label: 'PostgreSQL' }]}
                 title={cmTitle}
                 callback={(ev) => {
@@ -754,7 +754,7 @@ function CodeArea () {
     switch (lang) {
     case 'node':
       setReplTitle('Node.js REPL');
-      setCmTitle('Node.js');
+      setCmTitle('Javascript');
       break;
     case 'ruby':
       setReplTitle('Ruby REPL (Pry)');
