@@ -33,6 +33,7 @@ function CodeArea () {
   const params = useParams();
   const roomID = params.roomID;
   const initialTermRows = 200;
+  const initialTermCols = 80;
   const fakeScrollHeight = 100000;
   const fakeScrollMidpoint = 50000;
   const codeAreaDOMRef = useRef(null);
@@ -355,7 +356,7 @@ function CodeArea () {
   }
 
   async function prepareRoom (roomID, isCanceled) {
-    const body = JSON.stringify({ roomID, rows: initialTermRows });
+    const body = JSON.stringify({ roomID, rows: initialTermRows, cols: initialTermCols });
     const options = {
       method: 'POST',
       mode: 'cors',
@@ -761,6 +762,7 @@ function CodeArea () {
   // to the bottom edge of the xterm viewport
   function getDistancePastBottom () {
     const { lastLineNum } = getLastTermLineAndNumber();
+    console.log('lastLineNum: ' + lastLineNum);
     // Last line num is zero indexed, so add one
     let heightRatio = (lastLineNum + 1) / initialTermRows;
     if (heightRatio > 1) {
@@ -809,8 +811,10 @@ function CodeArea () {
     if (termDomRef.current === null) {
       return;
     }
+    console.log('Aligning last line to bottom');
     const bottomMargin = 5;
     const distancePastBottom = getDistancePastBottom();
+    console.log('DistancePastBottom: ' + distancePastBottom);
     termDomRef.current.scrollBy(0, distancePastBottom + bottomMargin);
     if (distancePastBottom > 0) {
       // Also scroll xterm.js internal scrolling to bottom
@@ -875,8 +879,36 @@ function CodeArea () {
     return text;
   }
 
+  // xterm.js returns long lines intact when getting the text
+  // from a selection, regardless of how it looks on the screen
+  // (i.e., there are no hard line breaks where the terminal
+  // visually breaks at the max column number).
+  // Insert a hard line break in each line over max columns at
+  // each max column interval
+  function insertHardLineBreaks (text) {
+    let cnt = 0;
+    const newArr = [];
+    console.log('initialTermCols: ' + initialTermCols);
+    for (let i = 0; i < text.length; i++) {
+      cnt++;
+      if (cnt > initialTermCols) {
+        newArr.push('\n' + text[i]);
+        cnt = 1;
+        continue;
+      } else if (text[i] === '\n') {
+        newArr.push('\n');
+        cnt = 0;
+        continue;
+      } else {
+        newArr.push(text[i]);
+      }
+    }
+    return newArr.join('');
+  }
+
   function getLastTermLineAndNumber () {
-    const text = getTerminalText();
+    let text = getTerminalText();
+    text = insertHardLineBreaks(text);
     const lines = text.split('\n');
 
     // Remove blank lines at end

@@ -470,6 +470,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
 		Rows   int
+		Cols   int
 	}
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
@@ -504,7 +505,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
 
-	if err = startContainer(room.lang, roomID, rm.Rows); err != nil {
+	if err = startContainer(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		logger.Printf("Could not start container for room %s", roomID)
 		return
@@ -905,7 +906,7 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // TODO: Move error handling to createRoom (return error here
 // along with containerDetails)
-func startContainer(lang, roomID string, rows int) error {
+func startContainer(lang, roomID string, rows int, cols int) error {
 	room := rooms[roomID]
 	cn := room.container
 	ctx := context.Background()
@@ -934,7 +935,7 @@ func startContainer(lang, roomID string, rows int) error {
 	cn.ID = resp.ID
 
 	logger.Println("Will try to set rows to: ", rows)
-	if err := resizeTTY(cn, 80, rows); err != nil {
+	if err := resizeTTY(cn, cols, rows); err != nil {
 		logger.Println("Error setting initial tty size: ", err)
 	}
 	// Sql container needs a pause to startup postgres
