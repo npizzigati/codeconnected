@@ -9,6 +9,7 @@ import Auth from './components/Auth.jsx';
 import CodeSessions from './components/CodeSessions.jsx';
 
 import { requestRoom } from '../helpers/launchUtils.js';
+import { handlePointerDown } from '../helpers/miscUtils.js';
 
 function Home () {
   const [auth, setAuth] = useState(false);
@@ -188,14 +189,6 @@ function Home () {
         </div>}
     </>
   );
-
-  function handlePointerDown (ev, callback, ...args) {
-    // Do nothing if this is a mouse click and not the primary button
-    if (ev.pointerType === 'mouse' && ev.isPrimary) {
-      return;
-    }
-    callback(...args);
-  }
 
   function closeModals (event) {
     console.log(event.keyCode);
