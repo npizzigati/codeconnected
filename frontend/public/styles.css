@@ -1310,6 +1310,11 @@ body.is-resizing {
 .u-width-2 {
     width: 35%
 }
+
+.u-clickable {
+    cursor: pointer;
+}
+
 /* @media (max-width: 500px), (max-height: 220px) { */
 /*     :root { */
 /*         font-size: calc(0.5em + .5vh); */
