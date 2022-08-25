@@ -144,7 +144,7 @@ function CodeArea () {
         username.current = 'Guest';
       }
       if (wsProvider.current !== null) {
-        wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
+        wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: getYjsDisplayName() });
       }
     })();
   }, [authed]);
@@ -289,6 +289,11 @@ function CodeArea () {
       </div>
     </>
   );
+
+  function getYjsDisplayName () {
+    // Only use first name
+    return username.current.split(' ')[0];
+  }
 
   function fireKeydownEvents (event) {
     // Escape is keyCode 27
@@ -535,7 +540,7 @@ function CodeArea () {
     wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
-    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
+    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: getYjsDisplayName() });
 
     const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
 
