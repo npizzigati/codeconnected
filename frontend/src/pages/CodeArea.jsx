@@ -173,7 +173,7 @@ function CodeArea () {
               className='media u-marg-left-1'
             >
               <div
-                className='media__image-container'
+                className='media__image-container u-clickable'
                 onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
               >
                 <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
@@ -182,7 +182,7 @@ function CodeArea () {
                 className='media__text'
                 onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
               >
-                <div className='site-name site-name--small'>
+                <div className='site-name site-name--small u-clickable'>
                   <span className='site-name--color1'>code</span>
                   <span className='site-name--color2'>connected</span>
                 </div>
