@@ -22,6 +22,9 @@ function UserQuickdash ({ setAuthed }) {
 
     document.addEventListener('pointerdown', handleDocPointerDown);
 
+    // If escape key custom event fires, close this component's modal dialog
+    document.addEventListener('escapePressed', hideQuickdash);
+
     let userInfo;
     let isCanceled = false;
     (async () => {
