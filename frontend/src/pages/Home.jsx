@@ -42,19 +42,19 @@ function Home () {
 
   const popupDialogConfig = {
     message: {
-      icon: { path: './attention.png', alt: 'Attention' },
+      icon: { path: './images/attention.png', alt: 'Attention' },
       text: 'Sessions created by unregistered users have a 15-minute time limit'
     },
     options: [
       {
         number: 1,
-        icon: { path: './login.png', alt: 'Login' },
+        icon: { path: './images/login.png', alt: 'Login' },
         text: 'Sign in to remove time limit',
         callback: preLaunchSignIn
       },
       {
         number: 2,
-        icon: { path: './run.png', alt: 'Time-limited' },
+        icon: { path: './images/run.png', alt: 'Time-limited' },
         text: 'Continue to time-limited session',
         callback: continueAnyway
       }
@@ -81,7 +81,7 @@ function Home () {
             <div className='flex-pane'>
               <div className='media u-marg-left-1'>
                 <div className='media__image-container'>
-                  <img className='media__image media__image--small u-marg-top-2' src='./codeconnected.png' alt='Logo' />
+                  <img className='media__image media__image--small u-marg-top-2' src='./images/codeconnected.png' alt='Logo' />
                 </div>
                 <div className='media__text'>
                   <div>
@@ -120,7 +120,7 @@ function Home () {
                       onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
                     >
                       <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
-                        <img className='media__image media__image--smaller' src='./ruby.png' alt='Ruby icon' />
+                        <img className='media__image media__image--smaller' src='./images/ruby.png' alt='Ruby icon' />
                       </div>
                       <div className='media__text'>
                         <div className='u-pad-left-1'>
@@ -137,7 +137,7 @@ function Home () {
                       onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
                     >
                       <div className='media__image-container'>
-                        <img className='media__image media__image--smaller' src='./node.png' alt='Node icon' />
+                        <img className='media__image media__image--smaller' src='./images/node.png' alt='Node icon' />
                       </div>
                       <div className='media__text'>
                         <div className='u-pad-left-1'>
@@ -154,7 +154,7 @@ function Home () {
                       onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
                     >
                       <div className='media__image-container'>
-                        <img className='media__image media__image--smaller' src='./postgres.png' alt='Postgres icon' />
+                        <img className='media__image media__image--smaller' src='./images/postgres.png' alt='Postgres icon' />
                       </div>
                       <div className='media__text'>
                         <div className='u-pad-left-1'>

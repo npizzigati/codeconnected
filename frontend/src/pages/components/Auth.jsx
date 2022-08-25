@@ -14,19 +14,19 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
 
   const popupDialogConfig = {
     message: {
-      icon: { path: './attention.png', alt: 'Attention' },
+      icon: { path: './images/attention.png', alt: 'Attention' },
       text: 'If you switch tabs now, the current process will be aborted'
     },
     options: [
       {
         number: 1,
-        icon: { path: './stay.png', alt: 'Stay' },
+        icon: { path: './images/stay.png', alt: 'Stay' },
         text: 'Stay on the current tab',
         callback: closeTabSwitchDialog
       },
       {
         number: 2,
-        icon: { path: './switchTab.png', alt: 'Switch tab' },
+        icon: { path: './images/switchTab.png', alt: 'Switch tab' },
         text: 'Switch tabs anyway',
         callback: switchTab
       }

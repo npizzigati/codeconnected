@@ -46,7 +46,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
             <label className='form__label' htmlFor='email'>
               <img
                 className='form__label-img'
-                src='./mail.png'
+                src='./images/mail.png'
                 alt='email icon'
               />
             </label>
@@ -72,7 +72,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
             <label className='form__label' htmlFor='password'>
               <img
                 className='form__label-img'
-                src='./key_icon.png'
+                src='./images/key_icon.png'
                 alt='password icon'
               />
             </label>
@@ -112,7 +112,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
               <label className='form__label' htmlFor='email'>
                 <img
                   className='form__label-img'
-                  src='./mail.png'
+                  src='./images/mail.png'
                   alt='email icon'
                 />
               </label>
@@ -152,7 +152,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
             <label className='form__label' htmlFor='password'>
               <img
                 className='form__label-img'
-                src='./key_icon.png'
+                src='./images/key_icon.png'
                 alt='password icon'
               />
             </label>
@@ -179,7 +179,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
             <label className='form__label' htmlFor='passwordDup'>
               <img
                 className='form__label-img'
-                src='./key_icon.png'
+                src='./images/key_icon.png'
                 alt='password icon'
               />
             </label>

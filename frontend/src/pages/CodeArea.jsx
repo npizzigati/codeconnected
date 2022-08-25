@@ -79,19 +79,19 @@ function CodeArea () {
 
   const popupDialogConfig = {
     message: {
-      icon: { path: './attention.png', alt: 'Attention' },
+      icon: { path: './images/attention.png', alt: 'Attention' },
       text: 'Do you really want to exit this session?'
     },
     options: [
       {
         number: 1,
-        icon: { path: './run.png', alt: 'Login' },
+        icon: { path: './images/run.png', alt: 'Login' },
         text: 'Yes, take me back to the home page.',
         callback: () => navigate('/')
       },
       {
         number: 2,
-        icon: { path: './stop.png', alt: 'Time-limited' },
+        icon: { path: './images/stop.png', alt: 'Time-limited' },
         text: 'No, I want to stay here.',
         callback: abortBackToHome
       }
@@ -185,7 +185,7 @@ function CodeArea () {
                 className='media__image-container u-clickable'
                 onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
               >
-                <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
+                <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
               </div>
               <div
                 className='media__text'

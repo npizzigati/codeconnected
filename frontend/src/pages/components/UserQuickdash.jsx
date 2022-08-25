@@ -49,7 +49,7 @@ function UserQuickdash ({ setAuthed }) {
     <>
       <img
         className='account-circle'
-        src='./account_circle.png'
+        src='./images/account_circle.png'
         alt='account circle'
         ref={avatar}
         onPointerDown={(ev) => handlePointerDown(ev, toggleQuickdash, ev)}
@@ -65,7 +65,7 @@ function UserQuickdash ({ setAuthed }) {
           <div className='aligned-block__cell'>
             <img
               className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
-              src='./blank_avatar.png'
+              src='./images/blank_avatar.png'
               alt='User'
             />
           </div>
@@ -77,7 +77,7 @@ function UserQuickdash ({ setAuthed }) {
           <div className='aligned-block__cell'>
             <img
               className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
-              src='./mail.png'
+              src='./images/mail.png'
               alt='email'
             />
           </div>

@@ -58,7 +58,7 @@ function Select ({ options, title, callback, config }) {
           onPointerDown={(ev) => handlePointerDown(ev, toggleDropdown, ev)}
         >
           <div ref={titlePart} className='select-title'>{title}</div>
-          <img className='select__expand-icon' ref={arrow} src='./expand_more.png' alt='expand icon' />
+          <img className='select__expand-icon' ref={arrow} src='./images/expand_more.png' alt='expand icon' />
         </div>
         <div
           ref={dropdown}
