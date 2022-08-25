@@ -282,7 +282,6 @@ function CodeArea () {
   );
 
   function closeModalsOnEscape (event) {
-    console.log(event.keyCode);
     if (event.keyCode !== 27) {
       return;
     }
@@ -872,10 +871,8 @@ function CodeArea () {
     if (termDomRef.current === null) {
       return;
     }
-    console.log('Aligning last line to bottom');
     const bottomMargin = 5;
     const distancePastBottom = getDistancePastBottom();
-    console.log('DistancePastBottom: ' + distancePastBottom);
     termDomRef.current.scrollBy(0, distancePastBottom + bottomMargin);
     if (distancePastBottom > 0) {
       // Also scroll xterm.js internal scrolling to bottom
