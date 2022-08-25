@@ -73,6 +73,8 @@ function CodeArea () {
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const cmContainerDOMRef = useRef(null);
+  // Custom event to closeModals
+  const escapePressedEvent = new Event('escapePressed');
   let termWriteTimeout;
 
   const popupDialogConfig = {
@@ -101,6 +103,10 @@ function CodeArea () {
     setShowBackToHomeDialog(false);
   }
 
+  function closeModals () {
+    setShowBackToHomeDialog(false);
+  }
+
   useEffect(() => {
     let isCanceled = false;
     function onlineEventHandler () {
@@ -113,8 +119,11 @@ function CodeArea () {
     // has closed.
     window.addEventListener('online', onlineEventHandler);
 
-    // Escape key to close modal dialogs
-    document.addEventListener('keydown', closeModalsOnEscape);
+    // Fire custom events on keydown
+    document.addEventListener('keydown', fireKeydownEvents);
+
+    // If escape custom event fires, close this component's modal dialogs
+    document.addEventListener('escapePressed', closeModals);
 
     (async () => {
       await setup(isCanceled);
@@ -281,11 +290,11 @@ function CodeArea () {
     </>
   );
 
-  function closeModalsOnEscape (event) {
-    if (event.keyCode !== 27) {
-      return;
+  function fireKeydownEvents (event) {
+    // Escape is keyCode 27
+    if (event.keyCode === 27) {
+      document.dispatchEvent(escapePressedEvent);
     }
-    setShowBackToHomeDialog(false);
   }
 
   function executeReplAction (ev) {
