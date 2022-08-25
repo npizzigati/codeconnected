@@ -109,7 +109,7 @@ function Home () {
             <div className='flex-pane flex-pane--narrow'>
               <div className='flex-container flex-container--col'>
                 <div>
-                  <h1 className='u-marg-top-3 u-marg-bot-2 u-center-text'>Start a new coding session</h1>
+                  <h1 className='u-marg-top-3 u-marg-bot-2 u-center-text'>Start a new collaborative coding session</h1>
                 </div>
                 <div className='flex-container flex-container-wrap'>
                   <div
