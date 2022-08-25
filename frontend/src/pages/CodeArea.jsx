@@ -171,12 +171,17 @@ function CodeArea () {
           <div className='flex-pane'>
             <div
               className='media u-marg-left-1'
-              onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
             >
-              <div className='media__image-container'>
+              <div
+                className='media__image-container'
+                onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
+              >
                 <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
               </div>
-              <div className='media__text'>
+              <div
+                className='media__text'
+                onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
+              >
                 <div className='site-name site-name--small'>
                   <span className='site-name--color1'>code</span>
                   <span className='site-name--color2'>connected</span>
