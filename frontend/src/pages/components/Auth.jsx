@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import SignIn from './SignIn.jsx';
 import SignUp from './SignUp.jsx';
+import PopupDialog from './PopupDialog.jsx';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
@@ -10,6 +11,29 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
   const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
   const [showTabSwitchDialog, setShowTabSwitchDialog] = useState(false);
+
+  const popupDialogConfig = {
+    message: {
+      icon: { path: './attention.png', alt: 'Attention' },
+      text: 'If you switch tabs now, the current process will be aborted'
+    },
+    options: [
+      {
+        number: 1,
+        icon: { path: './stay.png', alt: 'Stay' },
+        text: 'Stay on the current tab',
+        callback: closeTabSwitchDialog
+      },
+      {
+        number: 2,
+        icon: { path: './switchTab.png', alt: 'Switch tab' },
+        text: 'Switch tabs anyway',
+        callback: switchTab
+      }
+    ],
+    abortCallback: closeTabSwitchDialog
+  };
+
   return (
     <>
       {showTabSwitchDialog &&
@@ -18,62 +42,8 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
             className='backdrop backdrop--level2'
             onPointerDown={(ev) => handlePointerDown(ev, closeTabSwitchDialog, ev)}
           />
-          <div className='popup-dialog'>
-            <div className='media'>
-              <div className='media__image-container'>
-                <img
-                  className='media__image media__image--small'
-                  src='./attention.png'
-                  alt='Attention'
-                />
-              </div>
-              <div className='media__text media__text--constrained'>
-                <div>
-                  <span className='popup-dialog__text'>
-                    If you switch tabs now, the current process will be aborted
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className='aligned-block'>
-              <div
-                className='aligned-block__row aligned-block__row--clickable'
-                onPointerDown={(ev) => handlePointerDown(ev, closeTabSwitchDialog, ev)}
-              >
-                <div className='aligned-block__cell u-right-align-text'>
-                  <img
-                    className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
-                    src='./stay.png'
-                    alt='Login'
-                  />
-                </div>
-                <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                  <span className='popup-dialog__text popup-dialog__text--small'>
-                    Stay on current tab
-                  </span>
-                </div>
-              </div>
-              <div
-                className='aligned-block__row aligned-block__row--clickable'
-                onPointerDown={(ev) => handlePointerDown(ev, switchTab, ev)}
-              >
-                <div className='aligned-block__cell u-right-align-text'>
-                  <img
-                    className='aligned-block__image aligned-block__image--tinier'
-                    src='./switchTab.png'
-                    alt='Time-limited'
-                  />
-                </div>
-                <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                  <span className='popup-dialog__text popup-dialog__text--small'>
-                    Switch tabs anyway&nbsp;&nbsp;
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PopupDialog config={popupDialogConfig} />
         </div>}
-
       <div className='backdrop' />
       <div className='tabbed-modal'>
         <div className='close-button__container'>
