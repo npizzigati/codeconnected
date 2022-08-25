@@ -13,7 +13,6 @@ function Select ({ options, title, callback, config }) {
   useEffect(() => {
     document.addEventListener('pointerdown', (ev) => {
       if (ev.target !== titlePart.current && ev.target !== arrow.current) {
-        console.log('outside');
         hideDropdown();
       }
     });
