@@ -98,7 +98,7 @@ function Home () {
                 ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuth} /></div>
                 : <div
                     className='sign-in-link u-marg-left-auto'
-                    onPointerDown={() => setShowAuth(true)}
+                    onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
                   >
                     Sign in
                   </div>}
@@ -116,7 +116,7 @@ function Home () {
                   >
                     <div
                       className='media media--with-background media--centered media--constrained'
-                      onPointerDown={() => preLaunch('ruby')}
+                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
                     >
                       <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
                         <img className='media__image media__image--smaller' src='./ruby.png' alt='Ruby icon' />
@@ -133,7 +133,7 @@ function Home () {
                   >
                     <div
                       className='media media--with-background media--centered media--constrained'
-                      onPointerDown={() => preLaunch('node')}
+                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
                     >
                       <div className='media__image-container'>
                         <img className='media__image media__image--smaller' src='./node.png' alt='Node icon' />
@@ -150,7 +150,7 @@ function Home () {
                   >
                     <div
                       className='media media--with-background media--centered media--constrained'
-                      onPointerDown={() => preLaunch('postgres')}
+                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
                     >
                       <div className='media__image-container'>
                         <img className='media__image media__image--smaller' src='./postgres.png' alt='Postgres icon' />
@@ -188,6 +188,14 @@ function Home () {
         </div>}
     </>
   );
+
+  function handlePointerDown (ev, callback, ...args) {
+    // Do nothing if this is a mouse click and not the primary button
+    if (ev.pointerType === 'mouse' && ev.isPrimary) {
+      return;
+    }
+    callback(...args);
+  }
 
   function closeModals (event) {
     console.log(event.keyCode);
