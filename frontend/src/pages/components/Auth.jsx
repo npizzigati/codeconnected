@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import SignIn from './SignIn.jsx';
 import SignUp from './SignUp.jsx';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
   const [selectedTab, setSelectedTab] = useState('signIn');
@@ -13,7 +14,10 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
     <>
       {showTabSwitchDialog &&
         <div>
-          <div className='backdrop backdrop--level2' onPointerDown={closeTabSwitchDialog} />
+          <div
+            className='backdrop backdrop--level2'
+            onPointerDown={(ev) => handlePointerDown(ev, closeTabSwitchDialog, ev)}
+          />
           <div className='popup-dialog'>
             <div className='media'>
               <div className='media__image-container'>
@@ -34,7 +38,7 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
             <div className='aligned-block'>
               <div
                 className='aligned-block__row aligned-block__row--clickable'
-                onPointerDown={closeTabSwitchDialog}
+                onPointerDown={(ev) => handlePointerDown(ev, closeTabSwitchDialog, ev)}
               >
                 <div className='aligned-block__cell u-right-align-text'>
                   <img
@@ -51,7 +55,7 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
               </div>
               <div
                 className='aligned-block__row aligned-block__row--clickable'
-                onPointerDown={switchTab}
+                onPointerDown={(ev) => handlePointerDown(ev, switchTab, ev)}
               >
                 <div className='aligned-block__cell u-right-align-text'>
                   <img
@@ -73,20 +77,23 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
       <div className='backdrop' />
       <div className='tabbed-modal'>
         <div className='close-button__container'>
-          <div className='close-button' onPointerDown={closeAuth} />
+          <div
+            className='close-button'
+            onPointerDown={(ev) => handlePointerDown(ev, closeAuth, ev)}
+          />
         </div>
         <div className='tabbed-modal__tab-container'>
           <div
             id='sign-in-tab'
             className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signIn') ? ' selected' : '')}
-            onPointerDown={handleTabClick}
+            onPointerDown={(ev) => handlePointerDown(ev, handleTabClick, ev)}
           >
             Sign in
           </div>
           <div
             id='sign-up-tab'
             className={'tabbed-modal__tab u-no-select' + ((selectedTab === 'signUp') ? ' selected' : '')}
-            onPointerDown={handleTabClick}
+            onPointerDown={(ev) => handlePointerDown(ev, handleTabClick, ev)}
           >
             Sign up
           </div>

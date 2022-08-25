@@ -1,6 +1,7 @@
 'use strict';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
   const [email, setEmail] = useState('');
@@ -96,7 +97,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
           <button className='form__submit-button u-center-block u-marg-top-1 u-marg-bot-2' type='submit'>Sign in</button>
           <span
             className='form__bottom-link u-marg-top-3'
-            onPointerDown={showForgotPassword}
+            onPointerDown={(ev) => handlePointerDown(ev, showForgotPassword, ev)}
           >
             Forgot your password?
           </span>
@@ -136,7 +137,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
             <button className='form__submit-button u-center-block u-marg-top-2' type='submit'>Verify</button>
             <span
               className='form__bottom-link u-marg-top-3'
-              onPointerDown={goBackToSignIn}
+              onPointerDown={(ev) => handlePointerDown(ev, goBackToSignIn, ev)}
             >
               Go back to sign-in form
             </span>
@@ -222,7 +223,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
           <button className='form__submit-button u-center-block u-marg-top-1' type='submit'>Reset password</button>
           <span
             className='form__bottom-link u-marg-top-3'
-            onPointerDown={goBackToSignIn}
+            onPointerDown={(ev) => handlePointerDown(ev, goBackToSignIn, ev)}
           >
             Go back to sign-in form
           </span>
@@ -232,7 +233,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
           <span className='form__subheading form__subheading--medium'>Password successfully reset!</span>
           <span
             className='form__bottom-link u-marg-top-3'
-            onPointerDown={goBackToSignIn}
+            onPointerDown={(ev) => handlePointerDown(ev, goBackToSignIn, ev)}
           >
             Go to sign-in form
           </span>

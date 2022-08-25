@@ -1,6 +1,7 @@
 'use strict';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
   const [email, setEmail] = useState('');
@@ -176,13 +177,13 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
             <button className='form__submit-button u-center-block u-marg-top-1' type='submit'>Complete Registration</button>
             <span
               className='form__bottom-link u-marg-top-3'
-              onPointerDown={resendEmail}
+              onPointerDown={(ev) => handlePointerDown(ev, resendEmail, ev)}
             >
               Resend activation code
             </span>
             <span
               className='form__bottom-link u-marg-top-1'
-              onPointerDown={goBackToSignUp}
+              onPointerDown={(ev) => handlePointerDown(ev, goBackToSignUp, ev)}
             >
               Go back to sign-up form
             </span>
@@ -201,7 +202,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
           <div className='form__subheading'>Your activation request has timed out.</div>
           <span
             className='form__bottom-link u-marg-top-3 u-marg-bot-3'
-            onPointerDown={goBackToSignUp}
+            onPointerDown={(ev) => handlePointerDown(ev, goBackToSignUp, ev)}
           >
             Go back to sign-up form
           </span>

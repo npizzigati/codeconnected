@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { requestRoom } from '../../helpers/launchUtils.js';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function CodeSessions ({ authed, setShowAuth }) {
   const [cSessions, setCSessions] = useState([]);
@@ -58,7 +59,7 @@ function CodeSessions ({ authed, setShowAuth }) {
            <span
              className='flex-pane__message'
            >
-             <span className='flex-pane__sign-in-link' onPointerDown={() => setShowAuth(true)}>Sign in</span> to access previous sessions
+             <span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign in</span> to access previous sessions
            </span>
          </div>}
     </div>
@@ -69,7 +70,7 @@ function CodeSessions ({ authed, setShowAuth }) {
       <p
         key={cSession.sessID}
         className='table-row table-row--items'
-        onPointerDown={() => launch(cSession.lang, cSession.sessID, cSession.content)}
+        onPointerDown={(ev) => handlePointerDown(ev, launch, cSession.lang, cSession.sessID, cSession.content)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

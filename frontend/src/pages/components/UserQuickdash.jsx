@@ -1,6 +1,7 @@
 'use strict';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function UserQuickdash ({ setAuthed }) {
   const [username, setUsername] = useState('');
@@ -48,7 +49,7 @@ function UserQuickdash ({ setAuthed }) {
         src='./account_circle.png'
         alt='account circle'
         ref={avatar}
-        onPointerDown={toggleQuickdash}
+        onPointerDown={(ev) => handlePointerDown(ev, toggleQuickdash, ev)}
       />
       <div
         ref={quickdash}
@@ -83,7 +84,7 @@ function UserQuickdash ({ setAuthed }) {
         </div>
         <button
           className='user-quickdash__sign-out-button'
-          onPointerDown={signOut}
+          onPointerDown={(ev) => handlePointerDown(ev, signOut, ev)}
         >
           Sign out
         </button>

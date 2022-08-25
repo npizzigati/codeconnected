@@ -25,6 +25,8 @@ import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
 
+import { handlePointerDown } from '../helpers/miscUtils.js';
+
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
 // down the server with rooms still open. Currently the client's
@@ -169,7 +171,7 @@ function CodeArea () {
           <div className='flex-pane'>
             <div
               className='media u-marg-left-1'
-              onPointerDown={() => { setShowBackToHomeDialog(true) }}
+              onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
             >
               <div className='media__image-container'>
                 <img className='media__image media__image--tinier' src='./codeconnected.png' alt='Logo' />
@@ -187,7 +189,7 @@ function CodeArea () {
               ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuthed} /></div>
               : <div
                   className='sign-in-link u-marg-left-auto'
-                  onPointerDown={() => setShowAuth(true)}
+                  onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
                 >
                   Sign in
                 </div>}
@@ -226,7 +228,7 @@ function CodeArea () {
           <div
             ref={resizeBarDOMRef}
             className='resizer'
-            onPointerDown={startResize}
+            onPointerDown={(ev) => handlePointerDown(ev, startResize, ev)}
             onPointerUp={stopResize}
           >
             <div className='resizer__handle' />
@@ -256,7 +258,7 @@ function CodeArea () {
                   <div
                     className='terminal-scroll-layer'
                     ref={termScrollLayerDomRef}
-                    onPointerDown={focusTerminal}
+                    onPointerDown={(ev) => handlePointerDown(ev, focusTerminal, ev)}
                   />
                 </div>
                 <div

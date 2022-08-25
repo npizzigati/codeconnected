@@ -1,6 +1,7 @@
 'use strict';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function Select ({ options, title, callback, config }) {
   const dropdown = useRef(null);
@@ -52,7 +53,7 @@ function Select ({ options, title, callback, config }) {
         <div
           className='select-button'
           ref={button}
-          onPointerDown={toggleDropdown}
+          onPointerDown={(ev) => handlePointerDown(ev, toggleDropdown, ev)}
         >
           <div ref={titlePart} className='select-title'>{title}</div>
           <img className='select__expand-icon' ref={arrow} src='./expand_more.png' alt='expand icon' />
@@ -65,7 +66,7 @@ function Select ({ options, title, callback, config }) {
             <div
               key={index}
               className='select-dropdown-item'
-              onPointerDown={ev => handleSelect(ev, callback)}
+              onPointerDown={(ev) => handlePointerDown(ev, handleSelect, ev, callback)}
               data-value={option.value}
               data-label={option.label}
             >

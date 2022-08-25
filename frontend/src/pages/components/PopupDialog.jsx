@@ -1,11 +1,15 @@
 'use strict';
 
 import React from 'react';
+import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function PopupDialog ({ config }) {
   return (
     <>
-      <div className='backdrop' onPointerDown={config.abortCallback} />
+      <div
+        className='backdrop'
+        onPointerDown={(ev) => handlePointerDown(ev, config.abortCallback, ev)}
+      />
       <div className='popup-dialog'>
         <div className='media'>
           <div className='media__image-container'>
@@ -35,7 +39,7 @@ function PopupDialog ({ config }) {
       <div
         key={option.number}
         className='aligned-block__row aligned-block__row--clickable'
-        onPointerDown={option.callback}
+        onPointerDown={(ev) => handlePointerDown(ev, option.callback, ev)}
       >
         <div className='aligned-block__cell u-right-align-text'>
           <img
