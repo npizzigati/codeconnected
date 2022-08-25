@@ -607,6 +607,7 @@ function CodeArea () {
 
   function setupCodeMirror () {
     const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
+      inputStyle: 'textarea',
       value: '',
       lineNumbers: true,
       autoCloseBrackets: true,
