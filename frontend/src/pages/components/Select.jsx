@@ -17,7 +17,14 @@ function Select ({ options, title, callback, config }) {
         hideDropdown();
       }
     });
+
+    // If escape key custom event fires, close this component's modal dialogs
+    document.addEventListener('escapePressed', closeModals);
   }, []);
+
+  function closeModals () {
+    hideDropdown();
+  }
 
   function handleSelect (ev, callback) {
     const label = ev.target.dataset.label;
