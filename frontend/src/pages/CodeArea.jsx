@@ -48,7 +48,7 @@ function CodeArea () {
   const term = useRef(null);
   const ws = useRef(null);
   const wsProvider = useRef(null);
-  const flags = useRef(null);
+  const flagClear = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
   const lang = useRef(null);
@@ -544,14 +544,10 @@ function CodeArea () {
 
     const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
 
-    const yFlags = ydoc.getMap('flags');
-    yFlags.observe(ev => {
-      if (ev.target.get('signal') === 'clearTerminal') {
-        clearTerminal();
-      }
+    flagClear.current = ydoc.getArray('flag-clear');
+    flagClear.current.observe(ev => {
+      clearTerminal();
     });
-    // Copy a reference to React state
-    flags.current = yFlags;
 
     const yCodeOptions = ydoc.getMap('code options');
     yCodeOptions.observe(ev => {
@@ -913,7 +909,9 @@ function CodeArea () {
   }
 
   function setTerminalClearFlag () {
-    flags.current.set('signal', 'clearTerminal');
+    // We don't care about the value added, we just want to
+    // trigger the observe event
+    flagClear.current.push([1]);
   }
 
   // TODO: Make this work for Ctrl-L too
@@ -935,7 +933,6 @@ function CodeArea () {
     fetch('/api/clientclearterm', options)
       .then(response => {
         console.log(response);
-        flags.current.set('signal', '');
       });
 
     termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
