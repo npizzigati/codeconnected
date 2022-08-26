@@ -79,7 +79,7 @@ function CodeArea () {
   // Custom event to closeModals
   const escapePressedEvent = new Event('escapePressed');
   // Time before Yjs remote caret is hidden, in seconds
-  const remoteCaretTimeLimit = 4;
+  const remoteCaretTimeLimit = 2;
   let remoteCaretTimeout;
   let termWriteTimeout;
 
