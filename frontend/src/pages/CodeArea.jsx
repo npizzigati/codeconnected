@@ -49,11 +49,14 @@ function CodeArea () {
   const ws = useRef(null);
   const wsProvider = useRef(null);
   const flagClear = useRef(null);
+  const flagHideRemoteCaret = useRef(null);
+  const flagShowRemoteCaret = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
   const lang = useRef(null);
   const username = useRef(null);
   const codeSessionID = useRef(-1);
+  const isRemoteCaretShown = useRef(false);
   const [language, setLanguage] = useState('');
   // FIXME: Do I need this? Am I using the ydocRef anywhere?
   const [ydocRef, setYdocRef] = useState(null);
@@ -75,6 +78,9 @@ function CodeArea () {
   const cmContainerDOMRef = useRef(null);
   // Custom event to closeModals
   const escapePressedEvent = new Event('escapePressed');
+  // Time before Yjs remote caret is hidden, in seconds
+  const remoteCaretTimeLimit = 4;
+  let remoteCaretTimeout;
   let termWriteTimeout;
 
   const popupDialogConfig = {
@@ -549,6 +555,36 @@ function CodeArea () {
       clearTerminal();
     });
 
+    flagHideRemoteCaret.current = ydoc.getArray('flag-hide-remote-caret');
+    flagHideRemoteCaret.current.observe(ev => {
+      const name = flagHideRemoteCaret.current.get(flagHideRemoteCaret.current.length - 1);
+      console.log('should hide remote caret name: ' + name);
+      hideRemoteCaret(name);
+    });
+    flagShowRemoteCaret.current = ydoc.getArray('flag-show-remote-caret');
+    flagShowRemoteCaret.current.observe(ev => {
+      const name = flagShowRemoteCaret.current.get(flagShowRemoteCaret.current.length - 1);
+      console.log('should show remote caret name: ' + name);
+      showRemoteCaret(name);
+    });
+
+    // const yFlags = ydoc.getMap('flags');
+    // yFlags.observe(ev => {
+    //   console.log('flags observer triggered');
+    //   console.log('hideRemoteCaret: ' + ev.target.get('hideRemoteCaret'));
+    //   console.log('showRemoteCaret: ' + ev.target.get('showRemoteCaret'));
+    //   setTimeout(() => {
+    //     if (ev.target.get('hideRemoteCaret') !== '') {
+    //       hideRemoteCaret(ev.target.get('hideRemoteCaret'));
+    //     }
+    //     if (ev.target.get('showRemoteCaret') !== '') {
+    //       showRemoteCaret(ev.target.get('showRemoteCaret'));
+    //     }
+    //   }, 500);
+    // });
+    // // Copy a reference to React state
+    // flags.current = yFlags;
+
     const yCodeOptions = ydoc.getMap('code options');
     yCodeOptions.observe(ev => {
       const newLang = ev.target.get('language');
@@ -632,7 +668,48 @@ function CodeArea () {
       elt.style.paddingLeft = (basePadding + off) + 'px';
     });
 
+    // Timeout to hide Yjs remote caret
+    startRemoteCaretTimeout();
+
+    cm.on('cursorActivity', () => {
+      console.log('cursor activity');
+      flagShowRemoteCaret.current.push([getYjsDisplayName()]);
+      clearTimeout(remoteCaretTimeout);
+      startRemoteCaretTimeout();
+    });
+
     return cm;
+  }
+
+  function startRemoteCaretTimeout () {
+    console.log('starting remote caret timeout');
+    remoteCaretTimeout = setTimeout(() => {
+      console.log('firing remote caret timeout');
+      flagHideRemoteCaret.current.push([getYjsDisplayName()]);
+    }, remoteCaretTimeLimit * 1000);
+  }
+
+  function findRemoteCaret (name) {
+    const remoteCarets = document.querySelectorAll('.remote-caret');
+    return Array.from(remoteCarets).filter((caret) => caret.innerText === name)[0];
+  }
+
+  function hideRemoteCaret (name) {
+    console.log('hiding remote caret');
+    // Hide only the correct remote caret (in case there is more
+    // than one)
+    findRemoteCaret(name)?.classList.add('codeconnected-hide');
+    isRemoteCaretShown.current = false;
+  }
+
+  function showRemoteCaret (name) {
+    if (isRemoteCaretShown.current === true) {
+      console.log('remote caret already shown');
+      return;
+    }
+    console.log('showing remote caret');
+    findRemoteCaret(name)?.classList.remove('codeconnected-hide');
+    isRemoteCaretShown.current = true;
   }
 
   function betterTab (editor) {

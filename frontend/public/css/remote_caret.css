@@ -18,3 +18,18 @@
   padding-right: 0.1em;
   z-index: 3;
 }
+/* This is the hide class rule applied by Yjs. Its behavior is
+  unusual: Yjs hides the caret automatically after 2 seconds
+  regardless of activity, and then shows it upon certain cursor
+  movements (including automatic movements caused by the
+  codemirror language plugin automatic formatting) */
+/* .remote-caret.hide-name > div { */
+/*   transition-delay: .7s; */
+/*   opacity: 0; */
+/* } */
+
+/* This is our own hide class rule */
+.remote-caret.codeconnected-hide > div {
+  transition-delay: .7s;
+  opacity: 0;
+}
