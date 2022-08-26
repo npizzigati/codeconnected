@@ -665,6 +665,15 @@ function CodeArea () {
     return cm;
   }
 
+  function betterTab (editor) {
+    if (editor.somethingSelected()) {
+      editor.indentSelection('add');
+    } else {
+      const spaces = Array(editor.getOption('indentUnit') + 1).join(' ');
+      editor.replaceSelection(spaces);
+    }
+  }
+
   function startRemoteCaretTimeout () {
     remoteCaretTimeout = setTimeout(() => {
       flagHideRemoteCaret.current.push([getYjsDisplayName()]);
@@ -689,15 +698,6 @@ function CodeArea () {
     }
     findRemoteCaret(name)?.classList.remove('codeconnected-hide');
     isRemoteCaretShown.current = true;
-  }
-
-  function betterTab (editor) {
-    if (editor.somethingSelected()) {
-      editor.indentSelection('add');
-    } else {
-      const spaces = Array(editor.getOption('indentUnit') + 1).join(' ');
-      editor.replaceSelection(spaces);
-    }
   }
 
   function setPrevTermClientHeight () {
