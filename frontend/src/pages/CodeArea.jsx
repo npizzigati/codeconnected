@@ -672,7 +672,6 @@ function CodeArea () {
     startRemoteCaretTimeout();
 
     cm.on('cursorActivity', () => {
-      console.log('cursor activity');
       flagShowRemoteCaret.current.push([getYjsDisplayName()]);
       clearTimeout(remoteCaretTimeout);
       startRemoteCaretTimeout();
@@ -682,9 +681,7 @@ function CodeArea () {
   }
 
   function startRemoteCaretTimeout () {
-    console.log('starting remote caret timeout');
     remoteCaretTimeout = setTimeout(() => {
-      console.log('firing remote caret timeout');
       flagHideRemoteCaret.current.push([getYjsDisplayName()]);
     }, remoteCaretTimeLimit * 1000);
   }
@@ -695,7 +692,6 @@ function CodeArea () {
   }
 
   function hideRemoteCaret (name) {
-    console.log('hiding remote caret');
     // Hide only the correct remote caret (in case there is more
     // than one)
     findRemoteCaret(name)?.classList.add('codeconnected-hide');
@@ -704,10 +700,8 @@ function CodeArea () {
 
   function showRemoteCaret (name) {
     if (isRemoteCaretShown.current === true) {
-      console.log('remote caret already shown');
       return;
     }
-    console.log('showing remote caret');
     findRemoteCaret(name)?.classList.remove('codeconnected-hide');
     isRemoteCaretShown.current = true;
   }
