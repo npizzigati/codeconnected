@@ -298,7 +298,9 @@ function CodeArea () {
 
   function getYjsDisplayName () {
     // Only use first name
-    return username.current.split(' ')[0];
+    // return username.current.split(' ')[0];
+    // Use full name
+    return username.current;
   }
 
   function fireKeydownEvents (event) {
