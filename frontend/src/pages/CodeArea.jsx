@@ -568,23 +568,6 @@ function CodeArea () {
       showRemoteCaret(name);
     });
 
-    // const yFlags = ydoc.getMap('flags');
-    // yFlags.observe(ev => {
-    //   console.log('flags observer triggered');
-    //   console.log('hideRemoteCaret: ' + ev.target.get('hideRemoteCaret'));
-    //   console.log('showRemoteCaret: ' + ev.target.get('showRemoteCaret'));
-    //   setTimeout(() => {
-    //     if (ev.target.get('hideRemoteCaret') !== '') {
-    //       hideRemoteCaret(ev.target.get('hideRemoteCaret'));
-    //     }
-    //     if (ev.target.get('showRemoteCaret') !== '') {
-    //       showRemoteCaret(ev.target.get('showRemoteCaret'));
-    //     }
-    //   }, 500);
-    // });
-    // // Copy a reference to React state
-    // flags.current = yFlags;
-
     const yCodeOptions = ydoc.getMap('code options');
     yCodeOptions.observe(ev => {
       const newLang = ev.target.get('language');
