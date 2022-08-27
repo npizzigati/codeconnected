@@ -70,7 +70,7 @@ body.is-resizing {
     height: 2em;
     width: 2em;
     cursor: pointer;
-    background-image: url('./images/close_button.png');
+    background-image: url('../images/close_button.png');
     background-repeat: no-repeat;
     background-size: 2em 2em;
 }
@@ -247,7 +247,7 @@ body.is-resizing {
 
 .image-link {
     display: block;
-    background-image: url('./images/github.png');
+    background-image: url('../images/github.png');
     height: 1.2em;
     width: 1.2em;
     background-size: 1.2em 1.2em;
