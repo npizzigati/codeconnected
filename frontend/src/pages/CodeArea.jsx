@@ -46,6 +46,7 @@ function CodeArea () {
   const termScrollLayerDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
+  const setupDone = useRef(false);
   const ws = useRef(null);
   const wsProvider = useRef(null);
   const flagClear = useRef(null);
@@ -57,6 +58,9 @@ function CodeArea () {
   const username = useRef(null);
   const codeSessionID = useRef(-1);
   const isRemoteCaretShown = useRef(false);
+  const participants = useRef(null);
+  const participantsSuffixCounter = useRef(null);
+  const remoteCaretName = useRef(null);
   const [language, setLanguage] = useState('');
   // FIXME: Do I need this? Am I using the ydocRef anywhere?
   const [ydocRef, setYdocRef] = useState(null);
@@ -138,20 +142,17 @@ function CodeArea () {
     return function cleanup () {
       window.removeEventListener('online', onlineEventHandler);
       isCanceled = true;
+      // Remove user from participants
+      participants.current = participants.current.filter(participant => participant !== remoteCaretName.current);
     };
   }, []);
 
   useEffect(() => {
+    if (!setupDone.current) {
+      return;
+    }
     (async () => {
-      const userInfo = await getUserInfo();
-      if (userInfo.auth === true) {
-        username.current = userInfo.username;
-      } else {
-        username.current = 'Guest';
-      }
-      if (wsProvider.current !== null) {
-        wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: getYjsDisplayName() });
-      }
+      await setupUsername();
     })();
   }, [authed]);
 
@@ -296,11 +297,49 @@ function CodeArea () {
     </>
   );
 
-  function getYjsDisplayName () {
-    // Only use first name
-    // return username.current.split(' ')[0];
-    // Use full name
-    return username.current;
+  async function setupUsername () {
+    console.log('Setting up username and remote caret name');
+    const userInfo = await getUserInfo();
+    if (userInfo.auth) {
+      setAuthed(true);
+      username.current = userInfo.username;
+    } else {
+      username.current = 'Guest';
+    }
+    assignRemoteCaretName(username.current);
+    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: remoteCaretName.current });
+  }
+
+  // Assign remote caret name based on username
+  // Add numbered suffix for duplicate names
+  function assignRemoteCaretName (username) {
+    console.log('Going to assign remote caret name');
+    let suffix = '';
+    console.log('will loop through existing remote names');
+    if (participants.current !== null) {
+      console.log('before loop, participants length: ' + participants.current.length);
+    }
+    participants.current?.forEach(participant => {
+      console.log('participant: ' + participant);
+      console.log('username: ' + username);
+      if (participant === username) {
+        console.log('Duplicate remote name');
+        let newCount;
+        if (participantsSuffixCounter.current.has(username)) {
+          newCount = participantsSuffixCounter.current.get(username) + 1;
+          console.log('newCount: ' + newCount);
+        } else {
+          newCount = 2;
+        }
+        participantsSuffixCounter.current.set(username, newCount);
+        suffix = `-${newCount}`;
+      }
+    });
+    remoteCaretName.current = username + suffix;
+    console.log('remoteCaretName: ' + remoteCaretName.current);
+    participants.current.push([remoteCaretName.current]);
+    console.log('after loop, participants length: ' + participants.current.length);
+    console.log('participants: ' + participants.current.toJSON());
   }
 
   function fireKeydownEvents (event) {
@@ -516,14 +555,8 @@ function CodeArea () {
 
     cmRef.current = setupCodeMirror();
 
-    const userInfo = await getUserInfo();
     if (isCanceled) {
       return;
-    }
-    if (userInfo.auth === true) {
-      setAuthed(true);
-      username.current = userInfo.username;
-      console.log('signed in as: ' + userInfo.username);
     }
 
     setLanguage(initialLang);
@@ -548,9 +581,12 @@ function CodeArea () {
     wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
-    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: getYjsDisplayName() });
+    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: remoteCaretName.current });
 
     const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
+
+    participants.current = ydoc.getArray('participants');
+    participantsSuffixCounter.current = ydoc.getMap('participants-suffix-counter');
 
     flagClear.current = ydoc.getArray('flag-clear');
     flagClear.current.observe(ev => {
@@ -602,6 +638,8 @@ function CodeArea () {
     setupTerminalScroll();
     setupResizeEventListener();
     setPrevTermClientHeight();
+    await setupUsername();
+    setupDone.current = true;
   }
 
   function setupTerminal (initialHist) {
@@ -657,7 +695,7 @@ function CodeArea () {
     startRemoteCaretTimeout();
 
     cm.on('cursorActivity', () => {
-      flagShowRemoteCaret.current.push([getYjsDisplayName()]);
+      flagShowRemoteCaret.current.push([remoteCaretName.current]);
       clearTimeout(remoteCaretTimeout);
       startRemoteCaretTimeout();
     });
@@ -676,7 +714,7 @@ function CodeArea () {
 
   function startRemoteCaretTimeout () {
     remoteCaretTimeout = setTimeout(() => {
-      flagHideRemoteCaret.current.push([getYjsDisplayName()]);
+      flagHideRemoteCaret.current.push([remoteCaretName.current]);
     }, remoteCaretTimeLimit * 1000);
   }
 
