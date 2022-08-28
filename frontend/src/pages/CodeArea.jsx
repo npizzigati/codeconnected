@@ -622,14 +622,17 @@ function CodeArea () {
       Tab: betterTab
     });
 
-    // Make wrapped lines indent
-    const charWidth = cm.defaultCharWidth();
-    const basePadding = 4;
-    cm.on('renderLine', function (editor, line, elt) {
-      const off = CodeMirror.countColumn(line.text, null, editor.getOption('tabSize')) * charWidth;
-      elt.style.textIndent = '-' + off + 'px';
-      elt.style.paddingLeft = (basePadding + off) + 'px';
-    });
+    // // Make wrapped lines indent
+    // // This is commented out because it causes a bug in
+    // // y-codemirror that makes the remote caret name lag
+    // // behind the cursor on a new line started with spaces
+    // const charWidth = cm.defaultCharWidth();
+    // const basePadding = 4;
+    // cm.on('renderLine', function (editor, line, elt) {
+    //   const off = CodeMirror.countColumn(line.text, null, editor.getOption('tabSize')) * charWidth;
+    //   elt.style.textIndent = '-' + off + 'px';
+    //   elt.style.paddingLeft = (basePadding + off) + 'px';
+    // });
 
     // Event listener to trigger Yjs awareness change on
     // codemirror change. This awareness change signals to
