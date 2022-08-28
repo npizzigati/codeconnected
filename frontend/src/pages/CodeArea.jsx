@@ -5,7 +5,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import PuffLoader from 'react-spinners/PuffLoader';
 
 import * as Y from 'yjs';
-import { CodemirrorBinding } from 'y-codemirror';
+import { CodemirrorBinding } from '../utilities/y-codemirror.js';
 import { WebrtcProvider } from 'y-webrtc';
 import { WebsocketProvider } from 'y-websocket';
 
@@ -50,17 +50,11 @@ function CodeArea () {
   const ws = useRef(null);
   const wsProvider = useRef(null);
   const flagClear = useRef(null);
-  const flagHideRemoteCaret = useRef(null);
-  const flagShowRemoteCaret = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
   const lang = useRef(null);
   const username = useRef(null);
   const codeSessionID = useRef(-1);
-  const isRemoteCaretShown = useRef(false);
-  const participants = useRef(null);
-  const participantsSuffixCounter = useRef(null);
-  const remoteCaretName = useRef(null);
   const [language, setLanguage] = useState('');
   // FIXME: Do I need this? Am I using the ydocRef anywhere?
   const [ydocRef, setYdocRef] = useState(null);
@@ -82,9 +76,6 @@ function CodeArea () {
   const cmContainerDOMRef = useRef(null);
   // Custom event to closeModals
   const escapePressedEvent = new Event('escapePressed');
-  // Time before Yjs remote caret is hidden, in seconds
-  const remoteCaretTimeLimit = 1.5;
-  let remoteCaretTimeout;
   let termWriteTimeout;
 
   const popupDialogConfig = {
@@ -142,8 +133,6 @@ function CodeArea () {
     return function cleanup () {
       window.removeEventListener('online', onlineEventHandler);
       isCanceled = true;
-      // Remove user from participants
-      participants.current = participants.current.filter(participant => participant !== remoteCaretName.current);
     };
   }, []);
 
@@ -298,7 +287,6 @@ function CodeArea () {
   );
 
   async function setupUsername () {
-    console.log('Setting up username and remote caret name');
     const userInfo = await getUserInfo();
     if (userInfo.auth) {
       setAuthed(true);
@@ -306,40 +294,7 @@ function CodeArea () {
     } else {
       username.current = 'Guest';
     }
-    assignRemoteCaretName(username.current);
-    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: remoteCaretName.current });
-  }
-
-  // Assign remote caret name based on username
-  // Add numbered suffix for duplicate names
-  function assignRemoteCaretName (username) {
-    console.log('Going to assign remote caret name');
-    let suffix = '';
-    console.log('will loop through existing remote names');
-    if (participants.current !== null) {
-      console.log('before loop, participants length: ' + participants.current.length);
-    }
-    participants.current?.forEach(participant => {
-      console.log('participant: ' + participant);
-      console.log('username: ' + username);
-      if (participant === username) {
-        console.log('Duplicate remote name');
-        let newCount;
-        if (participantsSuffixCounter.current.has(username)) {
-          newCount = participantsSuffixCounter.current.get(username) + 1;
-          console.log('newCount: ' + newCount);
-        } else {
-          newCount = 2;
-        }
-        participantsSuffixCounter.current.set(username, newCount);
-        suffix = `-${newCount}`;
-      }
-    });
-    remoteCaretName.current = username + suffix;
-    console.log('remoteCaretName: ' + remoteCaretName.current);
-    participants.current.push([remoteCaretName.current]);
-    console.log('after loop, participants length: ' + participants.current.length);
-    console.log('participants: ' + participants.current.toJSON());
+    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
   }
 
   function fireKeydownEvents (event) {
@@ -581,29 +536,12 @@ function CodeArea () {
     wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
     );
-    wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: remoteCaretName.current });
 
     const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
-
-    participants.current = ydoc.getArray('participants');
-    participantsSuffixCounter.current = ydoc.getMap('participants-suffix-counter');
 
     flagClear.current = ydoc.getArray('flag-clear');
     flagClear.current.observe(ev => {
       clearTerminal();
-    });
-
-    flagHideRemoteCaret.current = ydoc.getArray('flag-hide-remote-caret');
-    flagHideRemoteCaret.current.observe(ev => {
-      const name = flagHideRemoteCaret.current.get(flagHideRemoteCaret.current.length - 1);
-      console.log('should hide remote caret name: ' + name);
-      hideRemoteCaret(name);
-    });
-    flagShowRemoteCaret.current = ydoc.getArray('flag-show-remote-caret');
-    flagShowRemoteCaret.current.observe(ev => {
-      const name = flagShowRemoteCaret.current.get(flagShowRemoteCaret.current.length - 1);
-      console.log('should show remote caret name: ' + name);
-      showRemoteCaret(name);
     });
 
     const yCodeOptions = ydoc.getMap('code options');
@@ -691,15 +629,10 @@ function CodeArea () {
       elt.style.paddingLeft = (basePadding + off) + 'px';
     });
 
-    // Timeout to hide Yjs remote caret
-    startRemoteCaretTimeout();
-
-    cm.on('cursorActivity', () => {
-      flagShowRemoteCaret.current.push([remoteCaretName.current]);
-      clearTimeout(remoteCaretTimeout);
-      startRemoteCaretTimeout();
-    });
-
+    // Event listener to trigger Yjs awareness change on
+    // codemirror change. This awareness change signals to
+    // y-codemirror.js to show remote caret and name tooltip
+    cm.on('change', () => wsProvider.current.awareness.setLocalStateField('keyPing', Date.now()));
     return cm;
   }
 
@@ -712,37 +645,11 @@ function CodeArea () {
     }
   }
 
-  function startRemoteCaretTimeout () {
-    remoteCaretTimeout = setTimeout(() => {
-      flagHideRemoteCaret.current.push([remoteCaretName.current]);
-    }, remoteCaretTimeLimit * 1000);
-  }
-
-  function findRemoteCaret (name) {
-    const remoteCarets = document.querySelectorAll('.remote-caret');
-    return Array.from(remoteCarets).filter((caret) => caret.innerText === name)[0];
-  }
-
-  function hideRemoteCaret (name) {
-    // Hide only the correct remote caret (in case there is more
-    // than one)
-    findRemoteCaret(name)?.classList.add('codeconnected-hide');
-    isRemoteCaretShown.current = false;
-  }
-
-  function showRemoteCaret (name) {
-    if (isRemoteCaretShown.current === true) {
-      return;
-    }
-    findRemoteCaret(name)?.classList.remove('codeconnected-hide');
-    isRemoteCaretShown.current = true;
-  }
-
   function setPrevTermClientHeight () {
     // termDomRef.current.clientHeight may initially be
     // "undefined", so try until it is a number
     const interval = setInterval(() => {
-      const clientHeight = termDomRef.current.clientHeight;
+      const clientHeight = termDomRef.current?.clientHeight;
       if (typeof clientHeight !== 'number') {
         return;
       }
