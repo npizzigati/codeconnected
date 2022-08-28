@@ -6,7 +6,6 @@ import PuffLoader from 'react-spinners/PuffLoader';
 
 import * as Y from 'yjs';
 // Import custom y-codemirror.js
-// For change, see comment block beginning on line 191
 import { CodemirrorBinding } from '../utilities/y-codemirror.js';
 import { WebrtcProvider } from 'y-webrtc';
 import { WebsocketProvider } from 'y-websocket';
