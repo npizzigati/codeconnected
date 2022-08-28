@@ -120,13 +120,18 @@ const targetObserver = (binding, changes) => {
   }
 }
 
+const makeNonBreaking = (username) => {
+  // Replace spaces with unicode non-breaking space literal
+  return username.replace(/\s/g, '\u00A0')
+}
+
 const createRemoteCaret = (username, color) => {
   const caret = document.createElement('span')
   caret.classList.add('remote-caret')
   caret.setAttribute('style', `border-color: ${color}`)
   const userDiv = document.createElement('div')
   userDiv.setAttribute('style', `background-color: ${color}`)
-  userDiv.insertBefore(document.createTextNode(username), null)
+  userDiv.insertBefore(document.createTextNode(makeNonBreaking(username)), null)
   caret.insertBefore(userDiv, null)
   setTimeout(() => {
     caret.classList.add('hide-name')
