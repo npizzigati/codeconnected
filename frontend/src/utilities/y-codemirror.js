@@ -146,7 +146,7 @@ const createEmptyLinePlaceholder = (color) => {
   emptyTxt.insertBefore(document.createTextNode(''), null)
   const sel = document.createElement('span')
   sel.setAttribute('class', 'y-line-selection')
-  sel.setAttribute('style', `display: inline-block; position: absolute; left: 4px; right: 4px; top: 0; bottom: 0; background-color: ${color}70`)
+  sel.setAttribute('style', `display: inline-block; position: absolute; left: 4px; right: 4px; top: 0; bottom: 0; background-color: ${color}`)
   placeholder.insertBefore(sel, null)
   placeholder.insertBefore(emptyTxt, null)
   return placeholder
@@ -203,7 +203,7 @@ const updateRemoteSelection = (y, cm, type, cursors, clientId, awareness) => {
     if (head.index !== anchor.index) {
       if (from.line !== to.line && from.ch !== 0) {
         // start of selection will only be a simple text-selection
-        sel.push(cm.markText(from, new CodeMirror.Pos(from.line + 1, 0), { css: `background-color: ${user.color}70;`, inclusiveRight: false, inclusiveLeft: false }))
+        sel.push(cm.markText(from, new CodeMirror.Pos(from.line + 1, 0), { css: `background-color: ${user.color};`, inclusiveRight: false, inclusiveLeft: false }))
         from = new CodeMirror.Pos(from.line + 1, 0)
       }
       while (from.line !== to.line) {
@@ -211,7 +211,7 @@ const updateRemoteSelection = (y, cm, type, cursors, clientId, awareness) => {
         sel.push(cm.setBookmark(new CodeMirror.Pos(from.line, 0), { widget: createEmptyLinePlaceholder(user.color) }))
         from = new CodeMirror.Pos(from.line + 1, 0)
       }
-      sel.push(cm.markText(from, to, { css: `background-color: ${user.color}70;`, inclusiveRight: false, inclusiveLeft: false }))
+      sel.push(cm.markText(from, to, { css: `background-color: ${user.color};`, inclusiveRight: false, inclusiveLeft: false }))
     }
     // only render caret if not the complete last line was selected (in this case headpos.ch === 0)
     const caret = sel.length > 0 && to === headpos && headpos.ch === 0 ? null : cm.setBookmark(headpos, { widget: caretEl, insertLeft: true })
