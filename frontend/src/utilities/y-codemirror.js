@@ -139,6 +139,15 @@ const createRemoteCaret = (username, color) => {
   return caret
 }
 
+const createZeroSelectionPlaceholder = () => {
+  const placeholder = document.createElement('span')
+  placeholder.setAttribute('style', 'user-select: none;')
+  const emptyTxt = document.createElement('span')
+  emptyTxt.insertBefore(document.createTextNode('\u200B'), null)
+  placeholder.insertBefore(emptyTxt, null)
+  return placeholder
+}
+
 const createEmptyLinePlaceholder = (color) => {
   const placeholder = document.createElement('span')
   placeholder.setAttribute('style', 'user-select: none;')
@@ -213,8 +222,23 @@ const updateRemoteSelection = (y, cm, type, cursors, clientId, awareness) => {
       }
       sel.push(cm.markText(from, to, { css: `background-color: ${user.color};`, inclusiveRight: false, inclusiveLeft: false }))
     }
+
+    // Fix for Firefox issue of collapsing line when remote
+    // cursor is placed on a line with no text or whitespace
+    // characters
+    // If there is no selection and current line is empty, push a
+    // zero-length char widget selection onto sel array
+    let blankLineSelectionFix = false
+    console.log('from line: ' + from.line)
+    console.log('to line: ' + to.line)
+    if (sel.length === 0 && cm.getLine(from.line) === '') {
+      sel.push(cm.setBookmark(new CodeMirror.Pos(from.line, 0), { widget: createZeroSelectionPlaceholder() }))
+      blankLineSelectionFix = true
+    }
+    console.log('blank line selection fix: ' + blankLineSelectionFix)
+
     // only render caret if not the complete last line was selected (in this case headpos.ch === 0)
-    const caret = sel.length > 0 && to === headpos && headpos.ch === 0 ? null : cm.setBookmark(headpos, { widget: caretEl, insertLeft: true })
+    const caret = sel.length > 0 && to === headpos && headpos.ch === 0 && !blankLineSelectionFix ? null : cm.setBookmark(headpos, { widget: caretEl, insertLeft: true })
     cursors.set(clientId, { caret, sel, awCursor: cursor })
   }
 }
