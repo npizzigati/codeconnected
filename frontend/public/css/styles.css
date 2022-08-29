@@ -5,14 +5,14 @@
     --modal-background: transparent;
     --modal-border: 1px #777 solid;
     /* z-indexes */
-    --tabbed-modal-z-index: 1001;
-    --popup-dialog-z-index: 1010;
-    --backdrop-z-index: 999;
-    --backdrop--level2-z-index: 1005;
-    --user-quickdash-z-index: 1001;
-    --select-dropdown-z-index: 1000;
-    --spinner-z-index: 10000;
-    --terminal-scrollport-z-index: 998;
+    --terminal-scrollport-z-index: 10;
+    --backdrop-z-index: 20;
+    --select-dropdown-z-index: 30;
+    --tabbed-modal-z-index: 40;
+    --user-quickdash-z-index: 40;
+    --backdrop--level2-z-index: 50;
+    --popup-dialog-z-index: 60;
+    --spinner-z-index: 70;
 }
 
 /* Base rules */
