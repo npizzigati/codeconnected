@@ -1160,6 +1160,14 @@ body.is-resizing {
     margin-right: 1.2em;
 }
 
+.u-marg-right-5 {
+    margin-right: 1.5em;
+}
+
+.u-marg-right-6 {
+    margin-right: 1.8em;
+}
+
 .u-marg-right-auto {
     margin-left: auto;
 }
