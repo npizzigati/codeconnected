@@ -1144,6 +1144,14 @@ body.is-resizing {
     margin-bottom: 0.6em;
 }
 
+.u-marg-bot-3 {
+    margin-bottom: 0.9em;
+}
+
+.u-marg-bot-4 {
+    margin-bottom: 1.2em;
+}
+
 .u-marg-right-1 {
     margin-right: 0.3em;
 }
