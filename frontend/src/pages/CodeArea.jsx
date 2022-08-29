@@ -25,6 +25,7 @@ import Select from './components/Select.jsx';
 import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
+import ParticipantList from './components/ParticipantList.jsx';
 
 import { handlePointerDown } from '../helpers/miscUtils.js';
 
@@ -55,10 +56,11 @@ function CodeArea () {
   const cmRef = useRef(null);
   const lang = useRef(null);
   const username = useRef(null);
+  const participants = useRef([]);
+  const [participantNames, setParticipantNames] = useState(null)
   const codeSessionID = useRef(-1);
   const [language, setLanguage] = useState('');
-  // FIXME: Do I need this? Am I using the ydocRef anywhere?
-  const [ydocRef, setYdocRef] = useState(null);
+  const ydoc = useRef(null);
   const resizeBarDOMRef = useRef(null);
   const initialX = useRef(null);
   const [cmWidth, setCmWidth] = useState('50%');
@@ -133,6 +135,7 @@ function CodeArea () {
 
     return function cleanup () {
       window.removeEventListener('online', onlineEventHandler);
+      removeUserFromParticipants();
       isCanceled = true;
     };
   }, []);
@@ -196,6 +199,7 @@ function CodeArea () {
             </div>
           </div>
           <div className='flex-pane flex-pane--right-justified u-marg-right-1 u-marg-top-1'>
+            <ParticipantList participantNames={participantNames} />
             {authed
               ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuthed} /></div>
               : <div
@@ -287,6 +291,10 @@ function CodeArea () {
     </>
   );
 
+  function removeUserFromParticipants () {
+    participants.current.delete(ydoc.current.clientID.toString());
+  }
+
   async function setupUsername () {
     const userInfo = await getUserInfo();
     if (userInfo.auth) {
@@ -296,6 +304,8 @@ function CodeArea () {
       username.current = 'Guest';
     }
     wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
+    participants.current.set(ydoc.current.clientID.toString(), username.current);
+    window.addEventListener('beforeunload', () => removeUserFromParticipants());
   }
 
   function fireKeydownEvents (event) {
@@ -526,26 +536,43 @@ function CodeArea () {
 
     // Collaborative editing
     // Code editor
-    const ydoc = new Y.Doc();
-    setYdocRef(ydoc);
+    ydoc.current = new Y.Doc();
 
-    const ytextCode = ydoc.getText('codemirror');
+    const ytextCode = ydoc.current.getText('codemirror');
 
     // y.js connection providers
-    const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc);
+    const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc.current);
     // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
     wsProvider.current = new WebsocketProvider(
-      window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc
+      window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc.current
     );
 
     const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
 
-    flagClear.current = ydoc.getArray('flag-clear');
+    // wsProvider.current.awareness.on('change', changes => {
+    //   // Whenever somebody updates their awareness information,
+    //   // we log all awareness information from all users.
+    //   console.log(Array.from(wsProvider.current.awareness.getStates().values()));
+    //   const values = Array.from(wsProvider.current.awareness.getStates().values());
+    //   console.log(JSON.stringify(values));
+    //   if (values.length !== participants.current.length) {
+    //     participants.current = values.map(value => value.user?.name).filter(name => name !== undefined);
+    //     console.log('participants: ' + participants.current);
+    //   }
+    // });
+
+    participants.current = ydoc.current.getMap('participants');
+    participants.current.observe(ev => {
+      console.log('participants: ' + JSON.stringify(participants.current.toJSON()));
+      setParticipantNames(Array.from(participants.current.values()));
+    });
+
+    flagClear.current = ydoc.current.getArray('flag-clear');
     flagClear.current.observe(ev => {
       clearTerminal();
     });
 
-    const yCodeOptions = ydoc.getMap('code options');
+    const yCodeOptions = ydoc.current.getMap('code options');
     yCodeOptions.observe(ev => {
       const newLang = ev.target.get('language');
       lang.current = newLang;

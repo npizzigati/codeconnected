@@ -1059,6 +1059,16 @@ body.is-resizing {
     transition: opacity .5s;
 }
 
+.participants-list {
+}
+
+.participants-list__label {
+    padding-right: 0.2em;
+}
+
+.participants-list__count {
+}
+
 .resizer {
     background: var(--code-area-bg-color);
     cursor: col-resize;
