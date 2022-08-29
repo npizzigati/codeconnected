@@ -290,7 +290,7 @@ body.is-resizing {
 }
 
 .flex-pane--vert-centered {
-    align-items: center;
+    align-self: center;
 }
 
 .flex-container {
@@ -309,6 +309,10 @@ body.is-resizing {
 .flex-container--right-justified {
     display: flex;
     justify-content: flex-end;
+}
+
+.flex-container--vert-centered {
+    align-items: center;
 }
 
 .flex-container--col {

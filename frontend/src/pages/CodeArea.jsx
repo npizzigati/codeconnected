@@ -199,7 +199,7 @@ function CodeArea () {
             </div>
           </div>
             <ParticipantList participantNames={participantNames} />
-          <div className='flex-pane flex-container flex-container--right-justified u-marg-right-1 u-marg-top-1'>
+          <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-1 u-marg-top-1'>
             {authed
               ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuthed} /></div>
               : <div
