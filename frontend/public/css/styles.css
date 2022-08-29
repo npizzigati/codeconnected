@@ -289,11 +289,6 @@ body.is-resizing {
     border-radius: 1em;
 }
 
-.flex-pane--right-justified {
-    display: flex;
-    justify-content: right;
-}
-
 .flex-pane--vert-centered {
     align-items: center;
 }
@@ -309,6 +304,11 @@ body.is-resizing {
 .flex-container--wide-horiz-margins {
     display: flex;
     margin: 0 4em;
+}
+
+.flex-container--right-justified {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .flex-container--col {

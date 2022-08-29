@@ -94,7 +94,7 @@ function Home () {
                 </div>
               </div>
             </div>
-            <div className='flex-pane flex-pane--right-justified flex-pane--vert-centered u-marg-right-2'>
+            <div className='flex-pane flex-pane--vert-centered flex-container flex-container--right-justified u-marg-right-2'>
               {auth
                 ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuth} /></div>
                 : <div
