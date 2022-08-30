@@ -12,6 +12,7 @@
     --select-dropdown-z-index: 30;
     --tabbed-modal-z-index: 40;
     --user-quickdash-z-index: 40;
+    --invite-z-index: 40;
     --backdrop--level2-z-index: 50;
     --popup-dialog-z-index: 60;
     --tooltip-z-index: 65;
@@ -1212,7 +1213,7 @@ body.is-resizing {
     padding: 0.4em 0.8em;
     text-align: center;
     border-radius: 0.5em;
-    z-index: var(--popup-dialog-z-index);
+    z-index: var(--invite-z-index);
 }
 
 .invite__text {
