@@ -3,6 +3,7 @@
     --code-area-bg-color: #0d1117;
     --code-area-border-color: #1e262e;
     --modal-background: transparent;
+    --code-area-modal-background: #32404d;
     --modal-border: 1px #777 solid;
     /* z-indexes */
     --terminal-scrollport-z-index: 10;
@@ -807,7 +808,7 @@ body.is-resizing {
     position: absolute;
     top: 22px;
     z-index: var(--select-dropdown-z-index);
-    background-color: #32404d;
+    background-color: var(--code-area-modal-background);
     border-radius: 4px;
     display: flex;
     flex-direction: column;
@@ -1101,7 +1102,7 @@ body.is-resizing {
 }
 
 .tooltip__text {
-    background-color: #32404d;
+    background-color: var(--code-area-modal-background);
     border-radius: 2em;
     padding: 0 0.4em;
 }
