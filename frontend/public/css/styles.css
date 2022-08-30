@@ -1172,15 +1172,24 @@ body.is-resizing {
     top: 3em;
     left: -1em;
     right: -1em;
-    font-size: 0.8em;
     text-align: center;
     z-index: var(--tooltip-z-index)
 }
 
 .tooltip__text {
+    font-size: 0.8em;
     background-color: var(--code-area-modal-background);
     border-radius: 2em;
     padding: 0 0.4em;
+}
+
+.invite-link {
+    position: absolute;
+    top: 3em;
+    left: -5em;
+    right: -1em;
+    text-align: center;
+    z-index: var(--popup-dialog-z-index);
 }
 
 .resizer {
