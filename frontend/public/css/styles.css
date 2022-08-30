@@ -657,6 +657,7 @@ body.is-resizing {
 
 #code-area .user-quickdash {
     background: var(--code-area-modal-background);
+    box-shadow: none;
 }
 
 #code-area .user-quickdash__heading {
@@ -680,7 +681,7 @@ body.is-resizing {
     --tabbed-modal-background: #1d252d;
     --unselected-tab-background: #0d1014;
     --tabbed-modal-border: none;
-    box-shadow: 0 0 7px 1px #444;
+    box-shadow: none;
 }
 
 #code-area .tabbed-modal__content {
