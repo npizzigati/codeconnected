@@ -1097,7 +1097,7 @@ body.is-resizing {
 }
 
 .tooltip__text {
-    background: #333;
+    background-color: #32404d;
     border-radius: 2em;
     padding: 0 0.4em;
 }
