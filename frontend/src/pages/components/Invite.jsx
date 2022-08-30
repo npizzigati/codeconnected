@@ -41,6 +41,11 @@ function Invite () {
       </div>
       {showDialog &&
         <div className='invite__dialog' ref={inviteDialogDomRef}>
+          <div className='u-marg-bot-1'>
+            <span className='invite__instructions'>
+              Visitors to this url will join this code session:
+            </span>
+          </div>
           <div className='media'>
             <div className='media__text'>
               <span className='invite__text'>{window.location.href}</span>

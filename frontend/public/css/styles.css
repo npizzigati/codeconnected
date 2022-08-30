@@ -1216,7 +1216,18 @@ body.is-resizing {
     z-index: var(--invite-z-index);
 }
 
+.invite__instructions {
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    font-size: 0.7rem;
+    color: white;
+}
+
 .invite__text {
+    font-family: 'Roboto', sans-serif;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 0.8rem;
     color: #e3e3ea;
     background: var(--code-area-modal-background);
     user-select: text;
