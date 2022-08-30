@@ -54,7 +54,7 @@ function Home () {
       },
       {
         number: 2,
-        icon: { path: './images/run.png', alt: 'Time-limited' },
+        icon: { path: './images/timer.png', alt: 'Time-limited' },
         text: 'Continue to time-limited session',
         callback: continueAnyway
       }
