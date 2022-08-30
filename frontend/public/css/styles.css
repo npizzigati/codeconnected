@@ -1150,8 +1150,8 @@ body.is-resizing {
     font-family: 'Jost', sans-serif;
     font-weight: 400;
     color: #999;
-    background-color: var(--code-area-bg-color);
-    border: 1px solid #555;
+    background-color: #050609;
+    border: 1px solid #666;
     border-radius: 0.4em;
     padding: 0.3em;
     cursor: pointer;
