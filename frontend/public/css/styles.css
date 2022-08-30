@@ -1139,6 +1139,7 @@ body.is-resizing {
     display: flex;
     width: 100%;
     justify-content: center;
+    z-index: var(--popup-dialog-z-index);
 }
 
 .popup:empty {
