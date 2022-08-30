@@ -39,6 +39,7 @@ function UserQuickdash ({ setAuthed }) {
 
     return function cleanup () {
       document.removeEventListener('pointerdown', handleDocPointerDown);
+      document.removeEventListener('escapePressed', hideQuickdash);
       isCanceled = true;
     };
   }, []);
