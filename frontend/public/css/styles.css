@@ -316,6 +316,10 @@ body.is-resizing {
     align-items: center;
 }
 
+.flex-container--horiz-centered {
+    justify-content: center;
+}
+
 .flex-container--col {
     flex-direction: column;
 }
