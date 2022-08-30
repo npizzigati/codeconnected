@@ -696,7 +696,7 @@ body.is-resizing {
     position: fixed;
     display: flex;
     flex-direction: column;
-    padding: 1em;
+    padding: 1em 1em 0.2em;
     top: 3.7em;
     right: 2.2em;
     min-width: 3em;
@@ -715,8 +715,9 @@ body.is-resizing {
 }
 
 .user-quickdash__heading {
-    font-family: 'Lato', sans-serif;
-    font-size: 1.2rem;
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
     color: #444;
     text-align: center;
     margin-bottom: 0.5em;
@@ -736,7 +737,7 @@ body.is-resizing {
     border: none;
     border-radius: 0.8em;
     padding: 0.2em 1.5em 0.3em;
-    margin: 1em auto;
+    margin: 1em auto 0.5em;
 }
 
 .user-quickdash__sign-out-button:hover {
