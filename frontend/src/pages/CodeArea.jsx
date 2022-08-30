@@ -25,6 +25,7 @@ import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
 import Participants from './components/Participants.jsx';
+import Invite from './components/Invite.jsx';
 
 import { handlePointerDown } from '../helpers/miscUtils.js';
 
@@ -198,8 +199,11 @@ function CodeArea () {
             </div>
           </div>
           <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-1 u-marg-bot-5'>
-            <div className='u-marg-right-8 u-marg-top-1'>
+            <div className='u-marg-right-2'>
               <Participants participantNames={participantNames} />
+            </div>
+            <div className='u-marg-right-8'>
+              <Invite />
             </div>
             <div>
               {authed

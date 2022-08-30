@@ -146,6 +146,15 @@ body.is-resizing {
     width: auto;
 }
 
+.media__image--micro {
+    height: 1.5em;
+    width: auto;
+}
+
+.media__image--clickable {
+    cursor: pointer;
+}
+
 .media__text {
     display: flex;
     flex-direction: column;
@@ -1183,13 +1192,32 @@ body.is-resizing {
     padding: 0 0.4em;
 }
 
-.invite-link {
-    position: absolute;
+.invite__button {
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    color: #999;
+    background-color: var(--code-area-bg-color);
+    border: 1px solid #9286aa;
+    border-radius: 0.4em;
+    padding: 0.3em;
+    cursor: pointer;
+}
+
+.invite__dialog {
+    background: var(--code-area-modal-background);
+    position: fixed;
     top: 3em;
-    left: -5em;
-    right: -1em;
+    right: 3em;
+    padding: 0.4em 0.8em;
     text-align: center;
+    border-radius: 0.5em;
     z-index: var(--popup-dialog-z-index);
+}
+
+.invite__text {
+    color: #e3e3ea;
+    background: var(--code-area-modal-background);
+    user-select: text;
 }
 
 .resizer {
