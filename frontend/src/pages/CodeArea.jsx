@@ -212,7 +212,7 @@ function CodeArea () {
                     className='sign-in-link'
                     onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
                   >
-                    Sign&nbsp;in
+                    Sign in
                   </div>}
             </div>
           </div>

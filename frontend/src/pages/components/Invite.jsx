@@ -37,7 +37,7 @@ function Invite () {
         ref={inviteButtonDomRef}
         onPointerDown={ev => handlePointerDown(ev, toggleInviteDialog)}
       >
-        <span>Invite&nbsp;Link</span>
+        <span>Invite Link</span>
       </div>
       {showDialog &&
         <div className='invite__dialog' ref={inviteDialogDomRef}>

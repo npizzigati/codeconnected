@@ -54,7 +54,6 @@ body {
     font-size: calc(0.5em + 1vh);
     user-select: none;
     -webkit-user-select: none;
-    white-space: pre;
 }
 
 /* Prevent text from being selected when user is resizing code
@@ -199,6 +198,7 @@ body.is-resizing {
     font-size: 1.3em;
     color: white;
     display: block;
+    white-space: nowrap;
 }
 
 #home {
@@ -422,6 +422,7 @@ body.is-resizing {
     font-weight: 700;
     font-size: 1.3em;
     text-decoration: underline;
+    white-space: nowrap;
 }
 
 .sign-in-link:hover {
@@ -850,6 +851,7 @@ body.is-resizing {
     font-weight: 400;
     color: #666;
     padding-right: 20px;
+    white-space: nowrap;
 }
 
 .editor-lang-label {
@@ -1171,6 +1173,7 @@ body.is-resizing {
     border-radius: 0.4em;
     padding: 0.3em;
     cursor: pointer;
+    white-space: nowrap;
     z-index: var(--participants-list-z-index);
 }
 
@@ -1206,6 +1209,7 @@ body.is-resizing {
     border-radius: 0.4em;
     padding: 0.3em;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .invite__dialog {
