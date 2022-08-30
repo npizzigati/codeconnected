@@ -7,7 +7,6 @@ import PuffLoader from 'react-spinners/PuffLoader';
 import * as Y from 'yjs';
 // Import custom y-codemirror.js
 import { CodemirrorBinding } from '../utilities/y-codemirror.js';
-import { WebrtcProvider } from 'y-webrtc';
 import { WebsocketProvider } from 'y-websocket';
 
 import CodeMirror from 'codemirror/lib/codemirror.js';
@@ -51,7 +50,6 @@ function CodeArea () {
   const setupDone = useRef(false);
   const ws = useRef(null);
   const wsProvider = useRef(null);
-  const rtcProvider = useRef(null);
   const flagClear = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
@@ -545,9 +543,7 @@ function CodeArea () {
 
     const ytextCode = ydoc.current.getText('codemirror');
 
-    // y.js connection providers
-    rtcProvider.current = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc.current);
-    // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
+    // y.js connection provider
     wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc.current
     );
