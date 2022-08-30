@@ -669,12 +669,12 @@ body.is-resizing {
 }
 
 #code-area .user-quickdash__sign-out-button {
-    color: #555;
-    background-color: #d9d9d9;
+    color: #e3e3ea;
+    background-color: #336791;
 }
 
 #code-area .user-quickdash__sign-out-button:hover {
-    background-color: #cfcfcf;
+    background-color: #042853;
 }
 
 #code-area .tabbed-modal {
