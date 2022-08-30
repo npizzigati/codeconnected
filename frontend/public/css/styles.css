@@ -522,7 +522,7 @@ body.is-resizing {
     width: fit-content;
     min-width: 24em;
     border-radius: 0.7rem;
-    box-shadow: 4px 4px 7px 1px #444;
+    box-shadow: 0 0 7px 1px #444;
 }
 
 .tabbed-modal__content {
@@ -680,7 +680,7 @@ body.is-resizing {
     --tabbed-modal-background: #1d252d;
     --unselected-tab-background: #0d1014;
     --tabbed-modal-border: none;
-    box-shadow: 4px 4px 7px 1px #444;
+    box-shadow: 0 0 7px 1px #444;
 }
 
 #code-area .tabbed-modal__content {
