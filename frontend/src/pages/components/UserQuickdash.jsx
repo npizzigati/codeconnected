@@ -5,7 +5,6 @@ import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function UserQuickdash ({ setAuthed }) {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [showQuickdash, setShowQuickdash] = useState(false);
   const avatar = useRef(null);
   const quickdash = useRef(null);
@@ -36,7 +35,6 @@ function UserQuickdash ({ setAuthed }) {
         return;
       }
       setUsername(userInfo.username);
-      setEmail(userInfo.email);
     })();
 
     return function cleanup () {
@@ -61,28 +59,18 @@ function UserQuickdash ({ setAuthed }) {
         <div className='user-quickdash__heading'>
           Signed in as:
         </div>
-        <div className='aligned-block__row'>
-          <div className='aligned-block__cell'>
-            <img
-              className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
-              src='./images/blank_avatar.png'
-              alt='User'
-            />
-          </div>
-          <div className='aligned-block__cell'>
-            <span className='user-quickdash__text'>{username}</span>
-          </div>
-        </div>
-        <div className='aligned-block__row'>
-          <div className='aligned-block__cell'>
-            <img
-              className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
-              src='./images/mail.png'
-              alt='email'
-            />
-          </div>
-          <div className='aligned-block__cell'>
-            <span className='user-quickdash__text'>{email}</span>
+        <div className='flex-container flex-container--horiz-centered'>
+          <div className='aligned-block__row'>
+            <div className='aligned-block__cell'>
+              <img
+                className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
+                src='./images/blank_avatar.png'
+                alt='User'
+              />
+            </div>
+            <div className='aligned-block__cell'>
+              <span className='user-quickdash__text'>{username}</span>
+            </div>
           </div>
         </div>
         <button
