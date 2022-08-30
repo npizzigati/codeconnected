@@ -25,7 +25,7 @@ import Select from './components/Select.jsx';
 import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
-import ParticipantList from './components/ParticipantList.jsx';
+import Participants from './components/Participants.jsx';
 
 import { handlePointerDown } from '../helpers/miscUtils.js';
 
@@ -51,6 +51,7 @@ function CodeArea () {
   const setupDone = useRef(false);
   const ws = useRef(null);
   const wsProvider = useRef(null);
+  const rtcProvider = useRef(null);
   const flagClear = useRef(null);
   const codeOptions = useRef(null);
   const cmRef = useRef(null);
@@ -198,16 +199,20 @@ function CodeArea () {
               </div>
             </div>
           </div>
-            <ParticipantList participantNames={participantNames} />
-          <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-1 u-marg-top-1'>
-            {authed
-              ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuthed} /></div>
-              : <div
-                  className='sign-in-link u-marg-left-auto'
-                  onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
-                >
-                  Sign in
-                </div>}
+          <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-1 u-marg-bot-5'>
+            <div className='u-marg-right-8 u-marg-top-1'>
+              <Participants participantNames={participantNames} />
+            </div>
+            <div>
+              {authed
+                ? <div><UserQuickdash setAuthed={setAuthed} /></div>
+                : <div
+                    className='sign-in-link'
+                    onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
+                  >
+                    Sign in
+                  </div>}
+            </div>
           </div>
         </header>
         <main>
@@ -541,7 +546,7 @@ function CodeArea () {
     const ytextCode = ydoc.current.getText('codemirror');
 
     // y.js connection providers
-    const rtcProvider = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc.current);
+    rtcProvider.current = new WebrtcProvider('nicks-cm-room-' + roomID, ydoc.current);
     // rtcProvider.awareness.setLocalStateField('user', { color: 'gray', name: 'me' });
     wsProvider.current = new WebsocketProvider(
       window.location.origin.replace(/^http/, 'ws') + '/ywebsocketprovider', 'nicks-cm-room-' + roomID, ydoc.current

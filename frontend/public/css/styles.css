@@ -12,6 +12,7 @@
     --user-quickdash-z-index: 40;
     --backdrop--level2-z-index: 50;
     --popup-dialog-z-index: 60;
+    --tooltip-z-index: 65;
     --spinner-z-index: 70;
 }
 
@@ -1064,13 +1065,36 @@ body.is-resizing {
 }
 
 .participants-list {
+    position: relative;
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    color: #999;
+    border: 1px solid #555;
+    border-radius: 0.4em;
+    padding: 0.3em;
 }
 
 .participants-list__label {
-    padding-right: 0.2em;
+    padding-right: 0.1em;
 }
 
 .participants-list__count {
+}
+
+.tooltip {
+    position: absolute;
+    top: 3em;
+    left: -1em;
+    right: -1em;
+    font-size: 0.8em;
+    text-align: center;
+    z-index: var(--tooltip-z-index)
+}
+
+.tooltip__text {
+    background: #333;
+    border-radius: 2em;
+    padding: 0 0.4em;
 }
 
 .resizer {
