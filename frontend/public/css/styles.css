@@ -584,7 +584,7 @@ body.is-resizing {
     display: flex;
     text-align: center;
     flex-direction: column;
-    padding: 1em 1em 0.2em;
+    padding: 0.6em 1em 0.2em;
     top: 3.7em;
     right: 2.2em;
     min-width: 3em;
@@ -605,7 +605,7 @@ body.is-resizing {
 .user-quickdash__heading {
     font-family: 'Jost', sans-serif;
     font-weight: 300;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #555;
     text-align: center;
     margin-bottom: 0.3em;
