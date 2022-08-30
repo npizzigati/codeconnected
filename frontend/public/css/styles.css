@@ -1198,7 +1198,7 @@ body.is-resizing {
 .invite__button {
     font-family: 'Jost', sans-serif;
     font-weight: 400;
-    color: #999;
+    color: #9286aa;
     background-color: var(--code-area-bg-color);
     border: 1px solid #9286aa;
     border-radius: 0.4em;
