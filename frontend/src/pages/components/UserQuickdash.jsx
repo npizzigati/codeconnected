@@ -59,20 +59,7 @@ function UserQuickdash ({ setAuthed }) {
         <div className='user-quickdash__heading'>
           Signed in as:
         </div>
-        <div className='flex-container flex-container--horiz-centered'>
-          <div className='aligned-block__row'>
-            <div className='aligned-block__cell'>
-              <img
-                className='aligned-block__image aligned-block__image--tinier u-pad-right-1'
-                src='./images/blank_avatar.png'
-                alt='User'
-              />
-            </div>
-            <div className='aligned-block__cell'>
-              <span className='user-quickdash__text'>{username}</span>
-            </div>
-          </div>
-        </div>
+        <span className='user-quickdash__text'>{username}</span>
         <button
           className='user-quickdash__sign-out-button'
           onPointerDown={(ev) => handlePointerDown(ev, signOut, ev)}
