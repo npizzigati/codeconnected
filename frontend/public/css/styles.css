@@ -6,6 +6,7 @@
     --modal-border: 1px #777 solid;
     /* z-indexes */
     --terminal-scrollport-z-index: 10;
+    --participants-list-z-index: 10;
     --backdrop-z-index: 20;
     --select-dropdown-z-index: 30;
     --tabbed-modal-z-index: 40;
@@ -1074,9 +1075,12 @@ body.is-resizing {
     font-family: 'Jost', sans-serif;
     font-weight: 400;
     color: #999;
+    background-color: var(--code-area-bg-color);
     border: 1px solid #555;
     border-radius: 0.4em;
     padding: 0.3em;
+    cursor: pointer;
+    z-index: var(--participants-list-z-index);
 }
 
 .participants-list__label {
