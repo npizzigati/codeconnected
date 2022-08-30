@@ -569,7 +569,7 @@ function CodeArea () {
     participants.current = ydoc.current.getMap('participants');
     participants.current.observe(ev => {
       console.log('participants: ' + JSON.stringify(participants.current.toJSON()));
-      setParticipantNames(Array.from(participants.current.values()));
+      buildParticipantNameList();
     });
 
     flagClear.current = ydoc.current.getArray('flag-clear');
@@ -611,6 +611,19 @@ function CodeArea () {
     setPrevTermClientHeight();
     await setupUsername();
     setupDone.current = true;
+  }
+
+  function buildParticipantNameList () {
+    // Put this user's name first on list and append with '(you)'
+    const nameList = [];
+    participants.current.forEach((name, clientID) => {
+      if (clientID === ydoc.current.clientID.toString()) {
+        nameList.unshift(name + ' (you)');
+      } else {
+        nameList.push(name);
+      }
+    });
+    setParticipantNames(nameList);
   }
 
   function setupTerminal (initialHist) {
