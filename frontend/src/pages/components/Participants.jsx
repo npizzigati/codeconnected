@@ -8,30 +8,28 @@ function Participants ({ participantNames }) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
-    <>
-      <div
-        className='participants-list'
-        onPointerDown={ev => handlePointerDown(ev, toggleNames)}
-        onPointerEnter={displayTooltip}
-        onPointerLeave={hideTooltip}
-      >
-        {showNames
-          ? <div>
-              <span className='participants-list__label'>Participants: </span>
-              <span className='participants-list__count'>{participantNames?.join(', ')}</span>
-            </div>
-          : <div>
-              <span className='participants-list__label'>Participants: </span>
-              <span className='participants-list__count'>{participantNames?.length}</span>
-            </div>
-        }
-        {showTooltip &&
-          <div className='tooltip'>
-            <span className='tooltip__text'>Click to {showNames ? 'hide' : 'show'} names</span>
+    <div
+      className='participants-list'
+      onPointerDown={ev => handlePointerDown(ev, toggleNames)}
+      onPointerEnter={displayTooltip}
+      onPointerLeave={hideTooltip}
+    >
+      {showNames
+        ? <div>
+            <span className='participants-list__label'>Participants: </span>
+            <span className='participants-list__count'>{participantNames?.join(', ')}</span>
           </div>
-        }
-      </div>
-    </>
+        : <div>
+            <span className='participants-list__label'>Participants: </span>
+            <span className='participants-list__count'>{participantNames?.length}</span>
+          </div>
+      }
+      {showTooltip &&
+        <div className='tooltip'>
+          <span className='tooltip__text'>Click to {showNames ? 'hide' : 'show'} names</span>
+        </div>
+      }
+    </div>
   );
 
   function toggleNames () {
