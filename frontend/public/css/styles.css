@@ -1563,6 +1563,10 @@ body.is-resizing {
     :root {
         font-size: calc(0.5em + .5vh);
     }
+
+    .flex-pane__message {
+        font-size: 1rem;
+    }
 }
 
 @media (max-width: 300px) {
