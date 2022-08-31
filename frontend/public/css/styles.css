@@ -1211,6 +1211,15 @@ body.is-resizing {
     white-space: nowrap;
 }
 
+.invite__button:hover {
+    color: #3d7ead;
+
+}
+
+.invite__button:active {
+    color: #336990;
+}
+
 .invite__dialog {
     background: var(--code-area-modal-background);
     position: fixed;
