@@ -258,7 +258,7 @@ function CodeArea () {
             <div className='resizer__handle' />
           </div>
           <div
-            id='terminal-container'
+            className='terminal-container'
             ref={termContainerDomRef}
             style={{ width: termWidth }}
           >
@@ -287,7 +287,7 @@ function CodeArea () {
                 </div>
                 <div
                   ref={termDomRef}
-                  id='terminal-wrapper'
+                  className='terminal-wrapper'
                 />
               </div>}
             {!termEnabled &&

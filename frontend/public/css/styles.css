@@ -793,7 +793,7 @@ body.is-resizing {
 .terminal-scroll-layer {
 }
 
-#terminal-wrapper {
+.terminal-wrapper {
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: auto;
@@ -806,12 +806,12 @@ body.is-resizing {
     scrollbar-width: none;
 }
 
-#terminal-wrapper::-webkit-scrollbar {
+.terminal-wrapper::-webkit-scrollbar {
     /* Disable vertical scrollbar in Webkit/Chrome */
     width: 0px;
 }
 
-#terminal-container {
+.terminal-container {
     --term-background: black;
     background-color: var(--term-background);
     box-sizing: border-box;
