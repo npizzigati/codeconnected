@@ -916,6 +916,9 @@ function CodeArea () {
 
   function handleResize () {
     const threshold = 10;
+    if (termDomRef.current === null) {
+      return;
+    }
     const delta = termDomRef.current.clientHeight - prevTermClientHeight.current;
     const distancePastBottom = getDistancePastBottom();
     // If last line was previously aligned to bottom, keep it that way
