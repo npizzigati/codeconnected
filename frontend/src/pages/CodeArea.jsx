@@ -301,7 +301,7 @@ function CodeArea () {
   );
 
   function removeUserFromParticipants () {
-    participants.current.delete(ydoc.current.clientID.toString());
+    participants.current.delete(ydoc.current?.clientID.toString());
   }
 
   async function setupUsername () {
