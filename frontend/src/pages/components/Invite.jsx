@@ -43,7 +43,7 @@ function Invite () {
         <div className='invite__dialog' ref={inviteDialogDomRef}>
           <div className='u-marg-bot-1'>
             <span className='invite__instructions'>
-              Send this link to someone to join the code session:
+              Send this link to a friend to join this code session:
             </span>
           </div>
           <div className='media'>
