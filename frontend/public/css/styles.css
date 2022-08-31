@@ -1164,7 +1164,6 @@ body.is-resizing {
 
 .participants-list {
     position: relative;
-    height: 1em;
     font-family: 'Jost', sans-serif;
     font-weight: 400;
     color: #999;
