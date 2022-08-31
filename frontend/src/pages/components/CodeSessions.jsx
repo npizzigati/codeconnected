@@ -59,7 +59,7 @@ function CodeSessions ({ authed, setShowAuth }) {
            <span
              className='flex-pane__message'
            >
-             <span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign in</span> to access previous sessions
+             <span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access&nbsp;previous&nbsp;sessions
            </span>
          </div>}
     </div>
