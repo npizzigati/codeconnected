@@ -56,7 +56,7 @@ function CodeArea () {
   const cmRef = useRef(null);
   const lang = useRef(null);
   const username = useRef(null);
-  const participants = useRef([]);
+  const participants = useRef(null);
   const [participantNames, setParticipantNames] = useState(null)
   const codeSessionID = useRef(-1);
   const [language, setLanguage] = useState('');
