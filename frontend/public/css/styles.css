@@ -170,6 +170,7 @@ body.is-resizing {
     font-family: 'Saira Condensed', sans-serif;
     font-size: 2.7em;
     color: white;
+    white-space: nowrap;
 }
 
 .site-name--color1 {
