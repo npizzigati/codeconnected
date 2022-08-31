@@ -220,7 +220,7 @@ function CodeArea () {
         <main>
           <div
             ref={cmContainerDOMRef}
-            id='codemirror-container'
+            class='codemirror-container'
             style={{ width: cmWidth }}
           >
             <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
@@ -238,9 +238,9 @@ function CodeArea () {
                 }}
                 config={{ staticTitle: true }}
               />
-              <button id='run-button' onClick={executeContent}>Run</button>
+              <button class='run-button' onClick={executeContent}>Run</button>
             </div>
-            <div id='codemirror-wrapper'>
+            <div class='codemirror-wrapper'>
               {showCodeMirror &&
                 <textarea
                   ref={codeAreaDOMRef}

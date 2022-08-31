@@ -861,13 +861,13 @@ body.is-resizing {
     color: #666;
 }
 
-#codemirror-wrapper {
+.codemirror-wrapper {
     box-sizing: border-box;
     border: 1px solid var(--code-area-border-color);
     height: 100%;
 }
 
-#codemirror-container {
+.codemirror-container {
     position: relative;
     box-sizing: border-box;
     margin: 0 0 0 5px;
@@ -896,7 +896,7 @@ body.is-resizing {
     cursor: pointer;
 }
 
-#run-button {
+.run-button {
     display: inline-block;
     padding-top: 0em;
     padding-bottom: 0.1em;
@@ -910,12 +910,12 @@ body.is-resizing {
     margin-left: 20px;
 }
 
-#run-button:hover {
+.run-button:hover {
     background-color: #2fc3a6;
     cursor: pointer;
 }
 
-#run-button:active {
+.run-button:active {
     color: #dcdcdc;
 }
 
