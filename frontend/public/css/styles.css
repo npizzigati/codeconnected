@@ -1538,10 +1538,6 @@ body.is-resizing {
 }
 
 @media (max-width: 550px) {
-    :root {
-        font-size: calc(0.5em + .8vh);
-    }
-
     .editor-lang-label {
         display: none;
     }
@@ -1552,6 +1548,12 @@ body.is-resizing {
 
     .participants-list {
         display: none;
+    }
+}
+
+@media (max-width: 400px) {
+    :root {
+        font-size: calc(0.5em + .5vh);
     }
 }
 
