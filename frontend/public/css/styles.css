@@ -899,26 +899,24 @@ body.is-resizing {
 }
 
 .run-button {
-    display: inline-block;
-    padding-top: 0em;
-    padding-bottom: 0.1em;
-    height: 1.1em;
-    font-family: 'Roboto', sans-serif;
-    font-size: 0.9rem;
-    color: white;
-    border-radius: 0.2em;
-    border: none;
-    background-color: #2bb297;
-    margin-left: 20px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 500;
+    padding: 0.1em 0.4em;
+    color: #2bb297;
+    border-radius: 0.4em;
+    border: 1px solid #2bb297;
+    background-color: var(--code-area-bg-color);
+    margin-left: 1.8em;
+    white-space: nowrap;
 }
 
 .run-button:hover {
-    background-color: #2fc3a6;
     cursor: pointer;
+    color: #22907a;
 }
 
 .run-button:active {
-    color: #dcdcdc;
+    color: #1a6f5e;
 }
 
 .select {

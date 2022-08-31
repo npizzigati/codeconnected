@@ -238,7 +238,9 @@ function CodeArea () {
                 }}
                 config={{ staticTitle: true }}
               />
-              <button class='run-button' onClick={executeContent}>Run</button>
+              <div class='run-button' onClick={executeContent}>
+                Run
+              </div>
             </div>
             <div class='codemirror-wrapper'>
               {showCodeMirror &&
