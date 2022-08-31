@@ -301,6 +301,9 @@ function CodeArea () {
   );
 
   function removeUserFromParticipants () {
+    if (participants.current === null) {
+      return;
+    }
     participants.current.delete(ydoc.current?.clientID.toString());
   }
 
