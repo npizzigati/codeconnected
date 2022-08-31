@@ -714,7 +714,14 @@ function CodeArea () {
 
   function focusTerminal (ev) {
     ev.preventDefault();
-    term.current?.focus();
+    if (ev.pointerType === 'mouse') {
+      term.current?.focus();
+    } else {
+      // Wait a fraction of a second before focusing, since focus
+      // won't stick in some mobile browsers (i.e., pointerType
+      // not mouse) if we apply it immediately
+      setTimeout(() => term.current?.focus(), 300);
+    }
   }
 
   function setupResizeEventListener () {
