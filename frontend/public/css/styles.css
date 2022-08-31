@@ -374,6 +374,7 @@ body.is-resizing {
     font-size: 0.9rem;
     color: #336791;
     line-height: 0.5em;
+    white-space: nowrap;
 }
 
 .table-row--items {
@@ -381,6 +382,7 @@ body.is-resizing {
     font-size: 0.9rem;
     font-weight: 400;
     color: #444;
+    white-space: nowrap;
 }
 
 .table-row--items:hover {
