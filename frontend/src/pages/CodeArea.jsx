@@ -325,6 +325,8 @@ function CodeArea () {
     wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
     participants.current.set(ydoc.current.clientID.toString(), username.current);
     window.addEventListener('beforeunload', () => removeUserFromParticipants());
+    // For iOS
+    window.addEventListener('pagehide', () => removeUserFromParticipants());
   }
 
   function fireKeydownEvents (event) {
