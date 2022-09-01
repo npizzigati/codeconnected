@@ -1,9 +1,13 @@
 :root {
+    --inner-height: 100vh;
     --main-bg-color: white;
     --code-area-bg-color: #0d1117;
     --code-area-border-color: #1e262e;
-    --modal-background: transparent;
+    --code-area-header-height: 3.6em;
+    --code-area-header-padding-top: 0.5em;
+    --code-area-bottom-margin: 1em;
     --code-area-modal-background: #32404d;
+    --modal-background: transparent;
     --modal-border: 1px #777 solid;
     /* z-indexes */
     --terminal-scrollport-z-index: 10;
@@ -50,6 +54,9 @@ h4 {
 body {
     background-color: var(--main-bg-color);
     color: #555;
+    /* This height definition for the sole purpose of having
+       height update on resize, to trigger resizeObserver */
+    height: 100%;
     box-sizing: border-box;
     font-size: calc(0.5em + 1vh);
     user-select: none;
@@ -208,7 +215,7 @@ body.is-resizing {
     /* background-color: var(--main-bg-color); */
     /* background: no-repeat url("./circuit-board.jpg"); */
     background-size: cover;
-    height: 100vh;
+    height: var(--inner-height);
     /* Don't show scrollbars on Firefox*/
     scrollbar-width: none;
 }
@@ -244,6 +251,8 @@ body.is-resizing {
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 1;
+    transition: opacity 0.4s;
 }
 
 .message {
@@ -641,10 +650,7 @@ body.is-resizing {
 
 #code-area {
     background: var(--code-area-bg-color);
-    height: 100vh;
-    --header-height: 3.6em;
-    --header-padding-top: 0.5em;
-    --bottom-margin: 1em;
+    height: var(--inner-height);
 }
 
 #code-area.hidden {
@@ -657,16 +663,16 @@ body.is-resizing {
 }
 
 #code-area > header {
-    height: var(--header-height);
+    height: var(--code-area-header-height);
     display: flex;
     padding-left: 0.6em;
     padding-right: 0.6em;
-    padding-top: var(--header-padding-top);
+    padding-top: var(--code-area-header-padding-top);
 }
 
 #code-area > main {
     /* flex: 20; */
-    height: calc(100vh - var(--header-height) - var(--header-padding-top) - var(--bottom-margin));
+    height: calc(var(--inner-height) - var(--code-area-header-height) - var(--code-area-header-padding-top) - var(--code-area-bottom-margin));
     display: flex;
     padding: 0.5em;
 }

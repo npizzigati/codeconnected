@@ -27,7 +27,7 @@ import PopupDialog from './components/PopupDialog.jsx';
 import Participants from './components/Participants.jsx';
 import Invite from './components/Invite.jsx';
 
-import { handlePointerDown } from '../helpers/miscUtils.js';
+import { handlePointerDown, debounce, changeCSSInnerHeight, setupWindowResizeListener } from '../helpers/miscUtils.js';
 
 // TODO: Somehow ping the server to deal with the case where the
 // room is closed with a client still attached, as in when I shut
@@ -117,6 +117,10 @@ function CodeArea () {
       console.log('now online');
       location.reload();
     }
+    // When resizing screen, it's useful to have the body be the
+    // same color as the content background, to avoid background
+    // artifacts
+    document.body.style.backgroundColor = '#0d1117';
     // Check whether room exists when user comes online. This
     // is so that users returning from sleep or otherwise being
     // offline can automatically return to home page if room
@@ -128,6 +132,11 @@ function CodeArea () {
 
     // If escape custom event fires, close this component's modal dialogs
     document.addEventListener('escapePressed', closeModals);
+
+    // Fix to solve viewport problem on iOS devices
+    // (Before fix, footer was not always fixed at bottom of
+    // screen.)
+    setupWindowResizeListener(() => debounce(changeCSSInnerHeight, 100));
 
     (async () => {
       await setup(isCanceled);
