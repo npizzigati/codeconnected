@@ -182,7 +182,7 @@ function CodeArea () {
             <PopupDialog config={popupDialogConfig} />
           </div>}
         <header>
-          <div className='flex-pane'>
+          <div className='flex-pane flex-container flex-container--vert-top'>
             <div
               className='media u-marg-left-1'
             >
@@ -207,14 +207,10 @@ function CodeArea () {
                 Time remaining: {timeLeftDisplay}
               </div>}
           </div>
-          <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-1 u-marg-bot-5'>
-            <div className='u-marg-right-2'>
-              <Participants participantNames={participantNames} />
-            </div>
-            <div className='u-marg-right-8'>
-              <Invite />
-            </div>
-            <div>
+          <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered flex-container--gap u-marg-right-1 u-marg-bot-5'>
+            <Participants participantNames={participantNames} />
+            <Invite />
+            <div className='sign-in-block'>
               {authed
                 ? <div><UserQuickdash setAuthed={setAuthed} /></div>
                 : <div
@@ -233,20 +229,22 @@ function CodeArea () {
             style={{ width: cmWidth }}
           >
             <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-              <span className='editor-and-repl-title'>Code Editor</span>
-              <span className='editor-lang-label'>Language:&nbsp;</span>
-              <Select
-                options={[{ value: 'ruby', label: 'Ruby' },
-                          { value: 'node', label: 'Javascript' },
-                          { value: 'postgres', label: 'PostgreSQL' }]}
-                title={cmTitle}
-                callback={(ev) => {
-                  lang.current = ev.target.dataset.value;
-                  switchLanguage(lang.current);
-                  updateCodeSession();
-                }}
-                config={{ staticTitle: true }}
-              />
+              <div className='editor-and-repl-title'>Code Editor</div>
+              <div className='flex-container'>
+                <div className='editor-lang-label'>Language:&nbsp;</div>
+                <Select
+                  options={[{ value: 'ruby', label: 'Ruby' },
+                            { value: 'node', label: 'Javascript' },
+                            { value: 'postgres', label: 'PostgreSQL' }]}
+                  title={cmTitle}
+                  callback={(ev) => {
+                    lang.current = ev.target.dataset.value;
+                    switchLanguage(lang.current);
+                    updateCodeSession();
+                  }}
+                  config={{ staticTitle: true }}
+                />
+              </div>
               <div className='run-button' onClick={executeContent}>
                 Run
               </div>
@@ -272,7 +270,7 @@ function CodeArea () {
             style={{ width: termWidth }}
           >
             <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-              <span className='editor-and-repl-title'>{replTitle}</span>
+              <div className='editor-and-repl-title'>{replTitle}</div>
               <Select
                 options={[{ value: 'clear', label: 'Clear' },
                           { value: 'reset', label: 'Reset' }]}
