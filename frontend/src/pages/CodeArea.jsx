@@ -202,6 +202,10 @@ function CodeArea () {
                 </div>
               </div>
             </div>
+            {timeLeftDisplay !== null &&
+              <div className='time-remaining'>
+                Time remaining: {timeLeftDisplay}
+              </div>}
           </div>
           <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-1 u-marg-bot-5'>
             <div className='u-marg-right-2'>

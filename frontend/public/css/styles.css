@@ -339,6 +339,10 @@ body.is-resizing {
     align-items: center;
 }
 
+.flex-container--vert-top {
+    align-items: start;
+}
+
 .flex-container--horiz-centered {
     justify-content: center;
 }
@@ -753,18 +757,15 @@ body.is-resizing {
 
 
 .time-remaining {
-    position: fixed;
     text-align: center;
-    top: 2em;
-    right: 10em;
-    width: 11em;
     color: white;
-    height: fit-content;
+    height: 1em;
+    padding: 0.2em;
+    margin: 0.3em 1em;
     font-family: 'Lato', sans-serif;
-    font-size: 1.1em;
-    padding: 0.3em;
     border-radius: 0.2em;
-    background-color: #5e499b
+    background-color: #5e499b;
+    white-space: nowrap;
 }
 
 .xterm .xterm-viewport {
