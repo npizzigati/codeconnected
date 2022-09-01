@@ -175,10 +175,6 @@ function CodeArea () {
         id='code-area'
         className={showContent ? 'visible' : 'hidden'}
       >
-        {timeLeftDisplay !== null &&
-          <div className='time-remaining'>
-            Time remaining: {timeLeftDisplay}
-          </div>}
         {showAuth &&
           <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
         {showBackToHomeDialog &&
@@ -729,7 +725,9 @@ function CodeArea () {
       // Wait a fraction of a second before focusing, since focus
       // won't stick in some mobile browsers (i.e., pointerType
       // not mouse) if we apply it immediately
-      setTimeout(() => term.current?.focus(), 300);
+      setTimeout(() => {
+        term.current?.focus();
+      }, 500);
     }
   }
 
@@ -744,6 +742,11 @@ function CodeArea () {
     const xtermViewportEl = document.querySelector('.xterm-viewport');
     termScrollLayerDomRef.current.style.width = xtermViewportEl.style.width;
     termScrollportDomRef.current.scrollTop = fakeScrollMidpoint;
+    // Set contentEditable and inputMode so that keyboard will
+    // pop up on ipad when tapping on the area (focus will be
+    // passed to xterm.js through event listener)
+    termScrollLayerDomRef.current.setAttribute('contentEditable', true);
+    termScrollLayerDomRef.current.setAttribute('inputMode', 'text');
   }
 
   function handleTerminalScroll (ev) {
