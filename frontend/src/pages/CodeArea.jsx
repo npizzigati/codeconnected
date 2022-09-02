@@ -426,6 +426,9 @@ function CodeArea () {
     setTimeLeftDisplay(`${minutes}:${seconds}`);
   }
 
+  /**
+   * Resize codemirror and terminal panes, proportionally
+   */
   function resize (event, startEvent) {
     const initialCmWidth = cmContainerDomRef.current.offsetWidth;
     const initialTermWidth = termContainerDomRef.current.offsetWidth;
