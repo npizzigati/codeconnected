@@ -4,6 +4,7 @@ const debounceTimeouts = {};
 
 function handlePointerDown (ev, callback, ...args) {
   // Do nothing if this is a mouse click and not button 0 (left click)
+  ev.preventDefault();
   if (ev.pointerType === 'mouse' && ev.button !== 0) {
     return;
   }
