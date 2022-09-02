@@ -1267,6 +1267,8 @@ body.is-resizing {
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Needed to allow resizing in mobile */
+    touch-action: none;
 }
 
 .resizer__handle {
