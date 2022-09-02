@@ -188,7 +188,7 @@ function CodeArea () {
             <PopupDialog config={popupDialogConfig} />
           </div>}
         <header>
-          <div className='flex-pane flex-container flex-container--vert-top'>
+          <div className='flex-pane flex-container flex-container--vert-top flex-container--spread-out'>
             <div
               className='media u-marg-left-1'
             >
@@ -209,7 +209,7 @@ function CodeArea () {
               </div>
             </div>
             {timeLeftDisplay !== null &&
-              <div className='time-remaining'>
+              <div className='time-remaining u-marg-top-1'>
                 Time remaining: {timeLeftDisplay}
               </div>}
           </div>
