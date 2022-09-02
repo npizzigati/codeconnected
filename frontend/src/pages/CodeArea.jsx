@@ -433,7 +433,7 @@ function CodeArea () {
   /**
    * Resize codemirror and terminal panes, proportionally
    */
-  function resize (event, startEvent) {
+  function resize (event) {
     const initialCmWidth = cmContainerDomRef.current.offsetWidth;
     const initialTermWidth = termContainerDomRef.current.offsetWidth;
     const resizeBarWidth = resizeBarDomRef.current.offsetWidth;
@@ -467,7 +467,7 @@ function CodeArea () {
     const elem = resizeBarDomRef.current;
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
-    elem.onpointermove = (moveEvent) => resize(moveEvent, event);
+    elem.onpointermove = (moveEvent) => resize(moveEvent);
   }
 
   function showPopup (message) {
