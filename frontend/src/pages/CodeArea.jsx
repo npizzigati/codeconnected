@@ -41,7 +41,8 @@ function CodeArea () {
   const initialTermCols = 80;
   const fakeScrollHeight = 100000;
   const fakeScrollMidpoint = 50000;
-  const codeAreaDOMRef = useRef(null);
+  const codeAreaDomRef = useRef(null);
+  const cmContainerDomRef = useRef(null);
   const termDomRef = useRef(null);
   const termContainerDomRef = useRef(null);
   const termScrollportDomRef = useRef(null);
@@ -61,11 +62,11 @@ function CodeArea () {
   const codeSessionID = useRef(-1);
   const [language, setLanguage] = useState('');
   const ydoc = useRef(null);
-  const resizeBarDOMRef = useRef(null);
+  const resizeBarDomRef = useRef(null);
   const initialX = useRef(null);
   const [cmWidth, setCmWidth] = useState('50%');
   const [termWidth, setTermWidth] = useState('50%');
-  const [minCmWidth, minTermWidth] = [450, 350];
+  const [minCmWidth, minTermWidth] = [150, 150];
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
   const [showContent, setShowContent] = useState(false);
@@ -76,7 +77,6 @@ function CodeArea () {
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
-  const cmContainerDOMRef = useRef(null);
   // Custom event to closeModals
   const escapePressedEvent = new Event('escapePressed');
   let termWriteTimeout;
@@ -224,13 +224,13 @@ function CodeArea () {
         </header>
         <main>
           <div
-            ref={cmContainerDOMRef}
+            ref={cmContainerDomRef}
             className='codemirror-container'
             style={{ width: cmWidth }}
           >
             <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-              <div className='editor-and-repl-title'>Code Editor</div>
-              <div className='flex-container'>
+              <div className='editor-and-repl-title flex-pane'>Code Editor</div>
+              <div className='flex-container flex-pane'>
                 <div className='editor-lang-label'>Language:&nbsp;</div>
                 <Select
                   options={[{ value: 'ruby', label: 'Ruby' },
@@ -252,12 +252,12 @@ function CodeArea () {
             <div className='codemirror-wrapper'>
               {showCodeMirror &&
                 <textarea
-                  ref={codeAreaDOMRef}
+                  ref={codeAreaDomRef}
                 />}
             </div>
           </div>
           <div
-            ref={resizeBarDOMRef}
+            ref={resizeBarDomRef}
             className='resizer'
             onPointerDown={(ev) => handlePointerDown(ev, startResize, ev)}
             onPointerUp={stopResize}
@@ -373,9 +373,9 @@ function CodeArea () {
   }
 
   function resize (event, startEvent) {
-    const initialCmWidth = cmContainerDOMRef.current.offsetWidth;
+    const initialCmWidth = cmContainerDomRef.current.offsetWidth;
     const initialTermWidth = termContainerDomRef.current.offsetWidth;
-    const resizeBarWidth = resizeBarDOMRef.current.offsetWidth;
+    const resizeBarWidth = resizeBarDomRef.current.offsetWidth;
     const deltaX = event.clientX - initialX.current;
     const leftBoundary = minCmWidth;
     const rightBoundary = (initialCmWidth + resizeBarWidth + initialTermWidth) - minTermWidth;
@@ -406,7 +406,7 @@ function CodeArea () {
     // when resizing (a webkit browser problem)
     document.body.classList.add('is-resizing');
 
-    const elem = resizeBarDOMRef.current;
+    const elem = resizeBarDomRef.current;
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
     elem.onpointermove = (moveEvent) => resize(moveEvent, event);
@@ -414,7 +414,7 @@ function CodeArea () {
 
   async function stopResize (event) {
     document.body.classList.remove('is-resizing');
-    const elem = resizeBarDOMRef.current;
+    const elem = resizeBarDomRef.current;
     elem.onpointermove = null;
     elem.releasePointerCapture(event.pointerId);
   }
@@ -659,7 +659,7 @@ function CodeArea () {
   }
 
   function setupCodeMirror () {
-    const cm = CodeMirror.fromTextArea(codeAreaDOMRef.current, {
+    const cm = CodeMirror.fromTextArea(codeAreaDomRef.current, {
       inputStyle: 'textarea',
       value: '',
       lineNumbers: true,
