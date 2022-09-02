@@ -844,7 +844,8 @@ body.is-resizing {
     text-align: center;
 }
 
-.title-row {
+.editor-title-row,
+.repl-title-row {
     display: flex;
     gap: 1.5em;
     align-items: center;
@@ -866,7 +867,8 @@ body.is-resizing {
     top: -1.8em;
 }
 
-.editor-and-repl-title {
+.editor-title,
+.repl-title {
     font-family: 'Jost', sans-serif;
     font-size: 0.9rem;
     font-weight: 400;
@@ -874,11 +876,20 @@ body.is-resizing {
     white-space: nowrap;
 }
 
+.editor-title.hidden,
+.repl-title.hidden {
+    display: none;
+}
+
 .editor-lang-label {
     font-family: 'Jost', sans-serif;
     font-size: 0.9rem;
     font-weight: 400;
     color: #666;
+}
+
+.editor-lang-label.hidden {
+    display: none;
 }
 
 .codemirror-wrapper {

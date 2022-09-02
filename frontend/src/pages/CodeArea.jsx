@@ -47,6 +47,11 @@ function CodeArea () {
   const termContainerDomRef = useRef(null);
   const termScrollportDomRef = useRef(null);
   const termScrollLayerDomRef = useRef(null);
+  const editorTitleDomRef = useRef(null);
+  const replTitleDomRef = useRef(null);
+  const editorLangLabelDomRef = useRef(null);
+  const editorTitleRowDomRef = useRef(null);
+  const replTitleRowDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const setupDone = useRef(false);
@@ -137,8 +142,11 @@ function CodeArea () {
     // Fix to solve viewport problem on iOS devices
     // (Before fix, footer was not always fixed at bottom of
     // screen.)
-    setupWindowResizeListener(() => debounce(changeCSSInnerHeight, 100));
-    setupWindowResizeListener(() => debounce(sanelyAdjustPanelWidths, 300));
+    setupWindowResizeListener(() => {
+      debounce(changeCSSInnerHeight, 100);
+      debounce(adjustHeaderDisplay, 100);
+      debounce(sanelyAdjustPanelWidths, 300);
+    });
 
     (async () => {
       await setup(isCanceled);
@@ -233,10 +241,10 @@ function CodeArea () {
             className='codemirror-container'
             style={{ width: cmWidth }}
           >
-            <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-              <div className='editor-and-repl-title flex-pane'>Code Editor</div>
+            <div className={'editor-title-row' + (runnerReady ? '' : ' hidden')} ref={editorTitleRowDomRef}>
+              <div className='editor-title flex-pane' ref={editorTitleDomRef}>Code Editor</div>
               <div className='flex-container flex-pane'>
-                <div className='editor-lang-label'>Language:&nbsp;</div>
+                <div className='editor-lang-label' ref={editorLangLabelDomRef}>Language:&nbsp;</div>
                 <Select
                   options={[{ value: 'ruby', label: 'Ruby' },
                             { value: 'node', label: 'Javascript' },
@@ -274,8 +282,8 @@ function CodeArea () {
             ref={termContainerDomRef}
             style={{ width: termWidth }}
           >
-            <div className={'title-row' + (runnerReady ? '' : ' hidden')}>
-              <div className='editor-and-repl-title'>{replTitle}</div>
+            <div className={'repl-title-row' + (runnerReady ? '' : ' hidden')} ref={replTitleRowDomRef}>
+              <div className='repl-title' ref={replTitleDomRef}>{replTitle}</div>
               <Select
                 options={[{ value: 'clear', label: 'Clear' },
                           { value: 'reset', label: 'Reset' }]}
@@ -430,6 +438,34 @@ function CodeArea () {
   }
 
   /**
+   * Hide or show codemirror and repl header items depending on
+   * pane width
+   */
+  function adjustHeaderDisplay () {
+    if (cmContainerDomRef.current === null || termContainerDomRef.current === null) {
+      return;
+    }
+    const cmWidth = cmContainerDomRef.current.offsetWidth;
+    if (cmWidth < 220) {
+      editorLangLabelDomRef.current.classList.add('hidden');
+      editorTitleDomRef.current.classList.add('hidden');
+    } else if (cmWidth < 300) {
+      editorTitleDomRef.current.classList.add('hidden');
+      editorLangLabelDomRef.current.classList.remove('hidden');
+    } else {
+      editorTitleDomRef.current.classList.remove('hidden');
+      editorLangLabelDomRef.current.classList.remove('hidden');
+    }
+
+    const termWidth = termContainerDomRef.current.offsetWidth;
+    if (termWidth < 220) {
+      replTitleDomRef.current.classList.add('hidden');
+    } else {
+      replTitleDomRef.current.classList.remove('hidden');
+    }
+  }
+
+  /**
    * Resize codemirror and terminal panes, proportionally
    */
   function resize (event) {
@@ -454,6 +490,7 @@ function CodeArea () {
     }
     setCmWidth(pixelfy(newCmWidth, true));
     setTermWidth(pixelfy(newTermWidth, true));
+    debounce(adjustHeaderDisplay, 20);
 
     initialX.current += deltaX;
   }
