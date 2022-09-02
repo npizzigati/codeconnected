@@ -337,6 +337,10 @@ body.is-resizing {
     justify-content: flex-end;
 }
 
+.flex-container--spread-out {
+    justify-content: space-between;
+}
+
 .flex-container--vert-centered {
     align-items: center;
 }
