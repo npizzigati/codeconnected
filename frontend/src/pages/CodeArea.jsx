@@ -77,6 +77,7 @@ function CodeArea () {
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
   // Custom event to closeModals
   const escapePressedEvent = new Event('escapePressed');
   let termWriteTimeout;
@@ -162,6 +163,9 @@ function CodeArea () {
 
   return (
     <>
+      <div className='popup-container'>
+        <div className='popup'>{popupMessage}</div>
+      </div>
       {!runnerReady &&
         <div>
           <div className='spinner-container'>
@@ -463,7 +467,15 @@ function CodeArea () {
     const elem = resizeBarDomRef.current;
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
+    elem.addEventListener('pointerup', () => showPopup('Pointer up'));
     elem.onpointermove = (moveEvent) => resize(moveEvent, event);
+  }
+
+  function showPopup (message) {
+    setPopupMessage(message);
+    setTimeout(() => {
+      setPopupMessage('');
+    }, 2000);
   }
 
   async function stopResize (event) {
