@@ -1586,14 +1586,16 @@ body.is-resizing {
 }
 
 @media (max-width: 400px) {
+    body {
+        font-size: calc(0.5em + 0.5vh);
+    }
+
     .flex-pane__message {
         font-size: 1rem;
     }
-}
 
-@media (max-width: 250px) {
-    .run-button {
-        display: none;
+    .time-remaining {
+        margin: 0.7em 1em;
+        font-size: 0.7em;
     }
-
 }
