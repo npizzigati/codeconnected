@@ -138,7 +138,6 @@ function CodeArea () {
     // (Before fix, footer was not always fixed at bottom of
     // screen.)
     setupWindowResizeListener(() => debounce(changeCSSInnerHeight, 100));
-
     setupWindowResizeListener(() => debounce(sanelyAdjustPanelWidths, 300));
 
     (async () => {
