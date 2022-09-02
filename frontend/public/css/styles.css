@@ -657,6 +657,9 @@ body.is-resizing {
 #code-area {
     background: var(--code-area-bg-color);
     height: var(--inner-height);
+    /* Prevent default touch actions (this allows resizing the panes
+       to work with the resize bar, among other things) */
+    touch-action: none;
 }
 
 #code-area.hidden {
@@ -1267,8 +1270,6 @@ body.is-resizing {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Needed to allow resizing in mobile */
-    touch-action: none;
 }
 
 .resizer__handle {
