@@ -881,17 +881,6 @@ body.is-resizing {
     display: none;
 }
 
-.editor-lang-label {
-    font-family: 'Jost', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 400;
-    color: #666;
-}
-
-.editor-lang-label.hidden {
-    display: none;
-}
-
 .codemirror-wrapper {
     box-sizing: border-box;
     border: 1px solid var(--code-area-border-color);

@@ -49,7 +49,6 @@ function CodeArea () {
   const termScrollLayerDomRef = useRef(null);
   const editorTitleDomRef = useRef(null);
   const replTitleDomRef = useRef(null);
-  const editorLangLabelDomRef = useRef(null);
   const editorTitleRowDomRef = useRef(null);
   const replTitleRowDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
@@ -243,21 +242,18 @@ function CodeArea () {
           >
             <div className={'editor-title-row' + (runnerReady ? '' : ' hidden')} ref={editorTitleRowDomRef}>
               <div className='editor-title flex-pane' ref={editorTitleDomRef}>Code Editor</div>
-              <div className='flex-container flex-pane'>
-                <div className='editor-lang-label' ref={editorLangLabelDomRef}>Language:&nbsp;</div>
-                <Select
-                  options={[{ value: 'ruby', label: 'Ruby' },
-                            { value: 'node', label: 'Javascript' },
-                            { value: 'postgres', label: 'PostgreSQL' }]}
-                  title={cmTitle}
-                  callback={(ev) => {
-                    lang.current = ev.target.dataset.value;
-                    switchLanguage(lang.current);
-                    updateCodeSession();
-                  }}
-                  config={{ staticTitle: true }}
-                />
-              </div>
+              <Select
+                options={[{ value: 'ruby', label: 'Ruby' },
+                          { value: 'node', label: 'Javascript' },
+                          { value: 'postgres', label: 'PostgreSQL' }]}
+                title={cmTitle}
+                callback={(ev) => {
+                  lang.current = ev.target.dataset.value;
+                  switchLanguage(lang.current);
+                  updateCodeSession();
+                }}
+                config={{ staticTitle: true }}
+              />
               <div className='run-button' onClick={executeContent}>
                 Run
               </div>
@@ -446,15 +442,10 @@ function CodeArea () {
       return;
     }
     const cmWidth = cmContainerDomRef.current.offsetWidth;
-    if (cmWidth < 220) {
-      editorLangLabelDomRef.current.classList.add('hidden');
+    if (cmWidth < 270) {
       editorTitleDomRef.current.classList.add('hidden');
-    } else if (cmWidth < 300) {
-      editorTitleDomRef.current.classList.add('hidden');
-      editorLangLabelDomRef.current.classList.remove('hidden');
     } else {
       editorTitleDomRef.current.classList.remove('hidden');
-      editorLangLabelDomRef.current.classList.remove('hidden');
     }
 
     const termWidth = termContainerDomRef.current.offsetWidth;
