@@ -1579,14 +1579,6 @@ body.is-resizing {
 }
 
 @media (max-width: 650px) {
-    .editor-and-repl-title {
-        display: none;
-    }
-
-    .editor-lang-label {
-        display: none;
-    }
-
     .participants-list {
         display: none;
     }
@@ -1597,10 +1589,6 @@ body.is-resizing {
 }
 
 @media (max-width: 400px) {
-    #code-area .site-name {
-        display: none;
-    }
-
     .flex-pane__message {
         font-size: 1rem;
     }
