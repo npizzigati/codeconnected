@@ -661,9 +661,6 @@ body.is-resizing {
 #code-area {
     background: var(--code-area-bg-color);
     height: var(--inner-height);
-    /* Prevent default touch actions (this allows resizing the panes
-       to work with the resize bar, among other things) */
-    touch-action: none;
 }
 
 #code-area.hidden {
@@ -688,6 +685,9 @@ body.is-resizing {
     height: calc(var(--inner-height) - var(--code-area-header-height) - var(--code-area-header-padding-top) - var(--code-area-bottom-margin));
     display: flex;
     padding: 0.5em;
+    /* Prevent default touch actions (this allows resizing the panes
+       to work with the resize bar, among other things) */
+    touch-action: none;
 }
 
 #code-area .user-quickdash {
@@ -1270,10 +1270,14 @@ body.is-resizing {
     cursor: col-resize;
     height: 100%;
     width: auto;
-    padding: 0 2px;
+    padding: 0 0.2em;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.resizer--big {
+    padding: 0 0.4em;
 }
 
 .resizer__handle {
@@ -1561,9 +1565,13 @@ body.is-resizing {
     cursor: pointer;
 }
 
-@media (max-width: 800px) {
-    .resizer__handle {
-        width: 0.5em;
+@media (max-width: 1400px) {
+    .resizer {
+        padding: 0 0.4em;
+    }
+
+    .resizer--big {
+        padding: 0 0.9em;
     }
 }
 

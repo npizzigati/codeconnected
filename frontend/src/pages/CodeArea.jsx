@@ -490,8 +490,17 @@ function CodeArea () {
     // Prevent any elements from being selected (causing flicker)
     // when resizing (a webkit browser problem)
     document.body.classList.add('is-resizing');
-
     const elem = resizeBarDomRef.current;
+    if (event.pointerType === 'touch') {
+
+      // Temporarily increase resize bar width
+      resizeBarDomRef.current.classList.add('resizer--big');
+      // On iOS, the pointer leaves the resize bar, which stops
+      // the resize, but stopResize is not called
+      elem.onpointerleave = (leaveEvent) => {
+        stopResize(event);
+      };
+    }
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
     elem.onpointermove = (moveEvent) => resize(moveEvent);
@@ -505,9 +514,11 @@ function CodeArea () {
   }
 
   async function stopResize (event) {
+    resizeBarDomRef.current.classList.remove('resizer--big');
     document.body.classList.remove('is-resizing');
     const elem = resizeBarDomRef.current;
     elem.onpointermove = null;
+    elem.onpointerleave = null;
     elem.releasePointerCapture(event.pointerId);
   }
 
