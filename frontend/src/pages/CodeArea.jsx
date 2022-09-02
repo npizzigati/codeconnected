@@ -467,7 +467,6 @@ function CodeArea () {
     const elem = resizeBarDomRef.current;
     initialX.current = event.clientX;
     elem.setPointerCapture(event.pointerId);
-    elem.addEventListener('pointerup', () => showPopup('Pointer up'));
     elem.onpointermove = (moveEvent) => resize(moveEvent, event);
   }
 
