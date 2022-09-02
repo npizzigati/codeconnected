@@ -768,10 +768,10 @@ body.is-resizing {
 .time-remaining {
     text-align: center;
     color: white;
-    height: 1em;
     padding: 0.3em 0.2em 0.2em;
-    margin: 0.3em 1em;
+    margin: 0.4em 1em;
     font-family: 'Lato', sans-serif;
+    font-size: 0.9em;
     border-radius: 0.2em;
     background-color: #5e499b;
     white-space: nowrap;
