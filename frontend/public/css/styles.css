@@ -1554,11 +1554,13 @@ body.is-resizing {
     cursor: pointer;
 }
 
-@media (max-width: 650px) {
-    #code-area .site-name {
-        display: none;
+@media (max-width: 800px) {
+    .resizer__handle {
+        width: 0.5em;
     }
+}
 
+@media (max-width: 650px) {
     .editor-and-repl-title {
         display: none;
     }
@@ -1577,6 +1579,10 @@ body.is-resizing {
 }
 
 @media (max-width: 400px) {
+    #code-area .site-name {
+        display: none;
+    }
+
     .flex-pane__message {
         font-size: 1rem;
     }
