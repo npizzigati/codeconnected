@@ -138,6 +138,8 @@ function CodeArea () {
     // screen.)
     setupWindowResizeListener(() => debounce(changeCSSInnerHeight, 100));
 
+    setupWindowResizeListener(() => debounce(sanelyAdjustPanelWidths, 300));
+
     (async () => {
       await setup(isCanceled);
     })();
@@ -307,6 +309,58 @@ function CodeArea () {
     </>
   );
 
+
+  /**
+   * Reset codemirror, terminal panes to sane widths
+   */
+  function sanelyAdjustPanelWidths () {
+    if (cmContainerDomRef.current === null || termContainerDomRef === null) {
+      return;
+    }
+    const currentCmWidth = cmContainerDomRef.current.offsetWidth;
+    console.log('currentCmWidth: ' + currentCmWidth);
+    const currentTermWidth = termContainerDomRef.current.offsetWidth;
+    console.log('currentTermWidth: ' + currentTermWidth);
+    const totalWidth = currentCmWidth + currentTermWidth;
+    console.log('totalWidth: ' + totalWidth);
+    const totalMinWidth = minCmWidth + minTermWidth;
+    console.log('totalMinWidth: ' + totalMinWidth);
+    // If no user-resizing is possible (panel widths total more
+    // than total possible minimum widths), set panels to equal
+    // half width
+    if (totalWidth < totalMinWidth) {
+      console.log('need to set equal widths');
+      const halfWidthString = pixelfy((currentCmWidth + currentTermWidth) / 2, true);
+      cmContainerDomRef.current.style.width = halfWidthString;
+      termContainerDomRef.current.style.width = halfWidthString;
+    } else if (currentCmWidth < minCmWidth) {
+      console.log('need to increase cm width to minimum');
+      // Otherwise set either pane that is below the minimum to its
+      // minimum width
+      const delta = minCmWidth - currentCmWidth;
+      console.log('delta: ' + delta);
+      termContainerDomRef.current.style.width = pixelfy(currentTermWidth - delta, true);
+      cmContainerDomRef.current.style.width = pixelfy(minCmWidth, true);
+      console.log('new cm width: ' + cmContainerDomRef.current.offsetWidth);
+    } else if (currentTermWidth < minTermWidth) {
+      console.log('need to increase term width to minimum');
+      const delta = minTermWidth - currentTermWidth;
+      console.log('delta: ' + delta);
+      cmContainerDomRef.current.style.width = pixelfy(currentCmWidth - delta, true);
+      termContainerDomRef.current.style.width = pixelfy(minTermWidth, true);
+    }
+  }
+
+  /**
+   * return a pixel unit as a string for a number
+   */
+  function pixelfy (number, round) {
+    if (round) {
+      number = Math.round(number);
+    }
+    return number.toString() + 'px';
+  }
+
   function removeUserFromParticipants () {
     if (participants.current === null) {
       return;
@@ -392,11 +446,8 @@ function CodeArea () {
     if (newTermWidth < minTermWidth) {
       newTermWidth = minTermWidth;
     }
-    const newCmWidthString = parseFloat(newCmWidth, 10) + 'px';
-    setCmWidth(newCmWidthString);
-
-    const newTermWidthString = parseFloat(newTermWidth, 10) + 'px';
-    setTermWidth(newTermWidthString);
+    setCmWidth(pixelfy(newCmWidth, true));
+    setTermWidth(pixelfy(newTermWidth, true));
 
     initialX.current += deltaX;
   }
