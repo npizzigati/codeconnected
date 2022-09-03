@@ -998,7 +998,7 @@ function CodeArea () {
     switch (lang) {
     case 'node':
       setReplTitle('Node.js REPL');
-      setCmTitle('Javascript');
+      setCmTitle('JavaScript');
       break;
     case 'ruby':
       setReplTitle('Ruby REPL (Pry)');
