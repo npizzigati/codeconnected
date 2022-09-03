@@ -715,7 +715,7 @@ body.is-resizing {
 
 #code-area .tabbed-modal {
     --tabbed-modal-background: #1d252d;
-    --unselected-tab-background: #0d1014;
+    --unselected-tab-background: #14181f;
     --tabbed-modal-border: none;
     box-shadow: none;
 }
