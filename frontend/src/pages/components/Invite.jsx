@@ -11,7 +11,7 @@ function Invite () {
   useEffect(() => {
     document.addEventListener('pointerdown', inviteHandleDocPointerDown);
     // If escape key custom event fires, close this component's modal dialog
-    document.addEventListener('escapePressed', () => hideInviteDialog());
+    document.addEventListener('escapePressed', hideInviteDialog);
 
     return function cleanup () {
       document.removeEventListener('escapePressed', hideInviteDialog);
