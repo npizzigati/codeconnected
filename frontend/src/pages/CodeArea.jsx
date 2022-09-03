@@ -67,6 +67,7 @@ function CodeArea () {
   const [language, setLanguage] = useState('');
   const ydoc = useRef(null);
   const resizeBarDomRef = useRef(null);
+  const resizerOverlayDomRef = useRef(null);
   const initialX = useRef(null);
   const [cmWidth, setCmWidth] = useState('50%');
   const [termWidth, setTermWidth] = useState('50%');
@@ -268,10 +269,14 @@ function CodeArea () {
           <div
             ref={resizeBarDomRef}
             className='resizer'
-            onPointerDown={(ev) => handlePointerDown(ev, startResize, ev)}
-            onPointerUp={stopResize}
           >
             <div className='resizer__handle' />
+            <div
+              className='resizer__overlay'
+              ref={resizerOverlayDomRef}
+              onPointerDown={(ev) => handlePointerDown(ev, startResize, ev)}
+              onPointerUp={stopResize}
+            />
           </div>
           <div
             className='terminal-container'
@@ -490,10 +495,10 @@ function CodeArea () {
     // Prevent any elements from being selected (causing flicker)
     // when resizing (a webkit browser problem)
     document.body.classList.add('is-resizing');
-    const elem = resizeBarDomRef.current;
+    const elem = event.target;
     if (event.pointerType === 'touch') {
       // Temporarily increase resize bar width
-      resizeBarDomRef.current.classList.add('resizer--big');
+      elem.classList.add('resizer__overlay-wide');
       // On iOS, the pointer can leave the resize bar with the
       // tap still down, which stops the resize, but we need to
       // call stopResize
@@ -514,9 +519,9 @@ function CodeArea () {
   }
 
   async function stopResize (event) {
-    resizeBarDomRef.current.classList.remove('resizer--big');
+    const elem = event.target;
+    elem.classList.remove('resizer__overlay--wide');
     document.body.classList.remove('is-resizing');
-    const elem = resizeBarDomRef.current;
     elem.onpointermove = null;
     elem.onpointerleave = null;
     elem.releasePointerCapture(event.pointerId);

@@ -12,6 +12,7 @@
     /* z-indexes */
     --terminal-scrollport-z-index: 10;
     --participants-list-z-index: 10;
+    --resizer-overlay-z-index: 15;
     --backdrop-z-index: 20;
     --select-dropdown-z-index: 30;
     --tabbed-modal-z-index: 40;
@@ -1266,6 +1267,7 @@ body.is-resizing {
 }
 
 .resizer {
+    position: relative;
     background: var(--code-area-bg-color);
     cursor: col-resize;
     height: 100%;
@@ -1276,9 +1278,17 @@ body.is-resizing {
     align-items: center;
 }
 
-.resizer--big {
-    padding: 0 0.4em;
+.resizer__overlay {
+    position: absolute;
+    width: 2em;
+    height: calc(var(--inner-height) - var(--code-area-header-height) - var(--code-area-header-padding-top) - var(--code-area-bottom-margin));
+    z-index: var(--resizer-overlay-z-index);
 }
+
+.resizer__overlay--wide {
+    width: 4em;
+}
+
 
 .resizer__handle {
     height: 25px;
@@ -1566,23 +1576,9 @@ body.is-resizing {
 }
 
 @media (max-width: 1400px) {
-    .resizer {
-        padding: 0 0.2em;
-    }
-
-    .resizer--big {
-        padding: 0 0.9em;
-    }
 }
 
 @media (max-width: 1200px) {
-    .resizer {
-        padding: 0 0.3em;
-    }
-
-    .resizer--big {
-        padding: 0 1.2em;
-    }
 }
 
 @media (max-width: 650px) {
