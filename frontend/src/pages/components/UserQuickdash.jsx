@@ -10,7 +10,7 @@ function UserQuickdash ({ setAuthed }) {
   const quickdash = useRef(null);
 
   useEffect(() => {
-    function handleDocPointerDown (ev) {
+    function handleQuickdashDocPointerDown (ev) {
       if (!quickdash.current) {
         return;
       }
@@ -19,7 +19,7 @@ function UserQuickdash ({ setAuthed }) {
       }
     }
 
-    document.addEventListener('pointerdown', handleDocPointerDown);
+    document.addEventListener('pointerdown', handleQuickdashDocPointerDown);
 
     // If escape key custom event fires, close this component's modal dialog
     document.addEventListener('escapePressed', hideQuickdash);
@@ -38,7 +38,7 @@ function UserQuickdash ({ setAuthed }) {
     })();
 
     return function cleanup () {
-      document.removeEventListener('pointerdown', handleDocPointerDown);
+      document.removeEventListener('pointerdown', handleQuickdashDocPointerDown);
       document.removeEventListener('escapePressed', hideQuickdash);
       isCanceled = true;
     };
