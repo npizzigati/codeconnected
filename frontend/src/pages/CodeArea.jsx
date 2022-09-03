@@ -495,8 +495,9 @@ function CodeArea () {
 
       // Temporarily increase resize bar width
       resizeBarDomRef.current.classList.add('resizer--big');
-      // On iOS, the pointer leaves the resize bar, which stops
-      // the resize, but stopResize is not called
+      // On iOS, the pointer can leave the resize bar with the
+      // tap still down, which stops the resize, but we need to
+      // call stopResize
       elem.onpointerleave = (leaveEvent) => {
         stopResize(event);
       };
