@@ -244,7 +244,7 @@ function CodeArea () {
               <div className='editor-title flex-pane' ref={editorTitleDomRef}>Code Editor</div>
               <Select
                 options={[{ value: 'ruby', label: 'Ruby' },
-                          { value: 'node', label: 'Javascript' },
+                          { value: 'node', label: 'JavaScript' },
                           { value: 'postgres', label: 'PostgreSQL' }]}
                 title={cmTitle}
                 callback={(ev) => {
