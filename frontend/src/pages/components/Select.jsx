@@ -32,13 +32,13 @@ function Select ({ options, title, callback, config }) {
   function hideDropdown () {
     setDisplayDropdown(false);
     if (dropdown.current) {
-      dropdown.current.className = 'select-dropdown--hidden';
+      dropdown.current.classList.add('hidden');
     }
   }
 
   function showDropdown () {
     setDisplayDropdown(true);
-    dropdown.current.className = 'select-dropdown';
+    dropdown.current.classList.remove('hidden');
   }
 
   function toggleDropdown () {
@@ -62,7 +62,7 @@ function Select ({ options, title, callback, config }) {
         </div>
         <div
           ref={dropdown}
-          className='select-dropdown--hidden'
+          className='select-dropdown hidden'
         >
           {options.map((option, index) => (
             <div
