@@ -1571,7 +1571,7 @@ body.is-resizing {
     }
 
     .resizer--big {
-        padding: 0 0.7em;
+        padding: 0 0.9em;
     }
 }
 
