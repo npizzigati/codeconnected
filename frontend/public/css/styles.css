@@ -1247,6 +1247,14 @@ body.is-resizing {
     text-align: center;
     border-radius: 0.5em;
     z-index: var(--invite-z-index);
+    opacity: 1;
+    transition: visibility 0.5s, opacity 0.5s;
+}
+
+.invite__dialog.hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s;
 }
 
 .invite__instructions {
