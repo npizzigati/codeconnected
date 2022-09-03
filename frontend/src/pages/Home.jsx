@@ -148,7 +148,7 @@ function Home () {
                       </div>
                       <div className='media__text'>
                         <div className='u-pad-left-1'>
-                          <span className='thin-font'>Javascript</span>
+                          <span className='thin-font'>JavaScript</span>
                         </div>
                       </div>
                     </div>
