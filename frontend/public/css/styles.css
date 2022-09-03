@@ -979,18 +979,18 @@ body.is-resizing {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    transition: opacity .5s;
-    opacity: 1;
     padding: 4px 0;
     min-width: 100%;
     cursor: pointer;
+    opacity: 1;
+    visibility: visible;
+    transition: visibility 0.5s, opacity 0.5s;
 }
 
-.select-dropdown--hidden {
-    z-index: -1;
-    position: absolute;
-    opacity: 0;
+.select-dropdown.hidden {
     visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s;
 }
 
 .select-dropdown__item {
