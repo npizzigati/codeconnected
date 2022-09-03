@@ -84,7 +84,6 @@ function CodeArea () {
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   // Custom event to closeModals
-  const escapePressedEvent = new Event('escapePressed');
   let termWriteTimeout;
 
   const popupDialogConfig = {
@@ -398,7 +397,7 @@ function CodeArea () {
   function fireKeydownEvents (event) {
     // Escape is keyCode 27
     if (event.keyCode === 27) {
-      document.dispatchEvent(escapePressedEvent);
+      document.dispatchEvent(new Event('escapePressed'));
     }
   }
 
