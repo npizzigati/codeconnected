@@ -492,7 +492,6 @@ function CodeArea () {
     document.body.classList.add('is-resizing');
     const elem = resizeBarDomRef.current;
     if (event.pointerType === 'touch') {
-
       // Temporarily increase resize bar width
       resizeBarDomRef.current.classList.add('resizer--big');
       // On iOS, the pointer can leave the resize bar with the
