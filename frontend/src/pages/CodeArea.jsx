@@ -497,9 +497,10 @@ function CodeArea () {
     document.body.classList.add('is-resizing');
     const elem = event.target;
     if (event.pointerType === 'touch') {
-      // Temporarily increase resize bar width
+      // Temporarily increase resizer overlay width, to make it
+      // less likely that pointer will leave the area
       elem.classList.add('resizer__overlay-wide');
-      // On iOS, the pointer can leave the resize bar with the
+      // On iOS, the pointer can leave the resizer overlay with the
       // tap still down, which stops the resize, but we need to
       // call stopResize
       elem.onpointerleave = (leaveEvent) => {
