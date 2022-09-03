@@ -1567,11 +1567,21 @@ body.is-resizing {
 
 @media (max-width: 1400px) {
     .resizer {
-        padding: 0 0.4em;
+        padding: 0 0.3em;
     }
 
     .resizer--big {
-        padding: 0 0.9em;
+        padding: 0 0.8em;
+    }
+}
+
+@media (max-width: 1200px) {
+    .resizer {
+        padding: 0 0.5em;
+    }
+
+    .resizer--big {
+        padding: 0 1.2em;
     }
 }
 
