@@ -38,12 +38,16 @@ function Home () {
       setupWindowResizeListener(fixViewport);
     })();
 
-    // Escape key to close modal dialogs
-    document.addEventListener('keydown', closeModals);
+    // Fire custom events on keydown
+    document.addEventListener('keydown', fireKeydownEvents);
+
+    // If escape custom event fires, close this component's modal dialogs
+    document.addEventListener('escapePressed', closeModals);
 
     return function cleanup () {
       isCanceled = true;
-      document.removeEventListener('keydown', closeModals);
+      document.removeEventListener('escapePressed', closeModals);
+      document.removeEventListener('keydown', fireKeydownEvents);
     };
   }, []);
 
@@ -216,11 +220,14 @@ function Home () {
     }, 250);
   }
 
-  function closeModals (event) {
-    console.log(event.keyCode);
-    if (event.keyCode !== 27) {
-      return;
+  function fireKeydownEvents (event) {
+    // Escape is keyCode 27
+    if (event.keyCode === 27) {
+      document.dispatchEvent(new Event('escapePressed'));
     }
+  }
+
+  function closeModals () {
     setShowPreLaunchDialog(false);
   }
 
