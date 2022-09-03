@@ -896,7 +896,7 @@ function CodeArea () {
     let cmLangMode;
     switch (newLang) {
     case 'node':
-      cmLangMode = 'javascript';
+      cmLangMode = 'javaScript';
       break;
     case 'ruby':
       cmLangMode = 'ruby';
