@@ -558,6 +558,14 @@ body.is-resizing {
     min-width: 24em;
     border-radius: 0.7rem;
     box-shadow: 0 0 7px 1px #444;
+    opacity: 1;
+    transition: visibility 0.5s, opacity 0.5s;
+}
+
+.tabbed-modal.hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.5s, opacity 0.5s;
 }
 
 .tabbed-modal__content {
@@ -602,6 +610,18 @@ body.is-resizing {
     border-left: var(--tabbed-modal-border);
     border-right: var(--tabbed-modal-border);
     border-bottom: none;
+}
+
+.auth-wrapper {
+    opacity: 1;
+    visibility: visible;
+    transition: visibility 0.5s, opacity 0.5s;
+}
+
+.auth-wrapper.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0.5s, opacity 0.5s;
 }
 
 .user-quickdash {

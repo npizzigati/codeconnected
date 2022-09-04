@@ -13,11 +13,11 @@ import { handlePointerDown, debounce, setupWindowResizeListener, changeCSSInnerH
 
 function Home () {
   const [auth, setAuth] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
   const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [showPreLaunchDialog, setShowPreLaunchDialog] = useState(false);
   const footerDOMRef = useRef(null);
+  const authWrapperDOMRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,13 +77,14 @@ function Home () {
     <>
       {authChecked &&
         <div id='home'>
-          {showAuth &&
+          <div className='auth-wrapper hidden' ref={authWrapperDOMRef}>
             <Auth
               setShowAuth={setShowAuth}
               setAuthed={setAuth}
               setPreLaunchLanguage={setPreLaunchLanguage}
               config={preLaunchLanguage === null ? {} : { successCallback: () => launch(preLaunchLanguage) }}
-            />}
+            />
+          </div>
           {showPreLaunchDialog &&
             <div>
               <PopupDialog config={popupDialogConfig} />
@@ -200,6 +201,14 @@ function Home () {
         </div>}
     </>
   );
+
+  function setShowAuth (show) {
+    if (show) {
+      authWrapperDOMRef.current?.classList.remove('hidden');
+    } else {
+      authWrapperDOMRef.current?.classList.add('hidden');
+    }
+  }
 
   /**
    * Fix to be passed in to setupWindowResizeListener
