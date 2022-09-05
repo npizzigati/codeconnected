@@ -904,7 +904,8 @@ body.is-resizing {
     background: var(--code-area-bg-color);
 }
 
-.title-row.hidden {
+.editor-title-row.hidden,
+.repl-title-row.hidden {
     opacity: 0;
 }
 
