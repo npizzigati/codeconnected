@@ -326,6 +326,10 @@ body.is-resizing {
     flex-wrap: wrap;
 }
 
+.flex-container--constrained {
+    max-width: 25em;
+}
+
 .flex-container--gap {
     gap: 1em;
 }

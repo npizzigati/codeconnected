@@ -217,7 +217,7 @@ function CodeArea () {
           </div>
         </CSSTransition>
         <header>
-          <div className='flex-pane flex-container flex-container--vert-top flex-container--spread-out'>
+          <div className='flex-pane flex-container flex-container--constrained flex-container--vert-top flex-container--spread-out'>
             <div
               className='media u-marg-left-1'
             >
