@@ -17,9 +17,9 @@ function Home () {
   const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [preLaunchDialogVisible, setPreLaunchDialogVisible] = useState(false);
-  const footerDOMRef = useRef(null);
   const authWrapperDOMRef = useRef(null);
   const preLaunchDOMRef = useRef(null);
+  const footerDomRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
