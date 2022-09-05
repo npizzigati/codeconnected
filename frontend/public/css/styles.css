@@ -254,7 +254,7 @@ body.is-resizing {
     align-items: center;
     justify-content: center;
     opacity: 1;
-    transition: opacity 0.4s;
+    transition: opacity 0.3s;
 }
 
 .message {
@@ -616,26 +616,26 @@ body.is-resizing {
 
 .pre-launch-dialog-wrapper {
     opacity: 1;
-    transition: visibility 0.2s, opacity 0.2s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .pre-launch-dialog-wrapper.hidden {
     opacity: 0;
     visibility: hidden;
-    transition: visibility 0.2s, opacity 0.2s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .auth-wrapper {
     position: absolute;
     z-index: var(--auth-wrapper-z-index);
     opacity: 1;
-    transition: visibility 0.2s, opacity 0.2s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .auth-wrapper.hidden {
     opacity: 0;
     visibility: hidden;
-    transition: visibility 0.2s, opacity 0.2s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .user-quickdash {
@@ -1019,13 +1019,13 @@ body.is-resizing {
     cursor: pointer;
     opacity: 1;
     visibility: visible;
-    transition: visibility 0.5s, opacity 0.5s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .select-dropdown.hidden {
     visibility: hidden;
     opacity: 0;
-    transition: visibility 0.5s, opacity 0.5s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .select-dropdown__item {
@@ -1282,13 +1282,13 @@ body.is-resizing {
     border-radius: 0.5em;
     z-index: var(--invite-z-index);
     opacity: 1;
-    transition: visibility 0.5s, opacity 0.5s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .invite__dialog.hidden {
     visibility: hidden;
     opacity: 0;
-    transition: visibility 0.5s, opacity 0.5s;
+    transition: visibility 0.3s, opacity 0.3s;
 }
 
 .invite__instructions {
