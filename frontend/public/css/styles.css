@@ -508,6 +508,10 @@ body.is-resizing {
     z-index: var(--popup-dialog-z-index)
 }
 
+.popup-dialog--dark {
+    background-color: black;
+}
+
 .popup-dialog__text {
     font-family: 'Lato', sans-serif;
     font-size: 1.3em;

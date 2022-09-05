@@ -10,7 +10,7 @@ function PopupDialog ({ config }) {
         className='backdrop'
         onPointerDown={(ev) => handlePointerDown(ev, config.abortCallback, ev)}
       />
-      <div className='popup-dialog'>
+      <div className={'popup-dialog' + ((config.theme === 'dark') ? ' popup-dialog--dark' : '')}>
         <div className='media'>
           <div className='media__image-container'>
             <img
