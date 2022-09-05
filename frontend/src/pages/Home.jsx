@@ -186,7 +186,7 @@ function Home () {
               </div>
             </div>
           </main>
-          <footer ref={footerDOMRef}>
+          <footer ref={footerDomRef}>
             <div className='media u-pad-bot-4'>
               <div className='media__text'>
                 <div className='site-name'>
@@ -235,15 +235,15 @@ function Home () {
    * when changing screen size, to avoid flickering
    */
   function fixViewport () {
-    if (footerDOMRef.current === null) {
+    if (footerDomRef.current === null) {
       return;
     }
-    footerDOMRef.current.style.visibility = 'hidden';
-    footerDOMRef.current.style.opacity = 0;
+    footerDomRef.current.style.visibility = 'hidden';
+    footerDomRef.current.style.opacity = 0;
     debounce(changeCSSInnerHeight, 100);
     debounce(() => {
-      footerDOMRef.current.style.visibility = 'visible';
-      footerDOMRef.current.style.opacity = 1;
+      footerDomRef.current.style.visibility = 'visible';
+      footerDomRef.current.style.opacity = 1;
     }, 250);
   }
 
