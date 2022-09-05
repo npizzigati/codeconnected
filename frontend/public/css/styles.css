@@ -661,13 +661,14 @@ body.is-resizing {
     background: white;
     box-shadow: 0 0 4px 0.1px #999;
     z-index: var(--user-quickdash-z-index);
-}
-
-.user-quickdash.visible {
+    opacity: 1;
+    transition: opacity 0.3s, visibility 0.3s;
 }
 
 .user-quickdash.hidden {
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
 }
 
 .user-quickdash__heading {

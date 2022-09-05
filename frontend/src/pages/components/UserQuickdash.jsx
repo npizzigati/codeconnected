@@ -5,7 +5,6 @@ import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function UserQuickdash ({ setAuthed }) {
   const [username, setUsername] = useState('');
-  const [showQuickdash, setShowQuickdash] = useState(false);
   const avatar = useRef(null);
   const quickdash = useRef(null);
 
@@ -55,7 +54,7 @@ function UserQuickdash ({ setAuthed }) {
       />
       <div
         ref={quickdash}
-        className={'user-quickdash ' + (showQuickdash ? 'visible' : 'hidden')}
+        className='user-quickdash hidden'
       >
         <div className='user-quickdash__heading'>
           Signed in as:
@@ -88,18 +87,14 @@ function UserQuickdash ({ setAuthed }) {
   }
 
   function hideQuickdash () {
-    setShowQuickdash(false);
-  }
-
-  function displayQuickdash () {
-    setShowQuickdash(true);
+    quickdash.current.classList.add('hidden');
   }
 
   function toggleQuickdash () {
-    if (showQuickdash) {
-      hideQuickdash();
+    if (quickdash.current.classList.contains('hidden')) {
+      quickdash.current.classList.remove('hidden');
     } else {
-      displayQuickdash();
+      quickdash.current.classList.add('hidden');
     }
   }
 
