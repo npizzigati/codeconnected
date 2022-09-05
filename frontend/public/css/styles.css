@@ -490,7 +490,7 @@ body.is-resizing {
     color: white;
     // backdrop-filter: blur(5px);
     // -webkit-backdrop-filter: blur(5px);
-    background-color: #777;
+    background-color: #808080;
     border: 1px solid white;
     border-radius: 1em;
     z-index: var(--popup-dialog-z-index)
