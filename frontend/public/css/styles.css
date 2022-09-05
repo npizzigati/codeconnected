@@ -644,7 +644,7 @@ body.is-resizing {
 }
 
 .user-quickdash {
-    position: fixed;
+    position: absolute;
     display: flex;
     text-align: center;
     flex-direction: column;
