@@ -459,6 +459,18 @@ body.is-resizing {
     width: 2em;
 }
 
+.back-to-home-dialog-wrapper {
+    position: absolute;
+    z-index: var(--popup-dialog-z-index);
+    opacity: 1;
+    transition: visibility 0.3s, opacity 0.3s;
+}
+
+.back-to-home-dialog-wrapper.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0.3s, opacity 0.3s;
+}
 
 .backdrop {
     position: fixed;

@@ -53,6 +53,7 @@ function CodeArea () {
   const replTitleDomRef = useRef(null);
   const editorTitleRowDomRef = useRef(null);
   const replTitleRowDomRef = useRef(null);
+  const backToHomeDialogWrapperDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const setupDone = useRef(false);
@@ -83,7 +84,7 @@ function CodeArea () {
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
-  const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
+  const [backToHomeDialogVisible, setBackToHomeDialogVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   // Custom event to closeModals
   let termWriteTimeout;
@@ -192,10 +193,9 @@ function CodeArea () {
         <div className='auth-wrapper hidden' ref={authWrapperDOMRef}>
           {authVisible && <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
         </div>
-        {showBackToHomeDialog &&
-          <div>
-            <PopupDialog config={popupDialogConfig} />
-          </div>}
+        <div className='back-to-home-dialog-wrapper hidden' ref={backToHomeDialogWrapperDomRef}>
+          {backToHomeDialogVisible && <PopupDialog config={popupDialogConfig} />}
+        </div>
         <header>
           <div className='flex-pane flex-container flex-container--vert-top flex-container--spread-out'>
             <div
@@ -334,6 +334,19 @@ function CodeArea () {
       authWrapperDOMRef.current.classList.add('hidden');
     }
   }
+
+  function setShowBackToHomeDialog (bool) {
+    if (bool) {
+      setBackToHomeDialogVisible(true);
+      backToHomeDialogWrapperDomRef.current.classList.remove('hidden');
+    } else {
+      backToHomeDialogWrapperDomRef.current.addEventListener('transitionend', () => {
+        setBackToHomeDialogVisible(false);
+      }, { once: true });
+      backToHomeDialogWrapperDomRef.current.classList.add('hidden');
+    }
+  }
+
 
   /**
    * Reset codemirror, terminal panes to sane widths
