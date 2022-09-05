@@ -16,7 +16,6 @@
     --backdrop-z-index: 20;
     --select-dropdown-z-index: 30;
     --tabbed-modal-z-index: 40;
-    --auth-wrapper-z-index: 40;
     --user-quickdash-z-index: 40;
     --invite-z-index: 40;
     --backdrop--level2-z-index: 50;
@@ -1371,25 +1370,31 @@ body.is-resizing {
   background: #2f3e54;
 }
 
-.react-css-transition-pre-launch-dialog-enter {
+.react-css-transition-popup-dialog-enter {
+    position: absolute;
+    z-index: var(--popup-dialog-z-index);
     opacity: 0;
 }
 
-.react-css-transition-pre-launch-dialog-enter-active {
+.react-css-transition-popup-dialog-enter-active {
     opacity: 1;
     transition: opacity 0.3s;
 }
 
-.react-css-transition-pre-launch-dialog-exit {
+.react-css-transition-popup-dialog-exit {
+    position: absolute;
+    z-index: var(--popup-dialog-z-index);
     opacity: 1;
 }
 
-.react-css-transition-pre-launch-dialog-exit-active {
+.react-css-transition-popup-dialog-exit-active {
     opacity: 0;
     transition: opacity 0.3s;
 }
 
 .react-css-transition-auth-dialog-enter {
+    position: absolute;
+    z-index: var(--tabbed-modal-z-index);
     opacity: 0;
 }
 
@@ -1399,6 +1404,8 @@ body.is-resizing {
 }
 
 .react-css-transition-auth-dialog-exit {
+    position: absolute;
+    z-index: var(--tabbed-modal-z-index);
     opacity: 1;
 }
 

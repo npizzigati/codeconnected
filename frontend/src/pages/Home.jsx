@@ -108,7 +108,7 @@ function Home () {
           <CSSTransition
             in={showPreLaunchDialog}
             timeout={300}
-            classNames='react-css-transition-pre-launch-dialog'
+            classNames='react-css-transition-popup-dialog'
             nodeRef={preLaunchDialogDomRef}
             mountOnEnter
             unmountOnExit

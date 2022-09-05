@@ -42,7 +42,7 @@ function CodeArea () {
   const initialTermCols = 80;
   const fakeScrollHeight = 100000;
   const fakeScrollMidpoint = 50000;
-  const authWrapperDOMRef = useRef(null);
+  const authDomRef = useRef(null);
   const codeAreaDomRef = useRef(null);
   const cmContainerDomRef = useRef(null);
   const termDomRef = useRef(null);
@@ -53,7 +53,7 @@ function CodeArea () {
   const replTitleDomRef = useRef(null);
   const editorTitleRowDomRef = useRef(null);
   const replTitleRowDomRef = useRef(null);
-  const backToHomeDialogWrapperDomRef = useRef(null);
+  const backToHomeDialogDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const setupDone = useRef(false);
@@ -78,13 +78,13 @@ function CodeArea () {
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
   const [showContent, setShowContent] = useState(false);
-  const [authVisible, setAuthVisible] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const [showCodeMirror, setShowCodeMirror] = useState(false);
   const [runnerReady, setRunnerReady] = useState(false);
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
-  const [backToHomeDialogVisible, setBackToHomeDialogVisible] = useState(false);
+  const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   let termWriteTimeout;
 
@@ -192,12 +192,30 @@ function CodeArea () {
         id='code-area'
         className={showContent ? 'visible' : 'hidden'}
       >
-        <div className='auth-wrapper hidden' ref={authWrapperDOMRef}>
-          {authVisible && <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
-        </div>
-        <div className='back-to-home-dialog-wrapper hidden' ref={backToHomeDialogWrapperDomRef}>
-          {backToHomeDialogVisible && <PopupDialog config={popupDialogConfig} />}
-        </div>
+        <CSSTransition
+          in={showAuth}
+          timeout={300}
+          classNames='react-css-transition-auth-dialog'
+          nodeRef={authDomRef}
+          mountOnEnter
+          unmountOnExit
+        >
+          <div className='auth' ref={authDomRef}>
+            <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />
+          </div>
+        </CSSTransition>
+        <CSSTransition
+          in={showBackToHomeDialog}
+          timeout={300}
+          classNames='react-css-transition-popup-dialog'
+          nodeRef={backToHomeDialogDomRef}
+          mountOnEnter
+          unmountOnExit
+        >
+          <div ref={backToHomeDialogDomRef}>
+            <PopupDialog config={popupDialogConfig} />
+          </div>
+        </CSSTransition>
         <header>
           <div className='flex-pane flex-container flex-container--vert-top flex-container--spread-out'>
             <div
@@ -324,31 +342,6 @@ function CodeArea () {
       </div>
     </>
   );
-
-  function setShowAuth (bool) {
-    if (bool) {
-      setAuthVisible(true);
-      authWrapperDOMRef.current.classList.remove('hidden');
-    } else {
-      authWrapperDOMRef.current.addEventListener('transitionend', () => {
-        setAuthVisible(false);
-      }, { once: true });
-      authWrapperDOMRef.current.classList.add('hidden');
-    }
-  }
-
-  function setShowBackToHomeDialog (bool) {
-    if (bool) {
-      setBackToHomeDialogVisible(true);
-      backToHomeDialogWrapperDomRef.current.classList.remove('hidden');
-    } else {
-      backToHomeDialogWrapperDomRef.current.addEventListener('transitionend', () => {
-        setBackToHomeDialogVisible(false);
-      }, { once: true });
-      backToHomeDialogWrapperDomRef.current.classList.add('hidden');
-    }
-  }
-
 
   /**
    * Reset codemirror, terminal panes to sane widths
