@@ -616,26 +616,26 @@ body.is-resizing {
 
 .pre-launch-dialog-wrapper {
     opacity: 1;
-    transition: visibility 0.2s, opacity 0.5s;
+    transition: visibility 0.2s, opacity 0.2s;
 }
 
 .pre-launch-dialog-wrapper.hidden {
     opacity: 0;
     visibility: hidden;
-    transition: visibility 0.2s, opacity 0.5s;
+    transition: visibility 0.2s, opacity 0.2s;
 }
 
 .auth-wrapper {
     position: absolute;
     z-index: var(--auth-wrapper-z-index);
     opacity: 1;
-    transition: visibility 0.5s, opacity 0.5s;
+    transition: visibility 0.2s, opacity 0.2s;
 }
 
 .auth-wrapper.hidden {
     opacity: 0;
     visibility: hidden;
-    transition: visibility 0.5s, opacity 0.5s;
+    transition: visibility 0.2s, opacity 0.2s;
 }
 
 .user-quickdash {
