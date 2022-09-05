@@ -623,17 +623,6 @@ body.is-resizing {
     border-bottom: none;
 }
 
-.pre-launch-dialog-wrapper {
-    opacity: 1;
-    transition: visibility 0.3s, opacity 0.3s;
-}
-
-.pre-launch-dialog-wrapper.hidden {
-    opacity: 0;
-    visibility: hidden;
-    transition: visibility 0.3s, opacity 0.3s;
-}
-
 .auth-wrapper {
     position: absolute;
     z-index: var(--auth-wrapper-z-index);
@@ -1380,6 +1369,42 @@ body.is-resizing {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #2f3e54;
+}
+
+.react-css-transition-pre-launch-dialog-enter {
+    opacity: 0;
+}
+
+.react-css-transition-pre-launch-dialog-enter-active {
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.react-css-transition-pre-launch-dialog-exit {
+    opacity: 1;
+}
+
+.react-css-transition-pre-launch-dialog-exit-active {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.react-css-transition-auth-dialog-enter {
+    opacity: 0;
+}
+
+.react-css-transition-auth-dialog-enter-active {
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.react-css-transition-auth-dialog-exit {
+    opacity: 1;
+}
+
+.react-css-transition-auth-dialog-exit-active {
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 /* Utility classes */

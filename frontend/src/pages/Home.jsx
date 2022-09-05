@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CSSTransition } from 'react-transition-group';
 
 import UserQuickdash from './components/UserQuickdash.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
@@ -13,15 +14,14 @@ import { handlePointerDown, debounce, setupWindowResizeListener, changeCSSInnerH
 
 function Home () {
   const [auth, setAuth] = useState(false);
-  const [authVisible, setAuthVisible] = useState(false);
-  const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [preLaunchLanguage, setPreLaunchLanguage] = useState('');
+  const [showPreLaunchDialog, setShowPreLaunchDialog] = useState(false);
   const isPreLaunchDialogVisible = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [preLaunchDialogVisible, setPreLaunchDialogVisible] = useState(false);
-  const authWrapperDOMRef = useRef(null);
-  const preLaunchDOMRef = useRef(null);
   const footerDomRef = useRef(null);
+  const authDialogDomRef = useRef(null);
+  const preLaunchDialogDomRef = useRef(null);
   const navigate = useNavigate();
   const escapeEvent = new Event('escapePressed');
 
@@ -88,19 +88,35 @@ function Home () {
     <>
       {authChecked &&
         <div id='home'>
-          <div className='auth-wrapper hidden' ref={authWrapperDOMRef}>
-            {authVisible &&
+          <CSSTransition
+            in={showAuth}
+            timeout={300}
+            classNames='react-css-transition-auth-dialog'
+            nodeRef={authDialogDomRef}
+            mountOnEnter
+            unmountOnExit
+          >
+            <div ref={authDialogDomRef}>
               <Auth
                 setShowAuth={setShowAuth}
                 setAuthed={setAuth}
                 setPreLaunchLanguage={setPreLaunchLanguage}
-                config={preLaunchLanguage === null ? {} : { successCallback: () => launch(preLaunchLanguage) }}
-              />}
-          </div>
-          <div className='pre-launch-dialog-wrapper hidden' ref={preLaunchDOMRef}>
-            {preLaunchDialogVisible && <PopupDialog config={popupDialogConfig} />}
-          </div>
                 config={preLaunchLanguage === '' ? {} : { successCallback: () => launch(preLaunchLanguage) }}
+              />
+            </div>
+          </CSSTransition>
+          <CSSTransition
+            in={showPreLaunchDialog}
+            timeout={300}
+            classNames='react-css-transition-pre-launch-dialog'
+            nodeRef={preLaunchDialogDomRef}
+            mountOnEnter
+            unmountOnExit
+          >
+            <div ref={preLaunchDialogDomRef}>
+              <PopupDialog config={popupDialogConfig} />
+            </div>
+          </CSSTransition>
           <header>
             <div className='flex-pane'>
               <div className='media u-marg-left-1'>
@@ -213,30 +229,6 @@ function Home () {
         </div>}
     </>
   );
-
-  function setShowAuth (bool) {
-    if (bool) {
-      setAuthVisible(true);
-      authWrapperDOMRef.current.classList.remove('hidden');
-    } else {
-      authWrapperDOMRef.current.addEventListener('transitionend', () => {
-        setAuthVisible(false);
-      }, { once: true });
-      authWrapperDOMRef.current.classList.add('hidden');
-    }
-  }
-
-  function setShowPreLaunchDialog (bool) {
-    if (bool) {
-      setPreLaunchDialogVisible(true);
-      preLaunchDOMRef.current.classList.remove('hidden');
-    } else {
-      preLaunchDOMRef.current.addEventListener('transitionend', () => {
-        setPreLaunchDialogVisible(false);
-      }, { once: true });
-      preLaunchDOMRef.current.classList.add('hidden');
-    }
-  }
 
   /**
    * Fix to be passed in to setupWindowResizeListener
