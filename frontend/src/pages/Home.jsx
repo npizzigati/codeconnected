@@ -22,6 +22,8 @@ function Home () {
   const preLaunchDOMRef = useRef(null);
   const footerDomRef = useRef(null);
   const navigate = useNavigate();
+  const escapeEvent = new Event('escapePressed');
+
   // This use effect makes it possible for our 'escapePressed'
   // event listener to know about the appropriate state
   useEffect(() => {
@@ -256,7 +258,7 @@ function Home () {
   function fireKeydownEvents (event) {
     // Escape is keyCode 27
     if (event.keyCode === 27) {
-      document.dispatchEvent(new Event('escapePressed'));
+      document.dispatchEvent(escapeEvent);
     }
   }
 
