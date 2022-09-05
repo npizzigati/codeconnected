@@ -488,8 +488,9 @@ body.is-resizing {
     left: 0;
     right: 0;
     color: white;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    // backdrop-filter: blur(5px);
+    // -webkit-backdrop-filter: blur(5px);
+    background-color: #777;
     border: 1px solid white;
     border-radius: 1em;
     z-index: var(--popup-dialog-z-index)
@@ -611,6 +612,17 @@ body.is-resizing {
     border-left: var(--tabbed-modal-border);
     border-right: var(--tabbed-modal-border);
     border-bottom: none;
+}
+
+.pre-launch-dialog-wrapper {
+    opacity: 1;
+    transition: visibility 0.2s, opacity 0.5s;
+}
+
+.pre-launch-dialog-wrapper.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0.2s, opacity 0.5s;
 }
 
 .auth-wrapper {

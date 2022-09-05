@@ -16,9 +16,10 @@ function Home () {
   const [authVisible, setAuthVisible] = useState(false);
   const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [showPreLaunchDialog, setShowPreLaunchDialog] = useState(false);
+  const [preLaunchDialogVisible, setPreLaunchDialogVisible] = useState(false);
   const footerDOMRef = useRef(null);
   const authWrapperDOMRef = useRef(null);
+  const preLaunchDOMRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -87,10 +88,9 @@ function Home () {
                 config={preLaunchLanguage === null ? {} : { successCallback: () => launch(preLaunchLanguage) }}
               />}
           </div>
-          {showPreLaunchDialog &&
-            <div>
-              <PopupDialog config={popupDialogConfig} />
-            </div>}
+          <div className='pre-launch-dialog-wrapper hidden' ref={preLaunchDOMRef}>
+            {preLaunchDialogVisible && <PopupDialog config={popupDialogConfig} />}
+          </div>
           <header>
             <div className='flex-pane'>
               <div className='media u-marg-left-1'>
@@ -213,6 +213,18 @@ function Home () {
         setAuthVisible(false);
       }, { once: true });
       authWrapperDOMRef.current.classList.add('hidden');
+    }
+  }
+
+  function setShowPreLaunchDialog (bool) {
+    if (bool) {
+      setPreLaunchDialogVisible(true);
+      preLaunchDOMRef.current.classList.remove('hidden');
+    } else {
+      preLaunchDOMRef.current.addEventListener('transitionend', () => {
+        setPreLaunchDialogVisible(false);
+      }, { once: true });
+      preLaunchDOMRef.current.classList.add('hidden');
     }
   }
 
