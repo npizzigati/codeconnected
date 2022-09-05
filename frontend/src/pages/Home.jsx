@@ -15,6 +15,7 @@ function Home () {
   const [auth, setAuth] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
   const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
+  const [preLaunchLanguage, setPreLaunchLanguage] = useState('');
   const isPreLaunchDialogVisible = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [preLaunchDialogVisible, setPreLaunchDialogVisible] = useState(false);
@@ -99,6 +100,7 @@ function Home () {
           <div className='pre-launch-dialog-wrapper hidden' ref={preLaunchDOMRef}>
             {preLaunchDialogVisible && <PopupDialog config={popupDialogConfig} />}
           </div>
+                config={preLaunchLanguage === '' ? {} : { successCallback: () => launch(preLaunchLanguage) }}
           <header>
             <div className='flex-pane'>
               <div className='media u-marg-left-1'>
@@ -285,7 +287,7 @@ function Home () {
 
   function abortPreLaunch () {
     setShowPreLaunchDialog(false);
-    setPreLaunchLanguage(null);
+    setPreLaunchLanguage('');
   }
 
   function continueAnyway () {
