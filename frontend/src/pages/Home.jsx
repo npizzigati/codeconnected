@@ -15,12 +15,18 @@ function Home () {
   const [auth, setAuth] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
   const [preLaunchLanguage, setPreLaunchLanguage] = useState(null);
+  const isPreLaunchDialogVisible = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [preLaunchDialogVisible, setPreLaunchDialogVisible] = useState(false);
   const authWrapperDOMRef = useRef(null);
   const preLaunchDOMRef = useRef(null);
   const footerDomRef = useRef(null);
   const navigate = useNavigate();
+  // This use effect makes it possible for our 'escapePressed'
+  // event listener to know about the appropriate state
+  useEffect(() => {
+    isPreLaunchDialogVisible.current = showPreLaunchDialog;
+  }, [showPreLaunchDialog]);
 
   useEffect(() => {
     // When resizing screen, it's useful to have the body be the
@@ -255,7 +261,9 @@ function Home () {
   }
 
   function closeModals () {
-    setShowPreLaunchDialog(false);
+    if (isPreLaunchDialogVisible.current) {
+      abortPreLaunch();
+    }
   }
 
   async function getUserInfo () {
