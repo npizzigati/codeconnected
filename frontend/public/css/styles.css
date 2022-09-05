@@ -561,13 +561,6 @@ body.is-resizing {
     border-radius: 0.7rem;
     box-shadow: 0 0 7px 1px #444;
     opacity: 1;
-    transition: visibility 0.5s, opacity 0.5s;
-}
-
-.tabbed-modal.hidden {
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0.5s, opacity 0.5s;
 }
 
 .tabbed-modal__content {
