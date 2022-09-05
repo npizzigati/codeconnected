@@ -86,7 +86,6 @@ function CodeArea () {
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const [backToHomeDialogVisible, setBackToHomeDialogVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
-  // Custom event to closeModals
   let termWriteTimeout;
 
   const popupDialogConfig = {
