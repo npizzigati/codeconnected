@@ -156,6 +156,8 @@ function CodeArea () {
 
     return function cleanup () {
       window.removeEventListener('online', onlineEventHandler);
+      document.removeEventListener('keydown', fireKeydownEvents);
+      document.removeEventListener('escapePressed', closeModals);
       removeUserFromParticipants();
       isCanceled = true;
     };
