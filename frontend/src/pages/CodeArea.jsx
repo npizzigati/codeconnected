@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { CSSTransition } from 'react-transition-group';
 import PuffLoader from 'react-spinners/PuffLoader';
 
 import * as Y from 'yjs';
@@ -41,6 +42,7 @@ function CodeArea () {
   const initialTermCols = 80;
   const fakeScrollHeight = 100000;
   const fakeScrollMidpoint = 50000;
+  const authWrapperDOMRef = useRef(null);
   const codeAreaDomRef = useRef(null);
   const cmContainerDomRef = useRef(null);
   const termDomRef = useRef(null);
@@ -75,7 +77,7 @@ function CodeArea () {
   const [replTitle, setReplTitle] = useState('');
   const [cmTitle, setCmTitle] = useState('');
   const [showContent, setShowContent] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
+  const [authVisible, setAuthVisible] = useState(false);
   const [showCodeMirror, setShowCodeMirror] = useState(false);
   const [runnerReady, setRunnerReady] = useState(false);
   const [termEnabled, setTermEnabled] = useState(true);
@@ -187,8 +189,9 @@ function CodeArea () {
         id='code-area'
         className={showContent ? 'visible' : 'hidden'}
       >
-        {showAuth &&
-          <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
+        <div className='auth-wrapper hidden' ref={authWrapperDOMRef}>
+          {authVisible && <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />}
+        </div>
         {showBackToHomeDialog &&
           <div>
             <PopupDialog config={popupDialogConfig} />
@@ -320,6 +323,17 @@ function CodeArea () {
     </>
   );
 
+  function setShowAuth (bool) {
+    if (bool) {
+      setAuthVisible(true);
+      authWrapperDOMRef.current.classList.remove('hidden');
+    } else {
+      authWrapperDOMRef.current.addEventListener('transitionend', () => {
+        setAuthVisible(false);
+      }, { once: true });
+      authWrapperDOMRef.current.classList.add('hidden');
+    }
+  }
 
   /**
    * Reset codemirror, terminal panes to sane widths

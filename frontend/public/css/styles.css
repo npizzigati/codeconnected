@@ -16,6 +16,7 @@
     --backdrop-z-index: 20;
     --select-dropdown-z-index: 30;
     --tabbed-modal-z-index: 40;
+    --auth-wrapper-z-index: 40;
     --user-quickdash-z-index: 40;
     --invite-z-index: 40;
     --backdrop--level2-z-index: 50;
@@ -613,8 +614,9 @@ body.is-resizing {
 }
 
 .auth-wrapper {
+    position: absolute;
+    z-index: var(--auth-wrapper-z-index);
     opacity: 1;
-    visibility: visible;
     transition: visibility 0.5s, opacity 0.5s;
 }
 
