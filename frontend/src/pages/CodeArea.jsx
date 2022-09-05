@@ -108,7 +108,8 @@ function CodeArea () {
         callback: abortBackToHome
       }
     ],
-    abortCallback: abortBackToHome
+    abortCallback: abortBackToHome,
+    theme: 'dark'
   };
 
   function abortBackToHome () {
