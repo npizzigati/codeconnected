@@ -4,6 +4,7 @@
   border-left-style: solid;
   border-left-width: 2px;
   height: 1em;
+  pointer-events: none;
 }
 
 .remote-caret > div {
@@ -17,6 +18,7 @@
   color: white;
   padding-left: 0.1em;
   padding-right: 0.1em;
+  pointer-events: none;
   z-index: 3;
 }
 
