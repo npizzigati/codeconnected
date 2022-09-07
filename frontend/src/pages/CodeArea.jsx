@@ -421,6 +421,12 @@ function CodeArea () {
     if (event.keyCode === 27) {
       document.dispatchEvent(new Event('escapePressed'));
     }
+    // If focus is on codemirror and key is pressed, trigger Yjs
+    // awareness change to signal to y-codeimrror.js to show
+    // remote caret and name tooltip (because user is typing)
+    if (cmContainerDomRef.current.contains(document.activeElement)) {
+      wsProvider.current.awareness.setLocalStateField('keyPing', Date.now());
+    }
   }
 
   function executeReplAction (ev) {
@@ -810,10 +816,6 @@ function CodeArea () {
     //   elt.style.paddingLeft = (basePadding + off) + 'px';
     // });
 
-    // Event listener to trigger Yjs awareness change on
-    // codemirror change. This awareness change signals to
-    // y-codemirror.js to show remote caret and name tooltip
-    cm.on('change', () => wsProvider.current.awareness.setLocalStateField('keyPing', Date.now()));
     return cm;
   }
 
