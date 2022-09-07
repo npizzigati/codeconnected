@@ -698,18 +698,6 @@ function CodeArea () {
 
     const binding = new CodemirrorBinding(ytextCode, cmRef.current, wsProvider.current.awareness);
 
-    // wsProvider.current.awareness.on('change', changes => {
-    //   // Whenever somebody updates their awareness information,
-    //   // we log all awareness information from all users.
-    //   console.log(Array.from(wsProvider.current.awareness.getStates().values()));
-    //   const values = Array.from(wsProvider.current.awareness.getStates().values());
-    //   console.log(JSON.stringify(values));
-    //   if (values.length !== participants.current.length) {
-    //     participants.current = values.map(value => value.user?.name).filter(name => name !== undefined);
-    //     console.log('participants: ' + participants.current);
-    //   }
-    // });
-
     participants.current = ydoc.current.getMap('participants');
     participants.current.observe(ev => {
       console.log('participants: ' + JSON.stringify(participants.current.toJSON()));
