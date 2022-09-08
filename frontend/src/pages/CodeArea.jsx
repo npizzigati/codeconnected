@@ -414,6 +414,7 @@ function CodeArea () {
     const participantDetails = new Y.Map();
     participantDetails.set('name', username.current);
     participantDetails.set('lastRollCall', currentTime);
+    participantDetails.set('joinTime', currentTime);
     const stringID = ydoc.current.clientID.toString();
     // Only add participant if they are not in the map already
     if (participants.current.get(stringID) === undefined) {
@@ -746,14 +747,21 @@ function CodeArea () {
         clearInterval(participantPruneInterval);
         return;
       }
+      const thisUserId = ydoc.current?.clientID.toString();
+      // If user has just joined (or rejoined), they shouldn't
+      // run the prune
+      if (participants.current.get(thisUserId) === undefined ||
+          Date.now() - participants.current.get(thisUserId).get('joinTime') < pruneIntervalSeconds * 1000) {
+        return;
+      }
       const toRemove = [];
-      // If more than x ms have passed since a successful roll
-      // call, mark participant for removal
       participants.current.forEach((details, id) => {
         // If self, do nothing
-        if (id === ydoc.current?.clientID.toString()) {
+        if (id === thisUserId) {
           return;
         }
+        // If more than x ms have passed since a successful roll
+        // call, mark participant for removal
         if ((Date.now() - details.get('lastRollCall')) > rollCallIntervalSeconds * 2 * 1000) {
           toRemove.push(id);
         }
