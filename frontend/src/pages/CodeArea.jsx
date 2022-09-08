@@ -168,7 +168,7 @@ function CodeArea () {
       return;
     }
     (async () => {
-      await setupUsername();
+      await setupUser();
     })();
   }, [authed]);
 
@@ -401,7 +401,7 @@ function CodeArea () {
     participants.current.delete(ydoc.current?.clientID.toString());
   }
 
-  async function setupUsername () {
+  async function setupUser () {
     const userInfo = await getUserInfo();
     if (userInfo.auth) {
       setAuthed(true);
@@ -410,7 +410,19 @@ function CodeArea () {
       username.current = 'Guest';
     }
     wsProvider.current.awareness.setLocalStateField('user', { color: 'rgba(228, 228, 288, 0.5)', name: username.current });
-    participants.current.set(ydoc.current.clientID.toString(), username.current);
+    const currentTime = Date.now();
+    const participantDetails = new Y.Map();
+    participantDetails.set('name', username.current);
+    participantDetails.set('lastRollCall', currentTime);
+    const stringID = ydoc.current.clientID.toString();
+    // Only add participant if they are not in the map already
+    if (participants.current.get(stringID) === undefined) {
+      participants.current.set(stringID, participantDetails);
+    }
+    // Remove participant immediately if user leaves room. Note
+    // that this doesn't handle the case of a user leaving room
+    // because of losing the connection or device sleeping --
+    // that is handled by the roll call/prune interval procedure
     window.addEventListener('beforeunload', () => removeUserFromParticipants());
     // For iOS
     window.addEventListener('pagehide', () => removeUserFromParticipants());
@@ -706,9 +718,51 @@ function CodeArea () {
 
     participants.current = ydoc.current.getMap('participants');
     participants.current.observe(ev => {
-      console.log('participants: ' + JSON.stringify(participants.current.toJSON()));
       buildParticipantNameList();
     });
+
+    const rollCallIntervalSeconds = 2;
+    const pruneIntervalSeconds = 10;
+    const participantRollCallInterval = setInterval(() => {
+      if (isCanceled) {
+        clearInterval(participantRollCallInterval);
+        return;
+      }
+      const id = ydoc.current?.clientID.toString();
+      if (id === undefined) {
+        return;
+      }
+      const participant = participants.current.get(id);
+      // Participant will be undefined if device wakes up and
+      // reconnects to site
+      if (participant === undefined) {
+        setupUser();
+      }
+      participant?.set('lastRollCall', Date.now());
+    }, rollCallIntervalSeconds * 1000);
+
+    const participantPruneInterval = setInterval(() => {
+      if (isCanceled) {
+        clearInterval(participantPruneInterval);
+        return;
+      }
+      const toRemove = [];
+      // If more than x ms have passed since a successful roll
+      // call, mark participant for removal
+      participants.current.forEach((details, id) => {
+        // If self, do nothing
+        if (id === ydoc.current?.clientID.toString()) {
+          return;
+        }
+        if ((Date.now() - details.get('lastRollCall')) > rollCallIntervalSeconds * 2 * 1000) {
+          toRemove.push(id);
+        }
+      });
+      // Remove marked participants
+      toRemove.forEach(id => {
+        participants.current.delete(id);
+      });
+    }, pruneIntervalSeconds * 1000);
 
     flagClear.current = ydoc.current.getArray('flag-clear');
     flagClear.current.observe(ev => {
@@ -747,18 +801,18 @@ function CodeArea () {
     setupTerminalScroll();
     setupResizeEventListener();
     setPrevTermClientHeight();
-    await setupUsername();
+    await setupUser();
     setupDone.current = true;
   }
 
   function buildParticipantNameList () {
     // Put this user's name first on list and append with '(you)'
     const nameList = [];
-    participants.current.forEach((name, clientID) => {
+    participants.current.forEach((details, clientID) => {
       if (clientID === ydoc.current.clientID.toString()) {
-        nameList.unshift(name + ' (you)');
+        nameList.unshift(details.get('name') + ' (you)');
       } else {
-        nameList.push(name);
+        nameList.push(details.get('name'));
       }
     });
     setParticipantNames(nameList);
