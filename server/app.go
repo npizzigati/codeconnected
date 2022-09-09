@@ -1748,11 +1748,6 @@ func runCode(roomID string, lang string, linesOfCode int) {
 	}
 }
 
-// TODO: Make sure repl is at prompt before running code
-// TODO: Make sure prompt is in correct repl before running code
-// (maybe by running a certain command and examining the output)
-// TODO: No.2: If repl is not at prompt, get is there (by exiting
-// and re-entering?)
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type paramsModel struct {
 		Filename      string
