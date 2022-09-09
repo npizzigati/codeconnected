@@ -797,7 +797,6 @@ func startRunnerReader(roomID string) {
 }
 
 func writeToWebsockets(text []byte, roomID string) {
-	logger.Println("writing to wsockets: ", text, string(text))
 	room := rooms[roomID]
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
