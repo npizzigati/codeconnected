@@ -1247,13 +1247,15 @@ function CodeArea () {
 
   // TODO: Deactivate run button while this is in progress (among
   // other controls, such as language switcher)
-  function runCode (filename, lines) {
+  function runCode (filename, lines, lastLineEmpty) {
+    const body = JSON.stringify({ roomID: params.roomID, lang: lang.current, filename, lines, lastLineEmpty });
     const options = {
       method: 'POST',
       mode: 'cors',
-      headers: { 'Content-Length': '0' }
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
     };
-    fetch(`/api/runfile?roomID=${params.roomID}&lang=${lang.current}&lines=${lines}`, options)
+    fetch('/api/runfile', options)
       .then(response => {
         console.log(response);
       });
@@ -1286,14 +1288,13 @@ function CodeArea () {
   // TODO: This should be debounced so that it is only sent once
   // even if user clicks multiple times
   function executeContent () {
-
     // Check whether repl is at a prompt
     const prompt = /> $/;
     const { lastLine } = getLastTermLineAndNumber();
     console.log('prompt ready? ' + prompt.test(lastLine));
+    let lastLineEmpty;
     if (!prompt.test(lastLine)) {
-      window.alert('REPL prompt must be empty before code can be run.');
-      return;
+      lastLineEmpty = false;
     }
 
     const content = cmRef.current.getValue();
@@ -1321,7 +1322,7 @@ function CodeArea () {
     fetch('/api/savecontent', options)
       .then(response => {
         console.log(response);
-        runCode(filename, lines);
+        runCode(filename, lines, lastLineEmpty);
       });
   }
 }

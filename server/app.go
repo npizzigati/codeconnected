@@ -1707,20 +1707,10 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	sendBoolJsonResponse(w, map[string]bool{"roomExists": exists})
 }
 
-// TODO: Make sure repl is at prompt before running code
-// TODO: Make sure prompt is in correct repl before running code
-// (maybe by running a certain command and examining the output)
-// TODO: No.2: If repl is not at prompt, get is there (by exiting
-// and re-entering?)
-func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	queryValues := r.URL.Query()
-	roomID := queryValues.Get("roomID")
+func runCode(roomID string, lang string, linesOfCode int) {
 	room := rooms[roomID]
 	cn := room.container
-	lang := queryValues.Get("lang")
-	linesOfCode := queryValues.Get("lines")
 	writeToWebsockets([]byte("\r\n\r\nRunning your code...\r\n"), roomID)
-	room.echo = false
 	switch lang {
 	case "ruby":
 		cn.runner.Write([]byte("exec $0\n")) // reset repl
@@ -1750,15 +1740,56 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 		// Turn echo back on right before output begins
 		room.setEventListener("newline", func(config eventConfig) {
-			lines, err := strconv.Atoi(linesOfCode)
-			if err != nil {
-				logger.Println("strconv error: ", err)
-			}
-			if config.count == lines+2 {
+			if config.count == linesOfCode+2 {
 				room.echo = true
 				room.removeEventListener("newline")
 			}
 		})
+	}
+}
+
+// TODO: Make sure repl is at prompt before running code
+// TODO: Make sure prompt is in correct repl before running code
+// (maybe by running a certain command and examining the output)
+// TODO: No.2: If repl is not at prompt, get is there (by exiting
+// and re-entering?)
+func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type paramsModel struct {
+		Filename      string
+		Lines         int
+		RoomID        string
+		Lang          string
+		LastLineEmpty bool
+	}
+	var pm paramsModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Println("err reading json: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+	err = json.Unmarshal(body, &pm)
+	if err != nil {
+		logger.Println("err while trying to unmarshal: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+
+	roomID := pm.RoomID
+	room := rooms[roomID]
+	cn := room.container
+	lang := pm.Lang
+	linesOfCode := pm.Lines
+	lastLineEmpty := pm.LastLineEmpty
+	room.echo = false
+	if !lastLineEmpty {
+		cn.runner.Write([]byte("\x03")) // send Ctrl-C
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
+			runCode(roomID, lang, linesOfCode)
+		})
+	} else {
+		runCode(roomID, lang, linesOfCode)
 	}
 }
 
