@@ -801,7 +801,8 @@ func writeToWebsockets(text []byte, roomID string) {
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
 		// Don't write special messages to history
-		if string(text) != "RESETTERMINAL" {
+		textString := string(text)
+		if textString != "RESETTERMINAL" && textString != "RUNDONE" {
 			room.termHist = append(room.termHist, text...)
 		}
 	}
@@ -1715,23 +1716,22 @@ func runCode(roomID string, lang string, linesOfCode int) {
 		cn.runner.Write([]byte("exec $0\n")) // reset repl
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
-			// The following cmd depends on the following ~/.pryrc file
-			// on the runner server:
-			// def run_code(filename)
-			//   puts 'START'; load filename; Pry.history.clear
-			// end
-			cn.runner.Write([]byte("run_code('code.rb');\n"))
+			// The following cmd depends on run_codeconnected_code method in ~/.pryrc
+			// file on the runner server:
+			cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
 		})
 		room.setEventListener("startOutput", func(config eventConfig) {
 			room.removeEventListener("startOutput")
 			room.echo = true
+			room.emit("runOutputStarted", eventConfig{})
 		})
 	case "postgres":
 		cn.runner.Write([]byte("\\i code.sql\n"))
 		room.setEventListener("newline", func(config eventConfig) {
 			if config.count == 1 {
-				room.echo = true
 				room.removeEventListener("newline")
+				room.echo = true
+				room.emit("runOutputStarted", eventConfig{})
 			}
 		})
 	case "node":
@@ -1740,20 +1740,76 @@ func runCode(roomID string, lang string, linesOfCode int) {
 		// Turn echo back on right before output begins
 		room.setEventListener("newline", func(config eventConfig) {
 			if config.count == linesOfCode+2 {
-				room.echo = true
 				room.removeEventListener("newline")
+				room.echo = true
+				room.emit("runOutputStarted", eventConfig{})
 			}
 		})
 	}
+	room.setEventListener("runOutputStarted", func(config eventConfig) {
+		logger.Println("********Run output started*********")
+		room.removeEventListener("runOutputStarted")
+		room.setEventListener("promptReady", func(config eventConfig) {
+			logger.Println("********Run done*********")
+			room.removeEventListener("promptReady")
+			writeToWebsockets([]byte("RUNDONE"), roomID)
+		})
+	})
+}
+
+func deleteReplHistory(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	type paramsModel struct {
+		RoomID string
+		Lang   string
+	}
+	var pm paramsModel
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Println("err reading json: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+	err = json.Unmarshal(body, &pm)
+	if err != nil {
+		logger.Println("err while trying to unmarshal: ", err)
+		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+
+	roomID := pm.RoomID
+	room := rooms[roomID]
+	cn := room.container
+	lang := pm.Lang
+
+	switch lang {
+	case "ruby":
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
+			room.echo = true
+		})
+		room.echo = false
+		cn.runner.Write([]byte("clear_history;\n"))
+	case "node":
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
+			room.echo = true
+		})
+		room.echo = false
+		cn.runner.Write([]byte(".deleteHistory\n"))
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte("Successfully deleted repl history"))
 }
 
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type paramsModel struct {
-		Filename      string
-		Lines         int
-		RoomID        string
-		Lang          string
-		LastLineEmpty bool
+		Filename        string
+		Lines           int
+		RoomID          string
+		Lang            string
+		PromptLineEmpty bool
 	}
 	var pm paramsModel
 	body, err := io.ReadAll(r.Body)
@@ -1774,10 +1830,11 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	cn := room.container
 	lang := pm.Lang
 	linesOfCode := pm.Lines
-	lastLineEmpty := pm.LastLineEmpty
+	promptLineEmpty := pm.PromptLineEmpty
 	room.echo = false
-	if !lastLineEmpty {
-		cn.runner.Write([]byte("\x03")) // send Ctrl-C
+	if !promptLineEmpty {
+		logger.Println("last line not empty -- will send interrupt")
+		cn.runner.Write([]byte("\x03")) // send ctrl-c
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
 			runCode(roomID, lang, linesOfCode)
@@ -1926,6 +1983,7 @@ func main() {
 	router.GET("/api/get-user-info", getUserInfo)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
+	router.POST("/api/delete-repl-history", deleteReplHistory)
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
 	router.POST("/api/sign-out", signOut)

@@ -965,13 +965,47 @@ body.is-resizing {
     white-space: nowrap;
 }
 
-.run-button:hover {
+.run-button.running {
+    color: #777;
+    border: 1px solid #777;
+    pointer-events: none;
+}
+
+.run-button.hidden {
+    display: none;
+}
+
+.run-button:not(.running):hover {
     cursor: pointer;
     color: #22907a;
 }
 
-.run-button:active {
+.run-button:not(.running):active {
     color: #1a6f5e;
+}
+
+.stop-button {
+    font-family: 'Jost', sans-serif;
+    font-weight: 500;
+    padding: 0.1em 0.4em;
+    color: #9f0000;
+    border-radius: 0.4em;
+    border: 1px solid #9f0000;
+    background-color: var(--code-area-bg-color);
+    white-space: nowrap;
+}
+
+.stop-button.hidden {
+    display: none;
+}
+
+.stop-button:hover {
+    cursor: pointer;
+    color: #c00000;
+}
+
+.stop-button:active {
+    color: #750000;
 }
 
 .select {

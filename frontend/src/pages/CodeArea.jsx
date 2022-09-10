@@ -42,6 +42,8 @@ function CodeArea () {
   const initialTermCols = 80;
   const fakeScrollHeight = 100000;
   const fakeScrollMidpoint = 50000;
+  const runButtonDomRef = useRef(null);
+  const stopButtonDomRef = useRef(null);
   const authDomRef = useRef(null);
   const codeAreaDomRef = useRef(null);
   const cmContainerDomRef = useRef(null);
@@ -67,6 +69,7 @@ function CodeArea () {
   const participants = useRef(null);
   const [participantNames, setParticipantNames] = useState(null);
   const codeSessionID = useRef(-1);
+  const running = useRef(false);
   const [language, setLanguage] = useState('');
   const ydoc = useRef(null);
   const resizeBarDomRef = useRef(null);
@@ -277,9 +280,8 @@ function CodeArea () {
                 }}
                 config={{ staticTitle: true }}
               />
-              <div className='run-button' onClick={executeContent}>
-                Run
-              </div>
+              <div className='run-button' ref={runButtonDomRef} onClick={executeContent}>Run</div>
+              <div className='stop-button hidden' ref={stopButtonDomRef} onClick={stopRun}>Stop</div>
             </div>
             <div className='codemirror-wrapper'>
               {showCodeMirror &&
@@ -1247,14 +1249,15 @@ function CodeArea () {
 
   // TODO: Deactivate run button while this is in progress (among
   // other controls, such as language switcher)
-  function runCode (filename, lines, lastLineEmpty) {
-    const body = JSON.stringify({ roomID: params.roomID, lang: lang.current, filename, lines, lastLineEmpty });
+  function runCode (filename, lines, promptLineEmpty) {
+    const body = JSON.stringify({ roomID: params.roomID, lang: lang.current, filename, lines, promptLineEmpty });
     const options = {
       method: 'POST',
       mode: 'cors',
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: body
     };
+    console.log('promptLineEmpty: ' + promptLineEmpty);
     fetch('/api/runfile', options)
       .then(response => {
         console.log(response);
@@ -1277,24 +1280,68 @@ function CodeArea () {
     ws.onmessage = ev => {
       if (ev.data === 'RESETTERMINAL') {
         resetTerminal();
-        return;
+      } else if (ev.data === 'RUNDONE') {
+        console.log('RUN DONE!!!!!!!!!!');
+        running.current = false;
+        runButtonDone();
+        deleteReplHistory();
+      } else {
+        writeToTerminal(ev.data);
       }
-      writeToTerminal(ev.data);
     };
 
     return ws;
   }
 
-  // TODO: This should be debounced so that it is only sent once
-  // even if user clicks multiple times
-  function executeContent () {
+  function deleteReplHistory () {
+    const body = JSON.stringify({ roomID: params.roomID, lang: lang.current });
+    const options = {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: body
+    };
+    fetch('/api/delete-repl-history', options)
+      .then(response => {
+        console.log(response);
+      });
+  }
+
+  function runButtonStart () {
     // Check whether repl is at a prompt
+    runButtonDomRef.current.classList.add('running');
+    // Seconds to wait before showing stop button
+    const stopDisplayWait = 2;
+    setTimeout(() => {
+      if (!running.current) {
+        return;
+      }
+      stopButtonDomRef.current.classList.remove('hidden');
+      runButtonDomRef.current.classList.add('hidden');
+    }, stopDisplayWait * 1000);
+  }
+
+  function runButtonDone () {
+    stopButtonDomRef.current.classList.add('hidden');
+    runButtonDomRef.current.classList.remove('hidden');
+    runButtonDomRef.current.classList.remove('running');
+  }
+
+  function stopRun () {
+    // Send ctrl-c
+    ws.current.send('\x03');
+  }
+
+  function executeContent () {
+    running.current = true;
+    runButtonStart();
     const prompt = /> $/;
     const { lastLine } = getLastTermLineAndNumber();
     console.log('prompt ready? ' + prompt.test(lastLine));
-    let lastLineEmpty;
+    let promptLineEmpty = true;
     if (!prompt.test(lastLine)) {
-      lastLineEmpty = false;
+      promptLineEmpty = false;
+      console.log('Last line is not empty');
     }
 
     const content = cmRef.current.getValue();
@@ -1322,7 +1369,7 @@ function CodeArea () {
     fetch('/api/savecontent', options)
       .then(response => {
         console.log(response);
-        runCode(filename, lines, lastLineEmpty);
+        runCode(filename, lines, promptLineEmpty);
       });
   }
 }
