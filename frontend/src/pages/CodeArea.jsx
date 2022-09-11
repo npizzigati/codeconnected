@@ -1280,8 +1280,9 @@ function CodeArea () {
     ws.onmessage = ev => {
       if (ev.data === 'RESETTERMINAL') {
         resetTerminal();
-      } else if (ev.data === 'RUNDONE') {
-        console.log('RUN DONE!!!!!!!!!!');
+      } else if (ev.data === 'RUNTIMEOUT') {
+        console.log('RUN TIMEOUT!!!!!!!!!!');
+      } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
         running.current = false;
         runButtonDone();
         deleteReplHistory();

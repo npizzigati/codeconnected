@@ -61,6 +61,7 @@ type room struct {
 	codeSessionID    int
 	initialContent   string
 	echo             bool
+	timeoutTimer     *time.Timer
 	container        *containerDetails
 	eventSubscribers map[string]func(eventConfig)
 	termHist         []byte
@@ -88,10 +89,15 @@ func (r *room) removeEventListener(event string) {
 var cli *client.Client
 var rooms = make(map[string]*room)
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESS_STORE_SECRET")))
+var welcomeMessages = map[string][]byte{
+	"ruby":     []byte(""),
+	"node":     []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n"),
+	"postgres": []byte("psql\r\nType \"help\" for help.\r\n"),
+}
 var initialPrompts = map[string][]byte{
 	"ruby":     []byte("[1] pry(main)> "),
-	"node":     []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n> "),
-	"postgres": []byte("psql\r\nType \"help\" for help.\r\ncodeuser=> "),
+	"node":     []byte("> "),
+	"postgres": []byte("codeuser=> "),
 }
 var pool *pgxpool.Pool
 var sesCli *sesv2.Client
@@ -652,7 +658,8 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// If first websocket in room, display initial repl message/prompt
 	if len(room.wsockets) == 1 {
-		displayInitialPrompt(roomID)
+		resetTerminal(roomID)
+		displayInitialPrompt(roomID, true, "1")
 	}
 
 	go heartbeat(context.Background(), ws, heartbeatTime*time.Second, room)
@@ -802,7 +809,10 @@ func writeToWebsockets(text []byte, roomID string) {
 	if len(room.wsockets) > 0 {
 		// Don't write special messages to history
 		textString := string(text)
-		if textString != "RESETTERMINAL" && textString != "RUNDONE" {
+		if textString != "RESETTERMINAL" &&
+			textString != "RUNDONE" &&
+			textString != "CANCELRUN" &&
+			textString != "RUNTIMEOUT" {
 			room.termHist = append(room.termHist, text...)
 		}
 	}
@@ -1022,7 +1032,8 @@ loop:
 		case <-success:
 			logger.Printf("Stopping loop to attempt language connection")
 			r.echo = true
-			displayInitialPrompt(roomID)
+			resetTerminal(roomID)
+			displayInitialPrompt(roomID, true, "1")
 			return nil
 		case <-time.After(time.Duration(waitTime) * time.Millisecond):
 			tries++
@@ -1091,18 +1102,26 @@ func attemptLangConn(lang, roomID string) {
 	startRunnerReader(roomID)
 }
 
-func displayInitialPrompt(roomID string) {
+func displayInitialPrompt(roomID string, welcome bool, promptNum string) {
 	lang := rooms[roomID].lang
-	var message []byte
+	var message, intro []byte
 	switch lang {
 	case "ruby":
-		message = initialPrompts["ruby"]
+		intro = welcomeMessages["ruby"]
+		// Replace line number with correct line number (i.e., it's
+		// not always 1, as in when we interrupt execution due to
+		// timeout and then print prompt)
+		message = bytes.Replace(initialPrompts["ruby"], []byte("1"), []byte(promptNum), 1)
 	case "node":
+		intro = welcomeMessages["node"]
 		message = initialPrompts["node"]
 	case "postgres":
+		intro = welcomeMessages["postgres"]
 		message = initialPrompts["postgres"]
 	}
-	resetTerminal(roomID)
+	if welcome {
+		writeToWebsockets(intro, roomID)
+	}
 	writeToWebsockets(message, roomID)
 }
 
@@ -1111,6 +1130,10 @@ func resetTerminal(roomID string) {
 	writeToWebsockets([]byte("RESETTERMINAL"), roomID)
 	// Also reset terminal history
 	rooms[roomID].termHist = []byte("")
+	if rooms[roomID].timeoutTimer != nil {
+		rooms[roomID].timeoutTimer.Stop()
+	}
+	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
 
 func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1710,6 +1733,8 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) {
 	room := rooms[roomID]
 	cn := room.container
+	// Max run time in seconds
+	const maxRunTime = 10
 
 	room.echo = false
 	if !promptLineEmpty {
@@ -1717,6 +1742,23 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	}
 
 	writeToWebsockets([]byte("\r\n\r\nRunning your code...\r\n"), roomID)
+
+	// Emit run timeout after x seconds to prevent long-running code
+	room.timeoutTimer = time.NewTimer(maxRunTime * time.Second)
+	go func() {
+		<-room.timeoutTimer.C
+		// Send ctrl-c interrupt
+		room.echo = false
+		cn.runner.Write([]byte("\x03")) // send ctrl-c
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
+			writeToWebsockets([]byte("CANCELRUN"), roomID)
+			writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
+			displayInitialPrompt(roomID, false, "2")
+			room.echo = true
+		})
+	}()
+
 	switch lang {
 	case "ruby":
 		cn.runner.Write([]byte("exec $0\n")) // reset repl
@@ -1758,6 +1800,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		room.setEventListener("promptReady", func(config eventConfig) {
 			logger.Println("********Run done*********")
 			room.removeEventListener("promptReady")
+			room.timeoutTimer.Stop()
 			writeToWebsockets([]byte("RUNDONE"), roomID)
 		})
 	})
