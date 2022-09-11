@@ -1713,11 +1713,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 
 	room.echo = false
 	if !promptLineEmpty {
-		logger.Println("last line not empty -- will send interrupt")
 		cn.runner.Write([]byte("\x03")) // send ctrl-c
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-		})
 	}
 
 	writeToWebsockets([]byte("\r\n\r\nRunning your code...\r\n"), roomID)
