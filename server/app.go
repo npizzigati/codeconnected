@@ -1707,9 +1707,19 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	sendBoolJsonResponse(w, map[string]bool{"roomExists": exists})
 }
 
-func runCode(roomID string, lang string, linesOfCode int) {
+func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) {
 	room := rooms[roomID]
 	cn := room.container
+
+	room.echo = false
+	if !promptLineEmpty {
+		logger.Println("last line not empty -- will send interrupt")
+		cn.runner.Write([]byte("\x03")) // send ctrl-c
+		room.setEventListener("promptReady", func(config eventConfig) {
+			room.removeEventListener("promptReady")
+		})
+	}
+
 	writeToWebsockets([]byte("\r\n\r\nRunning your code...\r\n"), roomID)
 	switch lang {
 	case "ruby":
@@ -1825,23 +1835,7 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	roomID := pm.RoomID
-	room := rooms[roomID]
-	cn := room.container
-	lang := pm.Lang
-	linesOfCode := pm.Lines
-	promptLineEmpty := pm.PromptLineEmpty
-	room.echo = false
-	if !promptLineEmpty {
-		logger.Println("last line not empty -- will send interrupt")
-		cn.runner.Write([]byte("\x03")) // send ctrl-c
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-			runCode(roomID, lang, linesOfCode)
-		})
-	} else {
-		runCode(roomID, lang, linesOfCode)
-	}
+	runCode(pm.RoomID, pm.Lang, pm.Lines, pm.PromptLineEmpty)
 }
 
 func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
