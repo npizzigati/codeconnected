@@ -27,7 +27,7 @@ function Invite () {
       <div
         className='invite__button'
         ref={inviteButtonDomRef}
-        onPointerDown={ev => handlePointerDown(ev, showInviteDialog)}
+        onPointerDown={ev => handlePointerDown(ev, toggleInviteDialog)}
       >
         <span>Invite</span>
       </div>
@@ -62,8 +62,12 @@ function Invite () {
     }
   }
 
-  function showInviteDialog () {
-    inviteDialogDomRef.current.classList.remove('hidden');
+  function toggleInviteDialog () {
+    if (inviteDialogDomRef.current.classList.contains('hidden')) {
+      inviteDialogDomRef.current.classList.remove('hidden');
+    } else {
+      inviteDialogDomRef.current.classList.add('hidden');
+    }
   }
 
   function hideInviteDialog () {
