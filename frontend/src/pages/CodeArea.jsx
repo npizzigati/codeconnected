@@ -245,7 +245,7 @@ function CodeArea () {
           </div>
           <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered flex-container--gap u-marg-right-1 u-marg-bot-5'>
             <Participants participantNames={participantNames} />
-            <Invite />
+            {termEnabled && <Invite />}
             <div className='sign-in-block'>
               {authed
                 ? <div><UserQuickdash setAuthed={setAuthed} /></div>
@@ -279,7 +279,7 @@ function CodeArea () {
                 }}
                 config={{ staticTitle: true }}
               />
-              <div className='run-button' ref={runButtonDomRef} onClick={executeContent}>Run</div>
+              {termEnabled && <div className='run-button' ref={runButtonDomRef} onClick={executeContent}>Run</div>}
               <div className='stop-button hidden' ref={stopButtonDomRef} onClick={stopRun}>Stop</div>
             </div>
             <div className='codemirror-wrapper'>
@@ -1317,9 +1317,9 @@ function CodeArea () {
   }
 
   function runButtonDone () {
-    stopButtonDomRef.current.classList.add('hidden');
-    runButtonDomRef.current.classList.remove('hidden');
-    runButtonDomRef.current.classList.remove('running');
+    stopButtonDomRef.current?.classList.add('hidden');
+    runButtonDomRef.current?.classList.remove('hidden');
+    runButtonDomRef.current?.classList.remove('running');
   }
 
   function stopRun () {
@@ -1328,10 +1328,6 @@ function CodeArea () {
   }
 
   function executeContent () {
-    if (!termEnabled) {
-      showPopup('Session has expired');
-      return;
-    }
     running.current = true;
     runButtonStart();
     const prompt = /> $/;
