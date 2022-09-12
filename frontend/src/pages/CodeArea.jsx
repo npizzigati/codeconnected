@@ -102,7 +102,11 @@ function CodeArea () {
         number: 1,
         icon: { path: './images/run.png', alt: 'Login' },
         text: 'Yes, take me back to the home page.',
-        callback: () => navigate('/')
+        callback: () => {
+          // Don't use React's navigate here because the user
+          // won't be removed from room participants
+          window.location = window.location.origin;
+        }
       },
       {
         number: 2,
