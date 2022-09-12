@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
 
-function Select ({ options, title, callback, config }) {
+function Select ({ enabled, options, title, callback, config }) {
   const dropdown = useRef(null);
   const button = useRef(null);
   const titlePart = useRef(null);
@@ -42,6 +42,9 @@ function Select ({ options, title, callback, config }) {
   }
 
   function toggleDropdown () {
+    if (!enabled) {
+      return;
+    }
     if (displayDropdown) {
       hideDropdown();
     } else {
@@ -53,7 +56,7 @@ function Select ({ options, title, callback, config }) {
     <>
       <div className='select'>
         <div
-          className='select-button'
+          className={enabled ? 'select-button' : 'select-button disabled'}
           ref={button}
           onPointerDown={(ev) => handlePointerDown(ev, toggleDropdown, ev)}
         >
