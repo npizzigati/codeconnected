@@ -1024,7 +1024,7 @@ body.is-resizing {
     display: flex;
 }
 
-.select-button:hover {
+.select-button:not[.disabled]:hover {
     color: #ebebeb;
     cursor: pointer;
 }
