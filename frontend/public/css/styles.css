@@ -806,7 +806,7 @@ body.is-resizing {
     text-align: center;
     color: white;
     padding: 0.3em 0.2em 0.2em;
-    margin: 0.4em 1em;
+    margin: 0.4em 0 0 1em;
     font-family: 'Lato', sans-serif;
     font-size: 0.9em;
     border-radius: 0.2em;
@@ -872,13 +872,6 @@ body.is-resizing {
     margin: 0 5px 0px 0;
     position: relative;
     border: 1px solid var(--code-area-border-color);
-}
-
-.terminal-expired {
-    width: 20em;
-    margin: 20% auto 0;
-    color: white;
-    text-align: center;
 }
 
 .editor-title-row,

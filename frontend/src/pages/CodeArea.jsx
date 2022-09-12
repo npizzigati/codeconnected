@@ -84,6 +84,7 @@ function CodeArea () {
   const [showAuth, setShowAuth] = useState(false);
   const [showCodeMirror, setShowCodeMirror] = useState(false);
   const [runnerReady, setRunnerReady] = useState(false);
+  const [selectButtonsEnabled, setSelectButtonsEnabled] = useState(true);
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
@@ -220,7 +221,7 @@ function CodeArea () {
           </div>
         </CSSTransition>
         <header>
-          <div className='flex-pane flex-container flex-container--constrained flex-container--vert-top flex-container--spread-out'>
+          <div className='flex-pane flex-container flex-container--vert-top'>
             <div
               className='media u-marg-left-1'
             >
@@ -240,10 +241,7 @@ function CodeArea () {
                 </div>
               </div>
             </div>
-            {timeLeftDisplay !== null &&
-              <div className='time-remaining u-marg-top-1'>
-                Time remaining: {timeLeftDisplay}
-              </div>}
+            {timeLeftDisplay !== null && <div className='time-remaining'>{timeLeftDisplay}</div>}
           </div>
           <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered flex-container--gap u-marg-right-1 u-marg-bot-5'>
             <Participants participantNames={participantNames} />
@@ -269,6 +267,7 @@ function CodeArea () {
             <div className={'editor-title-row' + (runnerReady ? '' : ' hidden')} ref={editorTitleRowDomRef}>
               <div className='editor-title flex-pane' ref={editorTitleDomRef}>Code Editor</div>
               <Select
+                enabled={selectButtonsEnabled}
                 options={[{ value: 'ruby', label: 'Ruby' },
                           { value: 'node', label: 'JavaScript' },
                           { value: 'postgres', label: 'PostgreSQL' }]}
@@ -310,6 +309,7 @@ function CodeArea () {
             <div className={'repl-title-row' + (runnerReady ? '' : ' hidden')} ref={replTitleRowDomRef}>
               <div className='repl-title' ref={replTitleDomRef}>{replTitle}</div>
               <Select
+                enabled={selectButtonsEnabled}
                 options={[{ value: 'clear', label: 'Clear' },
                           { value: 'reset', label: 'Reset' }]}
                 title='Actions'
@@ -334,10 +334,6 @@ function CodeArea () {
                   ref={termDomRef}
                   className='terminal-wrapper'
                 />
-              </div>}
-            {!termEnabled &&
-              <div className='terminal-expired'>
-                Terminal has expired.
               </div>}
           </div>
         </main>
@@ -455,19 +451,17 @@ function CodeArea () {
       }
       if (updatedSecondsToExpiry <= 0) {
         clearInterval(interval);
-        disableTerminal();
+        setTermEnabled(false);
+        setSelectButtonsEnabled(false);
+        setTimeLeftDisplay('Session expired');
       }
     }, 250);
-  }
-
-  function disableTerminal () {
-    setTermEnabled(false);
   }
 
   function displayTimeLeft (secondsToExpiry) {
     const minutes = (Math.trunc(secondsToExpiry / 60)).toString().padStart(2, '0');
     const seconds = (secondsToExpiry % 60).toString().padStart(2, '0');
-    setTimeLeftDisplay(`${minutes}:${seconds}`);
+    setTimeLeftDisplay(`Time remaining: ${minutes}:${seconds}`);
   }
 
   /**
@@ -1334,6 +1328,10 @@ function CodeArea () {
   }
 
   function executeContent () {
+    if (!termEnabled) {
+      showPopup('Session has expired');
+      return;
+    }
     running.current = true;
     runButtonStart();
     const prompt = /> $/;
