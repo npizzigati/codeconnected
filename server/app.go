@@ -668,7 +668,6 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	for {
 		// Receive command
 		_, message, err := ws.Read(context.Background())
-		logger.Println("message: ", message)
 		if err != nil {
 			logger.Println("error receiving message: ", err, " ", time.Now().String())
 			// TODO: -- I should try to recover after this (reopen
@@ -676,7 +675,6 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			break
 		}
 
-		logger.Printf("Command received: %s\n", message)
 		sendToContainer(message, roomID)
 	}
 }
@@ -748,10 +746,8 @@ func startRunnerReader(roomID string) {
 			}
 
 			if string(ru) == "\n" {
-				logger.Println("*********newline in output*********")
 				newlineCount++
 				room.emit("newline", eventConfig{count: newlineCount})
-				logger.Println("newlineCount: ", newlineCount)
 			}
 
 			// Add char to fake terminal buffer
@@ -778,7 +774,6 @@ func startRunnerReader(roomID string) {
 					// Check whether fakeTermBuffer ends with prompt termination
 					if promptTermination.Match(fakeTermBuffer) {
 						room.emit("promptReady", eventConfig{})
-						logger.Println("Matched prompt termination")
 						fakeTermBuffer = []byte{}
 						newlineCount = 0
 					}
@@ -824,7 +819,6 @@ func writeToWebsockets(text []byte, roomID string) {
 			logger.Println("ws write err: ", "text", text, "; err: ", err)
 		}
 	}
-	logger.Println("number of wsocket conns: ", len(room.wsockets))
 }
 
 func sendToContainer(message []byte, roomID string) {
@@ -840,7 +834,6 @@ func sendToContainer(message []byte, roomID string) {
 		time.Sleep(time.Duration(tries/2) * time.Second)
 		_, err := cn.runner.Write(message)
 		if err == nil {
-			logger.Printf("Payload bytes: %#v\n\n", message)
 			break
 		}
 		logger.Println("runner write error: ", err)
