@@ -4,9 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
 
 function Invite () {
-  const [popupMessage, setPopupMessage] = useState('');
   const inviteDialogDomRef = useRef(null);
   const inviteButtonDomRef = useRef(null);
+  const initialMessage = 'Send this link to a friend to join this code session:';
+  const [message, setMessage] = useState(initialMessage);
+  const [showCheckmark, setShowCheckmark] = useState(false);
 
   useEffect(() => {
     document.addEventListener('pointerdown', inviteHandleDocPointerDown);
@@ -21,9 +23,6 @@ function Invite () {
 
   return (
     <>
-      <div className='popup-container'>
-        <div className='popup'>{popupMessage}</div>
-      </div>
       <div
         className='invite__button'
         ref={inviteButtonDomRef}
@@ -32,18 +31,26 @@ function Invite () {
         <span>Invite</span>
       </div>
       <div className='invite__dialog hidden' ref={inviteDialogDomRef}>
-        <div className='u-marg-bot-1'>
-          <span className='invite__instructions'>
-            Send this link to a friend to join this code session:
-          </span>
+        <div className='media media--centered'>
+          <div className='media__image-container'>
+            {showCheckmark &&
+              <img
+                className='media__image media__image--nano media__image--clickable'
+                src='./images/checkmark.png'
+                onPointerDown={ev => handlePointerDown(ev, copyLinkToClipboard)}
+              />}
+          </div>
+          <div className='media__text'>
+            <span className='invite__message'>{message}</span>
+          </div>
         </div>
         <div className='media'>
           <div className='media__text'>
-            <span className='invite__text'>{window.location.href}</span>
+            <span className='invite__link'>{window.location.href}</span>
           </div>
           <div className='media__image-container'>
             <img
-              className='media__image--micro media__image--clickable'
+              className='media__image media__image--micro media__image--clickable'
               src='./images/copy.png'
               onPointerDown={ev => handlePointerDown(ev, copyLinkToClipboard)}
             />
@@ -64,6 +71,8 @@ function Invite () {
 
   function toggleInviteDialog () {
     if (inviteDialogDomRef.current.classList.contains('hidden')) {
+      setMessage(initialMessage);
+      setShowCheckmark(false);
       inviteDialogDomRef.current.classList.remove('hidden');
     } else {
       inviteDialogDomRef.current.classList.add('hidden');
@@ -76,15 +85,9 @@ function Invite () {
 
   function copyLinkToClipboard () {
     navigator.clipboard.writeText(window.location.href);
-    showPopup('Invite link copied to your clipboard');
-    hideInviteDialog();
-  }
-
-  function showPopup (message) {
-    setPopupMessage(message);
-    setTimeout(() => {
-      setPopupMessage('');
-    }, 2000);
+    setMessage('Invite link copied to your clipboard');
+    setShowCheckmark(true);
+    setTimeout(hideInviteDialog, 1500);
   }
 }
 

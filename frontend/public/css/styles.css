@@ -160,6 +160,11 @@ body.is-resizing {
     width: auto;
 }
 
+.media__image--nano {
+    height: 0.8em;
+    width: auto;
+}
+
 .media__image--clickable {
     cursor: pointer;
 }
@@ -1321,14 +1326,20 @@ body.is-resizing {
     transition: visibility 0.3s, opacity 0.3s;
 }
 
-.invite__instructions {
+.invite__message {
     font-family: 'Jost', sans-serif;
     font-weight: 400;
     font-size: 0.7rem;
     color: white;
 }
 
-.invite__text {
+.invite__checkmark {
+    height: 1.5em;
+    width: auto;
+}
+
+
+.invite__link {
     font-family: 'Roboto', sans-serif;
     font-family: 'Jost', sans-serif;
     font-weight: 300;
