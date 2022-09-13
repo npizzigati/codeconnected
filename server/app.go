@@ -822,6 +822,7 @@ func writeToWebsockets(text []byte, roomID string) {
 		if textString != "RESETTERMINAL" &&
 			textString != "RUNDONE" &&
 			textString != "CANCELRUN" &&
+			textString != "ROOMCLOSED" &&
 			textString != "RUNTIMEOUT" {
 			room.termHist = append(room.termHist, text...)
 		}
