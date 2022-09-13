@@ -527,6 +527,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
 
+	logger.Println("**************Going to start container********************")
 	if err = startContainer(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		logger.Printf("Could not start container for room %s", roomID)
@@ -1928,7 +1929,7 @@ func updateRoomAccessTime(codeSessionID int) {
 func closeEmptyRooms() {
 	// Remove rooms where there are no users
 	for roomID, room := range rooms {
-		logger.Println("container: ", room.container.ID, "  websockets: ", len(room.wsockets))
+		logger.Println("roomID: ", roomID, "status: ", room.status, "container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		// Check if room container exists to make sure we're not
 		// deleting rooms that are in the process of being created
 		if len(room.wsockets) == 0 && room.status == "open" {
