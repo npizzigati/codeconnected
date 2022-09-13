@@ -59,6 +59,7 @@ function CodeArea () {
   const roomClosedDialogDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
+  const setupCanceled = useRef(false);
   const setupDone = useRef(false);
   const ws = useRef(null);
   const wsProvider = useRef(null);
@@ -148,7 +149,6 @@ function CodeArea () {
   }
 
   useEffect(() => {
-    let isCanceled = false;
     function onlineEventHandler () {
       console.log('now online');
       location.reload();
@@ -179,7 +179,7 @@ function CodeArea () {
     });
 
     (async () => {
-      await setup(isCanceled);
+      await setup();
     })();
 
     return function cleanup () {
@@ -187,7 +187,7 @@ function CodeArea () {
       document.removeEventListener('keydown', fireKeydownEvents);
       document.removeEventListener('escapePressed', closeModals);
       removeUserFromParticipants();
-      isCanceled = true;
+      setupCanceled.current = true;
     };
   }, []);
 
@@ -626,7 +626,7 @@ function CodeArea () {
     }
   }
 
-  async function prepareRoom (roomID, isCanceled) {
+  async function prepareRoom (roomID) {
     const body = JSON.stringify({ roomID, rows: initialTermRows, cols: initialTermCols });
     const options = {
       method: 'POST',
@@ -637,7 +637,7 @@ function CodeArea () {
 
     try {
       const response = await fetch('/api/prepare-room', options);
-      if (isCanceled) {
+      if (setupCanceled.current) {
         return;
       }
       const json = await response.json();
@@ -655,9 +655,9 @@ function CodeArea () {
     return -1;
   }
 
-  async function setup (isCanceled) {
+  async function setup () {
     if (!(await roomExists(roomID))) {
-      if (isCanceled) {
+      if (setupCanceled.current) {
         return;
       }
       console.log('room does not exist');
@@ -673,11 +673,11 @@ function CodeArea () {
     let initialContent = '';
     if (status === 'created') {
       console.log('Will prepare room');
-      const json = await prepareRoom(roomID, isCanceled);
+      const json = await prepareRoom(roomID);
       codeSessionID.current = json.codeSessionID;
       initialContent = json.initialContent;
       console.log('codeSessionID: ' + codeSessionID.current);
-      if (isCanceled) {
+      if (setupCanceled.current) {
         return;
       }
     } else if (status === 'preparing') {
@@ -689,7 +689,7 @@ function CodeArea () {
 
     // Get initial lang and terminal history from server
     const initialVars = await getInitialRoomData(roomID);
-    if (isCanceled) {
+    if (setupCanceled.current) {
       return;
     }
     const initialLang = initialVars.language;
@@ -713,7 +713,7 @@ function CodeArea () {
 
     cmRef.current = setupCodeMirror();
 
-    if (isCanceled) {
+    if (setupCanceled.current) {
       return;
     }
 
@@ -747,7 +747,7 @@ function CodeArea () {
     const rollCallIntervalSeconds = 2;
     const pruneIntervalSeconds = 10;
     const participantRollCallInterval = setInterval(() => {
-      if (isCanceled) {
+      if (setupCanceled.current) {
         clearInterval(participantRollCallInterval);
         return;
       }
@@ -765,7 +765,7 @@ function CodeArea () {
     }, rollCallIntervalSeconds * 1000);
 
     const participantPruneInterval = setInterval(() => {
-      if (isCanceled) {
+      if (setupCanceled.current) {
         clearInterval(participantPruneInterval);
         return;
       }
