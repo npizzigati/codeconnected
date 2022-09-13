@@ -56,6 +56,7 @@ function CodeArea () {
   const editorTitleRowDomRef = useRef(null);
   const replTitleRowDomRef = useRef(null);
   const backToHomeDialogDomRef = useRef(null);
+  const roomClosedDialogDomRef = useRef(null);
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const setupDone = useRef(false);
@@ -89,10 +90,11 @@ function CodeArea () {
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
+  const [showRoomClosedDialog, setShowRoomClosedDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   let termWriteTimeout;
 
-  const popupDialogConfig = {
+  const backToHomeDialogConfig = {
     message: {
       icon: { path: './images/attention.png', alt: 'Attention' },
       text: 'Do you really want to exit this session?'
@@ -113,6 +115,25 @@ function CodeArea () {
         icon: { path: './images/stop.png', alt: 'Time-limited' },
         text: 'No, I want to stay here.',
         callback: abortBackToHome
+      }
+    ],
+    abortCallback: abortBackToHome,
+    theme: 'dark'
+  };
+
+  const roomClosedDialogConfig = {
+    message: {
+      icon: { path: './images/attention.png', alt: 'Attention' },
+      text: 'Room was closed or could not be opened.'
+    },
+    options: [
+      {
+        number: 1,
+        icon: { path: './images/run.png', alt: 'Login' },
+        text: 'Take me back to the home page.',
+        callback: () => {
+          window.location = window.location.origin;
+        }
       }
     ],
     abortCallback: abortBackToHome,
@@ -221,7 +242,19 @@ function CodeArea () {
           unmountOnExit
         >
           <div ref={backToHomeDialogDomRef}>
-            <PopupDialog config={popupDialogConfig} />
+            <PopupDialog config={backToHomeDialogConfig} />
+          </div>
+        </CSSTransition>
+        <CSSTransition
+          in={showRoomClosedDialog}
+          timeout={300}
+          classNames='react-css-transition-popup-dialog'
+          nodeRef={roomClosedDialogDomRef}
+          mountOnEnter
+          unmountOnExit
+        >
+          <div ref={roomClosedDialogDomRef}>
+            <PopupDialog config={roomClosedDialogConfig} />
           </div>
         </CSSTransition>
         <header>
@@ -1284,6 +1317,8 @@ function CodeArea () {
         running.current = false;
         runButtonDone();
         deleteReplHistory();
+      } else if (ev.data === 'ROOMCLOSED') {
+        setShowRoomClosedDialog(true);
       } else {
         writeToTerminal(ev.data);
       }
