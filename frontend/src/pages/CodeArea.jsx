@@ -1316,9 +1316,6 @@ function CodeArea () {
         running.current = false;
         runButtonDone();
         deleteReplHistory();
-      } else if (ev.data === 'ROOMCLOSED') {
-        setShowRoomClosedDialog(true);
-        setupCanceled.current = true;
       } else {
         writeToTerminal(ev.data);
       }

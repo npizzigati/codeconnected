@@ -823,7 +823,6 @@ func writeToWebsockets(text []byte, roomID string) {
 		if textString != "RESETTERMINAL" &&
 			textString != "RUNDONE" &&
 			textString != "CANCELRUN" &&
-			textString != "ROOMCLOSED" &&
 			textString != "RUNTIMEOUT" {
 			room.termHist = append(room.termHist, text...)
 		}
@@ -1786,8 +1785,8 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	case "node":
 		cn.runner.Write([]byte(".runUserCode code.js\n"))
 
-		extraLinesBeforeStdOutput := 2
 		// Turn echo back on right before output begins
+		extraLinesBeforeStdOutput := 2
 		// Account for output workaround (adding null; on newline at
 		// end of file) in custom node launcher
 		linesAddedInCustomNodeLauncher := 1
@@ -1962,8 +1961,6 @@ func closeRoom(roomID string) {
 	if err != nil {
 		logger.Println("error in stopping/removing container: ", err)
 	}
-	// Send message to any clients connected to room
-	writeToWebsockets([]byte("ROOMCLOSED"), roomID)
 	// Remove empty room from rooms map
 	delete(rooms, roomID)
 }
