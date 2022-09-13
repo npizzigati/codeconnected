@@ -472,6 +472,22 @@ func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	logger.Printf("Room %s is %s\n", rm.RoomID, rooms[rm.RoomID].status)
 }
 
+func createContainer(ctx context.Context, cmd []string) (container.ContainerCreateCreatedBody, error) {
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		// Don't specify the non-root user here, since the entrypoint
+		// needs to be root to start up Postgres
+		// The image needs to already be created on the runner server
+		Image:        "myrunner",
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: false,
+		Tty:          true,
+		OpenStdin:    true,
+		Cmd:          cmd,
+	}, nil, nil, nil, "")
+	return resp, err
+}
+
 func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
@@ -912,23 +928,16 @@ func startContainer(lang, roomID string, rows int, cols int) error {
 	ctx := context.Background()
 	cmd := []string{"bash"}
 
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		// Don't specify the non-root user here, since the entrypoint
-		// needs to be root to start up Postgres
-		// The image needs to already be created on the runner server
-		Image:        "myrunner",
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: false,
-		Tty:          true,
-		OpenStdin:    true,
-		Cmd:          cmd,
-	}, nil, nil, nil, "")
+	logger.Println("********About to call ContainerCreate for room: ", roomID)
+	resp, err := createContainer(ctx, cmd)
+	logger.Println("********resp from attempt to create container: ", resp)
 	if err != nil {
-		panic(err)
+		logger.Println("Error in creating container: ", err)
+		// panic(err)
 	}
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+		logger.Println("Error in starting container: ", err)
+		// panic(err)
 	}
 
 	logger.Println("Setting new container id to: ", resp.ID)
