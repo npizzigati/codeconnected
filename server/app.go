@@ -730,7 +730,6 @@ func startRunnerReader(roomID string) {
 				if err != nil {
 					logger.Println("error in discarding header: ", err)
 				}
-				logger.Println("header bytes discarded: ", num)
 			}
 
 			ru, _, err := cn.bufReader.ReadRune()
@@ -813,7 +812,6 @@ func writeToWebsockets(text []byte, roomID string) {
 	}
 
 	for _, ws := range room.wsockets {
-		logger.Println("********Writing to websocket*********")
 		err := ws.Write(context.Background(), websocket.MessageText, text)
 		if err != nil {
 			logger.Println("ws write err: ", "text", text, "; err: ", err)
@@ -822,7 +820,6 @@ func writeToWebsockets(text []byte, roomID string) {
 }
 
 func sendToContainer(message []byte, roomID string) {
-	logger.Println("Sending message to container")
 	cn := rooms[roomID].container
 	lang := rooms[roomID].lang
 
