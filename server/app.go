@@ -1956,6 +1956,8 @@ func closeRoom(roomID string) {
 	if err != nil {
 		logger.Println("error in stopping/removing container: ", err)
 	}
+	// Send message to any clients connected to room
+	writeToWebsockets([]byte("ROOMCLOSED"), roomID)
 	// Remove empty room from rooms map
 	delete(rooms, roomID)
 }
