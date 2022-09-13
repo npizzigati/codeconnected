@@ -8,7 +8,7 @@ function PopupDialog ({ config }) {
     <>
       <div
         className='backdrop'
-        onPointerDown={(ev) => handlePointerDown(ev, config.abortCallback, ev)}
+        onPointerDown={(ev) => config.abortCallback && handlePointerDown(ev, config.abortCallback, ev)}
       />
       <div className={'popup-dialog' + ((config.theme === 'dark') ? ' popup-dialog--dark' : '')}>
         <div className='media'>
