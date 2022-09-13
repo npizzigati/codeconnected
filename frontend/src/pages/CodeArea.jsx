@@ -136,7 +136,6 @@ function CodeArea () {
         }
       }
     ],
-    abortCallback: abortBackToHome,
     theme: 'dark'
   };
 
