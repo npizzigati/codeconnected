@@ -443,7 +443,7 @@ func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Param
 
 // Delete room in preparation that hasn't become ready after
 // timeout
-func closeUnsuccessfulRoom(roomID string) *time.Timer {
+func createUnsuccessfulRoomCloser(roomID string) *time.Timer {
 	prepTimeout := 20
 	closer := time.NewTimer(time.Duration(prepTimeout) * time.Second)
 	go func() {
@@ -491,7 +491,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	roomID := rm.RoomID
 	room := rooms[roomID]
 
-	closer := closeUnsuccessfulRoom(roomID)
+	closer := createUnsuccessfulRoomCloser(roomID)
 
 	// Room can only be prepared once. If the link is shared before
 	// room is prepared, this request could be made by a second
