@@ -742,7 +742,7 @@ func startRunnerReader(roomID string) {
 			// Header will begin with ascii value 1
 			if peek[0] == 1 {
 				// Discard the header
-				num, err := cn.bufReader.Discard(8)
+				_, err := cn.bufReader.Discard(8)
 				if err != nil {
 					logger.Println("error in discarding header: ", err)
 				}
