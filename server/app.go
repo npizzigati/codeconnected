@@ -1786,9 +1786,13 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	case "node":
 		cn.runner.Write([]byte(".runUserCode code.js\n"))
 
+		extraLinesBeforeStdOutput := 2
 		// Turn echo back on right before output begins
+		// Account for output workaround (adding null; on newline at
+		// end of file) in custom node launcher
+		linesAddedInCustomNodeLauncher := 1
 		room.setEventListener("newline", func(config eventConfig) {
-			if config.count == linesOfCode+2 {
+			if config.count == linesOfCode+extraLinesBeforeStdOutput+linesAddedInCustomNodeLauncher {
 				room.removeEventListener("newline")
 				room.echo = true
 				room.emit("runOutputStarted", eventConfig{})
