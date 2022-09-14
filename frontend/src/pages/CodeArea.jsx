@@ -86,6 +86,7 @@ function CodeArea () {
   const [showAuth, setShowAuth] = useState(false);
   const [showCodeMirror, setShowCodeMirror] = useState(false);
   const [runnerReady, setRunnerReady] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(true);
   const [selectButtonsEnabled, setSelectButtonsEnabled] = useState(true);
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
@@ -205,7 +206,7 @@ function CodeArea () {
       <div className='popup-container'>
         <div className='popup'>{popupMessage}</div>
       </div>
-      {!runnerReady &&
+      {!runnerReady && showSpinner &&
         <div>
           <div className='spinner-container'>
             <PuffLoader
@@ -647,7 +648,8 @@ function CodeArea () {
         console.log('Room successfully prepared');
         return json;
       } else {
-        console.error('Error preparing room.');
+        console.log('Error preparing room.');
+        return json;
       }
     } catch (error) {
       console.error('Error preparing room: ', error);
@@ -674,6 +676,12 @@ function CodeArea () {
     if (status === 'created') {
       console.log('Will prepare room');
       const json = await prepareRoom(roomID);
+      console.log('room status: ' + json.status);
+      if (json.status === 'failed') {
+        setShowRoomClosedDialog(true);
+        setShowSpinner(false);
+        return;
+      }
       codeSessionID.current = json.codeSessionID;
       initialContent = json.initialContent;
       console.log('codeSessionID: ' + codeSessionID.current);

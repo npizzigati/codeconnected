@@ -468,7 +468,9 @@ func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	logger.Printf("Room %s is %s\n", rm.RoomID, rooms[rm.RoomID].status)
 }
 
-func createContainer(ctx context.Context, cmd []string) (container.ContainerCreateCreatedBody, error) {
+func createContainer(ctx context.Context, cmd []string, createContainerChan chan<- container.ContainerCreateCreatedBody) {
+	// Temporary
+	time.Sleep(21 * time.Second)
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		// Don't specify the non-root user here, since the entrypoint
 		// needs to be root to start up Postgres
@@ -481,7 +483,11 @@ func createContainer(ctx context.Context, cmd []string) (container.ContainerCrea
 		OpenStdin:    true,
 		Cmd:          cmd,
 	}, nil, nil, nil, "")
-	return resp, err
+	if err != nil {
+		logger.Println("Error in creating container: ", err)
+		return
+	}
+	createContainerChan <- resp
 }
 
 func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -518,29 +524,25 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	// Close room if not successfully created in x seconds
-	prepTimeout := 20
+	prepTimeout := 10
 	failedStartCloser := time.NewTimer(time.Duration(prepTimeout) * time.Second)
-	go func() {
-		<-failedStartCloser.C
-		closeRoom(roomID)
-		room.status = "failed"
-		sendJsonResponse(w, &responseModel{Status: room.status})
-	}()
-
 	room.status = "preparing"
+	logger.Println("*************rm.RoomID: ", rm.RoomID)
+	logger.Println("**************Going to start container********************")
+	if err = startContainer(room.lang, roomID, rm.Rows, rm.Cols, failedStartCloser); err != nil {
+		logger.Printf("Error starting container for room %s: %s\n", roomID, err)
+		room.status = "failed"
+		logger.Println("********Room preparation failed. Room will be closed********")
+		closeRoom(roomID)
+		sendJsonResponse(w, &responseModel{Status: room.status})
+		return
+	}
 
 	session, err := store.Get(r, "session")
 	if err != nil {
 		logger.Println("Error retrieving status: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	logger.Println("*************rm.RoomID: ", rm.RoomID)
-
-	logger.Println("**************Going to start container********************")
-	if err = startContainer(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
-		logger.Printf("Error starting container for room %s: %s\n", roomID, err)
+		// TODO: Replace this http error with a meaningful json
+		// response to be handled by the front end
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -601,9 +603,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	failedStartCloser.Stop()
-	if room.status == "failed" {
-		return
-	}
 
 	logger.Printf("Room %s is ready\n", roomID)
 	room.status = "ready"
@@ -922,18 +921,26 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // TODO: Move error handling to createRoom (return error here
 // along with containerDetails)
-func startContainer(lang, roomID string, rows int, cols int) error {
+func startContainer(lang, roomID string, rows int, cols int, failedStartCloser *time.Timer) error {
 	room := rooms[roomID]
 	cn := room.container
 	ctx := context.Background()
 	cmd := []string{"bash"}
+	var resp container.ContainerCreateCreatedBody
 
-	logger.Println("********About to call ContainerCreate for room: ", roomID)
-	resp, err := createContainer(ctx, cmd)
-	logger.Println("********resp from attempt to create container: ", resp)
-	if err != nil {
-		logger.Println("Error in creating container: ", err)
-		// panic(err)
+	logger.Println("********About to call createContainer for room: ", roomID)
+	createContainerChan := make(chan container.ContainerCreateCreatedBody)
+	// Creating the container can take a long time (> 20 sec) if tcp
+	// connection with runner is down, so we set up a race and see
+	// if the failed start closer timeout finishes first
+	go func() {
+		createContainer(ctx, cmd, createContainerChan)
+	}()
+	select {
+	case <-failedStartCloser.C:
+		return errors.New("Container creation timed out")
+	case resp := <-createContainerChan:
+		logger.Println("********resp from attempt to create container: ", resp)
 	}
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		logger.Println("Error in starting container: ", err)
@@ -953,8 +960,7 @@ func startContainer(lang, roomID string, rows int, cols int) error {
 	if lang == "postgres" {
 		time.Sleep(3 * time.Second)
 	}
-	err = openLanguageConnection(lang, roomID)
-	if err != nil {
+	if err := openLanguageConnection(lang, roomID); err != nil {
 		return err
 	}
 	return nil
