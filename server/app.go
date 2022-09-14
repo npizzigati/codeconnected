@@ -927,7 +927,7 @@ func startContainer(lang, roomID string, rows int, cols int, failedStartCloser *
 	}
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		logger.Println("Error in starting container: ", err)
-		// panic(err)
+		return err
 	}
 
 	logger.Println("Setting new container id to: ", resp.ID)
