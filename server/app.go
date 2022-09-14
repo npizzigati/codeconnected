@@ -127,23 +127,22 @@ func initSesClient() {
 	sesCli = sesv2.NewFromConfig(cfg)
 }
 
-func sendPasswordResetEmail(resetCode string) {
-	subject := "Reset your password"
-	body := fmt.Sprintf("Your password reset code is: %s", resetCode)
-	fromAddr := "noreply@codeconnected.dev"
-	sendEmail(subject, body, fromAddr)
+func sendPasswordResetEmail(emailAddr, resetCode string) {
+	subject := "Your password reset code"
+	body := buildPasswordResetEmailBody(resetCode)
+	sendEmail(emailAddr, subject, body)
 }
 
-func sendVerificationEmail(activationCode string) {
-	subject := "Verify email address"
-	body := fmt.Sprintf("Your activation code is: %s", activationCode)
-	fromAddr := "noreply@codeconnected.dev"
-	sendEmail(subject, body, fromAddr)
+func sendVerificationEmail(username, emailAddr, activationCode string) {
+	subject := "Verify your email address"
+	body := buildVerificationEmailBody(username, activationCode)
+	sendEmail(emailAddr, subject, body)
 }
 
-func sendEmail(subject, body, fromAddr string) {
+func sendEmail(emailAddr, subject, body string) {
+	fromAddr := "codeconnected <contact@codeconnected.dev>"
 	destAddr := sesTypes.Destination{
-		ToAddresses: []string{"npizzigati@gmail.com"},
+		ToAddresses: []string{emailAddr},
 	}
 	simpleMessage := sesTypes.Message{
 		Subject: &sesTypes.Content{
@@ -1315,7 +1314,8 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	}
 
 	if !emailFound {
-		// TODO: Change other json structs into maps
+		// TODO: Send the reason along with the status, like we do for
+		// the activation process
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1331,6 +1331,8 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
 	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
 		logger.Println("unable to insert password reset request in db: ", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	// Automatically delete reset request after timeout
@@ -1344,7 +1346,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		}
 	}()
 
-	sendPasswordResetEmail(code)
+	sendPasswordResetEmail(cm.Email, code)
 	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
@@ -1565,6 +1567,8 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry, code_resends) VALUES($1, $2, $3, $4, $5, $6)"
 		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0); err != nil {
 			logger.Println("unable to insert activation request: ", err)
+			// TODO: Send error message to frontend
+			return
 		}
 
 		// Automatically delete activation request after timeout
@@ -1580,7 +1584,7 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			}
 		}()
 
-		sendVerificationEmail(code)
+		sendVerificationEmail(cm.Username, cm.Email, code)
 	}
 
 	type responseModel struct {
@@ -1601,7 +1605,8 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type contentModel struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
+		Username string `json:"username"`
 	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
@@ -1641,6 +1646,8 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 		logger.Println("Unable to update code_resends: ", err)
 		status = "failure"
 		reason = "database error"
+		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
+		return
 	}
 
 	// Update activation code
@@ -1650,6 +1657,8 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 		logger.Println("Unable to update activation code: ", err)
 		status = "failure"
 		reason = "database error"
+		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
+		return
 	}
 
 	// Update expiry
@@ -1659,9 +1668,11 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 		logger.Println("Unable to update expiry: ", err)
 		status = "failure"
 		reason = "database error"
+		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
+		return
 	}
 
-	sendVerificationEmail(activationCode)
+	sendVerificationEmail(cm.Username, cm.Email, activationCode)
 	sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
 }
 
