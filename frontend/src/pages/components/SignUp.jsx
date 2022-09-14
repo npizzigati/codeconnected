@@ -316,7 +316,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
   }
 
   function resendEmail () {
-    const body = JSON.stringify({ email });
+    const body = JSON.stringify({ email, username });
     const options = {
       method: 'POST',
       mode: 'cors',
@@ -339,6 +339,8 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
             setActivationStatus('failure');
           } else if (json.reason === 'exceeded') {
             showResendPopup('Code resent maximum number of times');
+          } else {
+            showResendPopup('There was an error with your request. Please try again later.');
           }
         }
       });
