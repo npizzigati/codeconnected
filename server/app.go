@@ -469,8 +469,6 @@ func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Para
 }
 
 func createContainer(ctx context.Context, cmd []string, createContainerChan chan<- container.ContainerCreateCreatedBody) {
-	// Temporary
-	time.Sleep(21 * time.Second)
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		// Don't specify the non-root user here, since the entrypoint
 		// needs to be root to start up Postgres
