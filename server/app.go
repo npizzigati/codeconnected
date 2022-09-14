@@ -437,19 +437,6 @@ func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	sendJsonResponse(w, map[string]int{"codeSessionID": room.codeSessionID})
 }
 
-// Delete room in preparation that hasn't become ready after
-// timeout
-// func createUnsuccessfulRoomCloser(roomID string) *time.Timer {
-// 	prepTimeout := 20
-// 	closer := time.NewTimer(time.Duration(prepTimeout) * time.Second)
-// 	go func() {
-// 		<-closer.C
-// 		// Close room if it still exists
-// 		closeRoom(roomID)
-// 	}()
-// 	return closer
-// }
-
 func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		RoomID string
