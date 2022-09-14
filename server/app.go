@@ -922,8 +922,8 @@ func startContainer(lang, roomID string, rows int, cols int, failedStartCloser *
 	select {
 	case <-failedStartCloser.C:
 		return errors.New("Container creation timed out")
-	case resp := <-createContainerChan:
 		logger.Println("********resp from attempt to create container: ", resp)
+	case resp = <-createContainerChan:
 	}
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		logger.Println("Error in starting container: ", err)
