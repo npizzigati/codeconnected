@@ -500,10 +500,14 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		logger.Println("err while trying to unmarshal: ", err)
 	}
 
+	type responseModel struct {
+		Status         string `json:"status"`
+		CodeSessionID  int    `json:"codeSessionID"`
+		InitialContent string `json:"initialContent"`
+	}
+
 	roomID := rm.RoomID
 	room := rooms[roomID]
-
-	closer := createUnsuccessfulRoomCloser(roomID)
 
 	// Room can only be prepared once. If the link is shared before
 	// room is prepared, this request could be made by a second
@@ -513,10 +517,21 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
+	// Close room if not successfully created in x seconds
+	prepTimeout := 20
+	failedStartCloser := time.NewTimer(time.Duration(prepTimeout) * time.Second)
+	go func() {
+		<-failedStartCloser.C
+		closeRoom(roomID)
+		room.status = "failed"
+		sendJsonResponse(w, &responseModel{Status: room.status})
+	}()
+
 	room.status = "preparing"
 
 	session, err := store.Get(r, "session")
 	if err != nil {
+		logger.Println("Error retrieving status: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -525,8 +540,8 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	logger.Println("**************Going to start container********************")
 	if err = startContainer(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
+		logger.Printf("Error starting container for room %s: %s\n", roomID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		logger.Printf("Could not start container for room %s", roomID)
 		return
 	}
 
@@ -541,6 +556,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	room.expiry = expiry
 
+	// TODO: Would a timer be simpler here?
 	if expiry != -1 {
 		// Close room when it expires
 		ticker := time.NewTicker(1 * time.Second)
@@ -584,32 +600,19 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}
 	}
 
-	// TODO: In the previous stages of room preparation, I should
-	// abort if there are any errors and send the appropriate
-	// message to the client
-	closer.Stop()
+	failedStartCloser.Stop()
+	if room.status == "failed" {
+		return
+	}
+
 	logger.Printf("Room %s is ready\n", roomID)
 	room.status = "ready"
 
-	type responseModel struct {
-		Status         string `json:"status"`
-		CodeSessionID  int    `json:"codeSessionID"`
-		InitialContent string `json:"initialContent"`
-	}
-
-	response := &responseModel{
+	sendJsonResponse(w, &responseModel{
 		Status:         "ready",
 		CodeSessionID:  room.codeSessionID,
 		InitialContent: room.initialContent,
-	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	})
 }
 
 // Ping/pong to detect when people leave room (websockets stop
