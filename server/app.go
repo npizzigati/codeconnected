@@ -509,8 +509,8 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	// Close room and notify user if not successfully created in x seconds
-	containerCreateTimeout := 5
-	failedStartCloser := time.NewTimer(time.Duration(containerCreateTimeout) * time.Second)
+	const containerCreateTimeout = 5
+	failedStartCloser := time.NewTimer(containerCreateTimeout * time.Second)
 	room.status = "preparing"
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
 	logger.Println("**************Going to start container********************")
