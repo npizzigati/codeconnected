@@ -523,8 +523,8 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	// Close room if not successfully created in x seconds
-	prepTimeout := 10
+	// Close room and notify user if not successfully created in x seconds
+	prepTimeout := 8
 	failedStartCloser := time.NewTimer(time.Duration(prepTimeout) * time.Second)
 	room.status = "preparing"
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
@@ -919,8 +919,6 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Write([]byte("Successfully wrote code to container"))
 }
 
-// TODO: Move error handling to createRoom (return error here
-// along with containerDetails)
 func startContainer(lang, roomID string, rows int, cols int, failedStartCloser *time.Timer) error {
 	room := rooms[roomID]
 	cn := room.container
