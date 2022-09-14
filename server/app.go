@@ -335,13 +335,13 @@ func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Println("err reading json: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &csm)
 	if err != nil {
 		logger.Println("err while trying to unmarshal: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
@@ -351,11 +351,11 @@ func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	query := "UPDATE coding_sessions SET editor_contents = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, csm.Content, csm.CodeSessionID); err != nil {
 		logger.Println("unable to update content in coding_sessions: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
-	sendStringJsonResponse(w, map[string]string{"status": "success"})
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -383,7 +383,7 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	for k, r := range rooms {
 		if rm.CodeSessionID != -1 && r.codeSessionID == rm.CodeSessionID {
 			roomID = k
-			sendStringJsonResponse(w, map[string]string{"roomID": roomID})
+			sendJsonResponse(w, map[string]string{"roomID": roomID})
 			return
 		}
 	}
@@ -401,7 +401,7 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	rooms[roomID] = &room
 
-	sendStringJsonResponse(w, map[string]string{"roomID": roomID})
+	sendJsonResponse(w, map[string]string{"roomID": roomID})
 }
 
 func getRoomStatus(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -409,14 +409,10 @@ func getRoomStatus(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	roomID := queryValues.Get("roomID")
 
 	status := rooms[roomID].status
-	resp, err := json.Marshal(
+	sendJsonResponse(w,
 		map[string]string{
 			"status": status,
 		})
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-	sendJsonResponse(w, resp)
 }
 
 func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -427,32 +423,32 @@ func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Println("err reading json: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
 		logger.Println("err while trying to unmarshal: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
 	room := rooms[pm.RoomID]
-	sendIntJsonResponse(w, map[string]int{"codeSessionID": room.codeSessionID})
+	sendJsonResponse(w, map[string]int{"codeSessionID": room.codeSessionID})
 }
 
 // Delete room in preparation that hasn't become ready after
 // timeout
-func createUnsuccessfulRoomCloser(roomID string) *time.Timer {
-	prepTimeout := 20
-	closer := time.NewTimer(time.Duration(prepTimeout) * time.Second)
-	go func() {
-		<-closer.C
-		// Close room if it still exists
-		closeRoom(roomID)
-	}()
-	return closer
-}
+// func createUnsuccessfulRoomCloser(roomID string) *time.Timer {
+// 	prepTimeout := 20
+// 	closer := time.NewTimer(time.Duration(prepTimeout) * time.Second)
+// 	go func() {
+// 		<-closer.C
+// 		// Close room if it still exists
+// 		closeRoom(roomID)
+// 	}()
+// 	return closer
+// }
 
 func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
@@ -513,7 +509,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// room is prepared, this request could be made by a second
 	// user. Guard against that.
 	if room.status == "preparing" {
-		sendStringJsonResponse(w, map[string]string{"status": room.status})
+		sendJsonResponse(w, &responseModel{Status: room.status})
 		return
 	}
 
@@ -1169,7 +1165,7 @@ func signOut(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	http.SetCookie(w, cookie)
 
-	sendStringJsonResponse(w, map[string]string{"status": "success"})
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1328,14 +1324,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 	if !emailFound {
 		// TODO: Change other json structs into maps
-		failureResp, err := json.Marshal(
-			map[string]string{
-				"status": "failure",
-			})
-		if err != nil {
-			logger.Println("err in marshaling: ", err)
-		}
-		sendJsonResponse(w, failureResp)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
@@ -1364,15 +1353,7 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	}()
 
 	sendPasswordResetEmail(code)
-
-	successResp, err := json.Marshal(
-		map[string]string{
-			"status": "success",
-		})
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-	sendJsonResponse(w, successResp)
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func generateRandomCode() string {
@@ -1382,36 +1363,11 @@ func generateRandomCode() string {
 	return strconv.Itoa(rand.Intn(max-min) + min)
 }
 
-// TODO: Use this where appropriate
-func sendStringJsonResponse(w http.ResponseWriter, data map[string]string) {
-	resp, err := json.Marshal(data)
+func sendJsonResponse(w http.ResponseWriter, data interface{}) {
+	jsonResp, err := json.Marshal(data)
 	if err != nil {
 		logger.Println("err in marshaling: ", err)
 	}
-	sendJsonResponse(w, resp)
-	return
-}
-
-func sendBoolJsonResponse(w http.ResponseWriter, data map[string]bool) {
-	resp, err := json.Marshal(data)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-	sendJsonResponse(w, resp)
-	return
-}
-
-func sendIntJsonResponse(w http.ResponseWriter, data map[string]int) {
-	resp, err := json.Marshal(data)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-	sendJsonResponse(w, resp)
-	return
-}
-
-// TODO: Use this helper function when appropriate
-func sendJsonResponse(w http.ResponseWriter, jsonResp []byte) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
@@ -1457,7 +1413,7 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	}
 
 	if status == "failure" {
-		sendStringJsonResponse(w, map[string]string{"status": "failure", "reason": reason})
+		sendJsonResponse(w, map[string]string{"status": "failure", "reason": reason})
 		return
 	}
 
@@ -1475,12 +1431,12 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	query = "UPDATE users SET encrypted_pw = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, encryptedPW, userID); err != nil {
 		logger.Println("unable to insert: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	// Delete completed reset request from database
 	deleteRequestRec(userID)
-	sendStringJsonResponse(w, map[string]string{"status": "success"})
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func deleteRequestRec(userID int) string {
@@ -1524,7 +1480,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Will throw errow if code is not found
 	if err = pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&username, &encryptedPW, &expiry); err != nil {
 		logger.Println("query error: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	logger.Println("now: ", time.Now().Unix())
@@ -1533,7 +1489,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		logger.Println("Activation code has expired")
 		// delete expired record
 		deleteActivationRec(cm.Email)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
@@ -1542,13 +1498,13 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3) RETURNING id;"
 	if err := pool.QueryRow(context.Background(), query, username, cm.Email, encryptedPW).Scan(&userID); err != nil {
 		logger.Println("unable to insert user data: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
 	if userID == -1 {
 		logger.Println("User ID could not be retrieved")
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
@@ -1561,7 +1517,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	sendStringJsonResponse(w, map[string]string{"status": "success"})
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1684,7 +1640,7 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 
 	if status == "failure" {
 		logger.Println(reason)
-		sendStringJsonResponse(w, map[string]string{"status": status, "reason": reason})
+		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
 		return
 	}
 
@@ -1714,7 +1670,7 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	}
 
 	sendVerificationEmail(activationCode)
-	sendStringJsonResponse(w, map[string]string{"status": status, "reason": reason})
+	sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
 }
 
 func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1727,7 +1683,7 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	} else {
 		exists = false
 	}
-	sendBoolJsonResponse(w, map[string]bool{"roomExists": exists})
+	sendJsonResponse(w, map[string]bool{"roomExists": exists})
 }
 
 func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) {
@@ -1819,13 +1775,13 @@ func deleteReplHistory(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Println("err reading json: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
 		logger.Println("err while trying to unmarshal: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
@@ -1868,13 +1824,13 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Println("err reading json: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
 		logger.Println("err while trying to unmarshal: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
@@ -1892,24 +1848,24 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Println("err reading json: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
 		logger.Println("err while trying to unmarshal: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
 	logger.Printf("In code session updated function. csID: %d, lang: %s, content: %s", pm.CodeSessionID, pm.Language, pm.Content)
 	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content); err != nil {
 		logger.Println("error in updating code session: ", err)
-		sendStringJsonResponse(w, map[string]string{"status": "failure"})
+		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 
-	sendStringJsonResponse(w, map[string]string{"status": "success"})
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func runSessionUpdateQuery(codeSessionID int, language string, content string) error {
