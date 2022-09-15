@@ -94,7 +94,6 @@ function CodeArea () {
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const [showRoomClosedDialog, setShowRoomClosedDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
-  let termWriteTimeout;
 
   const backToHomeDialogConfig = {
     message: {
@@ -1304,10 +1303,7 @@ function CodeArea () {
 
   function writeToTerminal (data) {
     term.current.write(data);
-    clearTimeout(termWriteTimeout);
-    termWriteTimeout = setTimeout(() => {
-      alignLastLineToBottom();
-    }, 100);
+    debounce(alignLastLineToBottom, 100);
   }
 
   function openWs (roomID) {
