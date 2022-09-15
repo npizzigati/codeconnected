@@ -34,4 +34,3 @@ CREATE TABLE coding_sessions (
   when_created BIGINT NOT NULL,
   when_accessed BIGINT NOT NULL
 );
-

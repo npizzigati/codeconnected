@@ -503,6 +503,10 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// room is prepared, this request could be made by a second
 	// user. Guard against that.
 	if room.status == "preparing" {
+		// TODO: Do I need to do anything here with respect to thea
+		// change where editor content is now a map of the content
+		// for each language -- e.g., do I need to send the initial
+		// content in the following response?
 		sendJsonResponse(w, &responseModel{Status: room.status})
 		return
 	}
@@ -1861,7 +1865,6 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		return
 	}
 
-	logger.Printf("In code session updated function. csID: %d, lang: %s, content: %s", pm.CodeSessionID, pm.Language, pm.Content)
 	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content); err != nil {
 		logger.Println("error in updating code session: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
@@ -1872,7 +1875,7 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 }
 
 func runSessionUpdateQuery(codeSessionID int, language string, content string) error {
-	query := "UPDATE coding_sessions SET when_accessed = $1, lang = $2, editor_contents = $3 WHERE id = $4"
+	query := `UPDATE coding_sessions SET when_accessed = $1, lang = $2, editor_contents = $3 WHERE id = $4`
 	currentTime := time.Now().Unix()
 	if _, err := pool.Exec(context.Background(), query, currentTime, language, content, codeSessionID); err != nil {
 		return err
