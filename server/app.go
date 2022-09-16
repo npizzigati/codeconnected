@@ -888,16 +888,10 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		panic(err)
 	}
 
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		panic(err)
-	}
-
 	cn := rooms[cm.RoomID].container
 
 	// Copy contents of user program to container.
-	err = cli.CopyToContainer(ctx, cn.ID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
+	err = cli.CopyToContainer(context.Background(), cn.ID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
 	if err != nil {
 		panic(err)
 	}
