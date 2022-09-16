@@ -77,7 +77,7 @@ function CodeArea () {
   const ydoc = useRef(null);
   const yCode = useRef(null);
   const isAuthedCreator = useRef(false);
-  const autosaverStatus = useRef(null);
+  const switchLanguageStatus = useRef(null);
   const resizeBarDomRef = useRef(null);
   const resizerOverlayDomRef = useRef(null);
   const initialX = useRef(null);
@@ -673,8 +673,15 @@ function CodeArea () {
     // Code editor
     ydoc.current = new Y.Doc();
     editorContents.current = ydoc.current.getMap('editor contents');
-    autosaverStatus.current = ydoc.current.getMap('autosaver status');
-    autosaverStatus.current.set('suspend', true);
+    switchLanguageStatus.current = ydoc.current.getMap('switch language status');
+    switchLanguageStatus.current.set('active', false);
+    switchLanguageStatus.current.observe(() => {
+      if (switchLanguageStatus.current.get('active') === true) {
+        setRunnerReady(false);
+      } else {
+        setRunnerReady(true);
+      }
+    });
 
     // Get room status. If room isn't ready (connected to
     // container), send request for it to be made ready.
@@ -876,13 +883,11 @@ function CodeArea () {
     if (isAuthedCreator.current) {
       console.log('This is the authedCreator');
       yCode.current.observe(() => {
-        if (autosaverStatus.current.get('suspend') === true) {
-          console.log('autosave paused');
+        if (switchLanguageStatus.current.get('active') === true) {
           return;
         }
         debounce(() => {
-          if (autosaverStatus.current.get('suspend') === true) {
-            console.log('autosave paused inside debounce');
+          if (switchLanguageStatus.current.get('active') === true) {
             return;
           }
           editorContents.current.set(lang.current, cmRef.current.getValue());
@@ -890,14 +895,6 @@ function CodeArea () {
         }, 2000);
       });
     }
-  }
-
-  function pauseAutoSaver () {
-    autosaverStatus.current.set('suspend', true);
-  }
-
-  function resumeAutoSaver () {
-    autosaverStatus.current.set('suspend', false);
   }
 
   function showTitleRow () {
@@ -1258,8 +1255,7 @@ function CodeArea () {
     // current language when any changes are observed in the
     // editor. Prevent the conflict by stopping it here and
     // starting it again when this process has finished
-    pauseAutoSaver();
-    setRunnerReady(false);
+    switchLanguageStatus.current.set('active', true);
     console.log('*************Calling switchLanguage*************');
     editorContents.current.set(lang.current, cmRef.current.getValue());
     console.log('editor contents before switch: ' + JSON.stringify(editorContents.current.toJSON()));
@@ -1278,8 +1274,7 @@ function CodeArea () {
         showTitles(newLang);
         cmRef.current.setValue(editorContents.current.has(newLang) ? editorContents.current.get(newLang) : '');
         console.log('editor contents after switch: ' + JSON.stringify(editorContents.current.toJSON()));
-        setRunnerReady(true);
-        resumeAutoSaver();
+        switchLanguageStatus.current.set('active', false);
       });
   }
 
