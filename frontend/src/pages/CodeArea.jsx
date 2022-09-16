@@ -1395,29 +1395,15 @@ function CodeArea () {
       } else if (ev.data === 'RUNTIMEOUT') {
         console.log('RUN TIMEOUT!!!!!!!!!!');
       } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
+        console.log('ev.data: ' + ev.data);
         running.current = false;
         runButtonDone();
-        deleteReplHistory();
       } else {
         writeToTerminal(ev.data);
       }
     };
 
     return ws;
-  }
-
-  function deleteReplHistory () {
-    const body = JSON.stringify({ roomID: params.roomID, lang: lang.current });
-    const options = {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json;charset=utf-8' },
-      body: body
-    };
-    fetch('/api/delete-repl-history', options)
-      .then(response => {
-        console.log(response);
-      });
   }
 
   function runButtonStart () {

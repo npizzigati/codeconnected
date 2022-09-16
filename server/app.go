@@ -661,7 +661,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// If first websocket in room, display initial repl message/prompt
 	if len(room.wsockets) == 1 {
-		resetTerminal(roomID)
+		// resetTerminal(roomID)
 		displayInitialPrompt(roomID, true, "1")
 	}
 
@@ -1124,6 +1124,7 @@ func resetTerminal(roomID string) {
 	if rooms[roomID].timeoutTimer != nil {
 		rooms[roomID].timeoutTimer.Stop()
 	}
+	deleteReplHistory(roomID)
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
 
@@ -1715,6 +1716,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		cn.runner.Write([]byte("\x03")) // send ctrl-c
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
+			deleteReplHistory(roomID)
 			writeToWebsockets([]byte("CANCELRUN"), roomID)
 			writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
 			displayInitialPrompt(roomID, false, "2")
@@ -1768,55 +1770,32 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			logger.Println("********Run done*********")
 			room.removeEventListener("promptReady")
 			room.timeoutTimer.Stop()
+			deleteReplHistory(roomID)
 			writeToWebsockets([]byte("RUNDONE"), roomID)
 		})
 	})
 }
 
-func deleteReplHistory(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	type paramsModel struct {
-		RoomID string
-		Lang   string
-	}
-	var pm paramsModel
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		logger.Println("err reading json: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
-		return
-	}
-	err = json.Unmarshal(body, &pm)
-	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
-		return
-	}
-
-	roomID := pm.RoomID
+func deleteReplHistory(roomID string) {
 	room := rooms[roomID]
 	cn := room.container
-	lang := pm.Lang
 
-	switch lang {
+	switch room.lang {
 	case "ruby":
+		room.echo = false
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
 			room.echo = true
 		})
-		room.echo = false
 		cn.runner.Write([]byte("clear_history;\n"))
 	case "node":
+		room.echo = false
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
 			room.echo = true
 		})
-		room.echo = false
 		cn.runner.Write([]byte(".deleteHistory\n"))
 	}
-
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("Successfully deleted repl history"))
 }
 
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1982,7 +1961,6 @@ func main() {
 	router.GET("/api/get-user-info", getUserInfo)
 	router.POST("/api/switchlanguage", switchLanguage)
 	router.POST("/api/runfile", runFile)
-	router.POST("/api/delete-repl-history", deleteReplHistory)
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
 	router.POST("/api/sign-out", signOut)
