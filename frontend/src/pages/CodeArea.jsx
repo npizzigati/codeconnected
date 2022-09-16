@@ -65,7 +65,7 @@ function CodeArea () {
   const wsProvider = useRef(null);
   const flagClear = useRef(null);
   const codeOptions = useRef(null);
-  const editorContents = useRef({});
+  const editorContents = useRef(null);
   const cmRef = useRef(null);
   const lang = useRef(null);
   const username = useRef(null);
@@ -314,7 +314,7 @@ function CodeArea () {
                 title={cmTitle}
                 callback={(ev) => {
                   switchLanguage(ev.target.dataset.value);
-                  updateCodeSession();
+                  // updateCodeSession();
                 }}
                 config={{ staticTitle: true }}
               />
@@ -669,11 +669,17 @@ function CodeArea () {
       return;
     }
 
+    // Collaborative editing
+    // Code editor
+    ydoc.current = new Y.Doc();
+    editorContents.current = ydoc.current.getMap('editor contents');
+
     // Get room status. If room isn't ready (connected to
     // container), send request for it to be made ready.
     setShowContent(true);
     const { status } = await getRoomStatus(roomID);
     console.log(status);
+
     if (status === 'created') {
       console.log('Will prepare room');
       const prepData = await prepareRoom(roomID);
@@ -684,8 +690,14 @@ function CodeArea () {
         return;
       }
       codeSessionID.current = prepData.codeSessionID;
-      editorContents.current = prepData.initialContent === '' ? {} : JSON.parse(prepData.initialContent);
-      console.log('editor contents on load: ' + JSON.stringify(editorContents.current));
+      // If this is a new session, the initial content will be an
+      // empty string
+      if (prepData.initialContent === '') {
+        //
+      } else {
+        populateEditorContents(prepData.initialContent);
+      }
+      // editorContents.current = prepData.initialContent === '' ? {} : JSON.parse(prepData.initialContent);
       console.log('codeSessionID: ' + codeSessionID.current);
       if (setupCanceled.current) {
         return;
@@ -739,9 +751,6 @@ function CodeArea () {
 
     ws.current = openWs(roomID);
 
-    // Collaborative editing
-    // Code editor
-    ydoc.current = new Y.Doc();
 
     yCode.current = ydoc.current.getText('codemirror');
 
@@ -823,14 +832,19 @@ function CodeArea () {
     // Copy a reference to React state
     codeOptions.current = yCodeOptions;
 
-    console.log('editor contents right before setting cm content: ' + JSON.stringify(editorContents.current));
     console.log('lang.current right before setting cm content: ' + lang.current);
-    // FIXME: If this is not the first person in the room, should
-    // I just not set the cmRef value? (Should yjs take care of that?)
-    if (editorContents.current[lang.current] !== undefined) {
-      cmRef.current.setValue(editorContents.current[lang.current]);
+    // If this is the first person in a new room,
+    // editorContents.current.has(lang.current) will be false.
+    // In that case, insert an empty string, otherwise, insert
+    // contents into codemirror editor
+    if (editorContents.current.has(lang.current)) {
+      cmRef.current.setValue(editorContents.current.get(lang.current));
+    } else {
+      cmRef.current.setValue('');
+      // Set editorContents to an empty string, so that the next
+      // joining user will find the key
+      editorContents.current.set(lang.current, '');
     }
-    // cmRef.current.setValue((editorContents.current[lang.current] === undefined) ? '' : editorContents.current[lang.current]);
     setRunnerReady(true);
     showTitleRow();
     setRoomStatusOpen(roomID);
@@ -842,23 +856,36 @@ function CodeArea () {
     setupDone.current = true;
   }
 
+  function populateEditorContents (initialContent) {
+    const initialContentMap = JSON.parse(initialContent);
+    Object.keys(initialContentMap).forEach(k => {
+      editorContents.current.set(k, initialContentMap[k]);
+    });
+  }
+
   function startAutoSaver () {
     // If this is the creating user and they are signed in, start
     // autosaver, which will fire after any changes in the shared
-    // code editor
+    // code editor. Only do this if user is signed-in creating
+    // user since otherwise we don't save sessions, and it is
+    // enough to update the editor contents when we switch
+    // sessions
     console.log('Starting autoSaver');
     if (isAuthedCreator.current) {
+      console.log('This is the authedCreator');
       yCode.current.observe(() => {
         if (autoSaverPaused.current) {
+          console.log('autosave paused');
           return;
         }
         debounce(() => {
           if (autoSaverPaused.current) {
+            console.log('autosave paused');
             return;
           }
-          editorContents.current[lang.current] = cmRef.current.getValue();
+          editorContents.current.set(lang.current, cmRef.current.getValue());
           updateCodeSession();
-        }, 2000);
+        }, 100);
       });
     }
   }
@@ -1051,7 +1078,13 @@ function CodeArea () {
 
   async function updateCodeSession () {
     console.log('updating code session');
-    const body = JSON.stringify({ codeSessionID: codeSessionID.current, language: lang.current, content: JSON.stringify(editorContents.current) });
+    // Only do this if user is the signed-in creating user since
+    // otherwise we don't save sessions, and it is enough to
+    // update the editor contents when we switch sessions
+    if (!isAuthedCreator.current) {
+      return;
+    }
+    const body = JSON.stringify({ codeSessionID: codeSessionID.current, language: lang.current, content: JSON.stringify(editorContents.current.toJSON()) });
     const options = {
       method: 'POST',
       mode: 'cors',
@@ -1063,6 +1096,7 @@ function CodeArea () {
       const json = await response.json();
       const status = json.status;
       if (status === 'success') {
+        //
       } else {
         console.error('Error updating code session.');
       }
@@ -1225,11 +1259,10 @@ function CodeArea () {
     pauseAutoSaver();
     setRunnerReady(false);
     console.log('*************Calling switchLanguage*************');
-    editorContents.current[lang.current] = cmRef.current.getValue();
-    // cmRef.current.setValue('');
-    console.log('editor contents before switch: ' + JSON.stringify(editorContents.current));
+    editorContents.current.set(lang.current, cmRef.current.getValue());
+    console.log('editor contents before switch: ' + JSON.stringify(editorContents.current.toJSON()));
     codeOptions.current.set('language', newLang);
-
+    // TODO: Should I update the code session here?
     const options = {
       method: 'POST',
       mode: 'cors',
@@ -1241,8 +1274,8 @@ function CodeArea () {
         console.log(response);
         termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
         showTitles(newLang);
-        cmRef.current.setValue((editorContents.current[newLang] === undefined) ? '' : editorContents.current[newLang]);
-        console.log('editor contents after switch: ' + JSON.stringify(editorContents.current));
+        cmRef.current.setValue(editorContents.current.has(newLang) ? editorContents.current.get(newLang) : '');
+        console.log('editor contents after switch: ' + JSON.stringify(editorContents.current.toJSON()));
         setRunnerReady(true);
         resumeAutoSaver();
       });
