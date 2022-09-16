@@ -877,6 +877,7 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		// TODO: replace these panics with useful error messages
 		panic(err)
 	}
 	err = json.Unmarshal(body, &cm)
