@@ -64,6 +64,7 @@ function CodeArea () {
   const ws = useRef(null);
   const wsProvider = useRef(null);
   const flagClear = useRef(null);
+  const flagRun = useRef(null);
   const codeOptions = useRef(null);
   const editorContents = useRef(null);
   const cmRef = useRef(null);
@@ -830,6 +831,12 @@ function CodeArea () {
       clearTerminal();
     });
 
+    flagRun.current = ydoc.current.getArray('flag-run');
+    flagRun.current.observe(ev => {
+      runButtonStart();
+      running.current = true;
+    });
+
     const yCodeOptions = ydoc.current.getMap('code options');
     yCodeOptions.observe(ev => {
       const newLang = ev.target.get('language');
@@ -1278,10 +1285,17 @@ function CodeArea () {
       });
   }
 
+  /**
+   * --Shared flags--
+   * We don't care about the value added, we just want to
+   * trigger the observe event
+   */
   function setTerminalClearFlag () {
-    // We don't care about the value added, we just want to
-    // trigger the observe event
     flagClear.current.push([1]);
+  }
+
+  function setRunFlag () {
+    flagRun.current.push([1]);
   }
 
   // TODO: Make this work for Ctrl-L too
@@ -1407,7 +1421,6 @@ function CodeArea () {
   }
 
   function runButtonStart () {
-    // Check whether repl is at a prompt
     runButtonDomRef.current.classList.add('running');
     // Seconds to wait before showing stop button
     const stopDisplayWait = 2;
@@ -1432,8 +1445,7 @@ function CodeArea () {
   }
 
   function executeContent () {
-    running.current = true;
-    runButtonStart();
+    setRunFlag();
     const prompt = /> $/;
     const { lastLine } = getLastTermLineAndNumber();
     console.log('prompt ready? ' + prompt.test(lastLine));
