@@ -77,7 +77,7 @@ function CodeArea () {
   const ydoc = useRef(null);
   const yCode = useRef(null);
   const isAuthedCreator = useRef(false);
-  const autoSaverPaused = useRef(false);
+  const autosaverStatus = useRef(null);
   const resizeBarDomRef = useRef(null);
   const resizerOverlayDomRef = useRef(null);
   const initialX = useRef(null);
@@ -673,6 +673,8 @@ function CodeArea () {
     // Code editor
     ydoc.current = new Y.Doc();
     editorContents.current = ydoc.current.getMap('editor contents');
+    autosaverStatus.current = ydoc.current.getMap('autosaver status');
+    autosaverStatus.current.set('suspend', true);
 
     // Get room status. If room isn't ready (connected to
     // container), send request for it to be made ready.
@@ -870,32 +872,32 @@ function CodeArea () {
     // user since otherwise we don't save sessions, and it is
     // enough to update the editor contents when we switch
     // sessions
-    console.log('Starting autoSaver');
+    console.log('Starting autosaver');
     if (isAuthedCreator.current) {
       console.log('This is the authedCreator');
       yCode.current.observe(() => {
-        if (autoSaverPaused.current) {
+        if (autosaverStatus.current.get('suspend') === true) {
           console.log('autosave paused');
           return;
         }
         debounce(() => {
-          if (autoSaverPaused.current) {
-            console.log('autosave paused');
+          if (autosaverStatus.current.get('suspend') === true) {
+            console.log('autosave paused inside debounce');
             return;
           }
           editorContents.current.set(lang.current, cmRef.current.getValue());
           updateCodeSession();
-        }, 100);
+        }, 2000);
       });
     }
   }
 
   function pauseAutoSaver () {
-    autoSaverPaused.current = true;
+    autosaverStatus.current.set('suspend', true);
   }
 
   function resumeAutoSaver () {
-    autoSaverPaused.current = false;
+    autosaverStatus.current.set('suspend', false);
   }
 
   function showTitleRow () {
