@@ -1774,20 +1774,29 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 func deleteReplHistory(roomID string) {
 	room := rooms[roomID]
 	cn := room.container
+	var toggleRoomEcho bool
+
+	// Only switch room echo on and off if is not off already
+	if room.echo {
+		room.echo = false
+		toggleRoomEcho = true
+	}
 
 	switch room.lang {
 	case "ruby":
-		room.echo = false
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
-			room.echo = true
+			if toggleRoomEcho {
+				room.echo = true
+			}
 		})
 		cn.runner.Write([]byte("clear_history;\n"))
 	case "node":
-		room.echo = false
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
-			room.echo = true
+			if toggleRoomEcho {
+				room.echo = true
+			}
 		})
 		cn.runner.Write([]byte(".deleteHistory\n"))
 	}
