@@ -1902,6 +1902,7 @@ func closeRoom(roomID string) {
 }
 
 // Remove old unused containers/close rooms
+// at an interval
 func startRoomCloser() {
 	const checkInterval = 60 // Time between checks in seconds
 	go func() {
