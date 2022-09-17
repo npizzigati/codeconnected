@@ -1717,7 +1717,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			awaitPrompt(room, func() { deleteReplHistory(roomID) })
 			writeToWebsockets([]byte("CANCELRUN"), roomID)
 			writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
-			displayInitialPrompt(roomID, false, "2")
+			displayInitialPrompt(roomID, false, "3")
 			room.echo = true
 		})
 	}()
