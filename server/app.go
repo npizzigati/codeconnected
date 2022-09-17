@@ -1115,11 +1115,14 @@ func displayInitialPrompt(roomID string, welcome bool, promptNum string) {
 func resetTerminal(roomID string) {
 	writeToWebsockets([]byte("RESETTERMINAL"), roomID)
 	// Also reset terminal history
-	rooms[roomID].termHist = []byte("")
-	if rooms[roomID].timeoutTimer != nil {
-		rooms[roomID].timeoutTimer.Stop()
+	room := rooms[roomID]
+	room.termHist = []byte("")
+	if room.timeoutTimer != nil {
+		room.timeoutTimer.Stop()
 	}
-	deleteReplHistory(roomID)
+	room.echo = false
+	awaitPrompt(rooms[roomID], func() { deleteReplHistory(roomID) })
+	room.echo = true
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
 
@@ -1711,7 +1714,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		cn.runner.Write([]byte("\x03")) // send ctrl-c
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
-			deleteReplHistory(roomID)
+			awaitPrompt(room, func() { deleteReplHistory(roomID) })
 			writeToWebsockets([]byte("CANCELRUN"), roomID)
 			writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
 			displayInitialPrompt(roomID, false, "2")
@@ -1765,41 +1768,38 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			logger.Println("********Run done*********")
 			room.removeEventListener("promptReady")
 			room.timeoutTimer.Stop()
-			deleteReplHistory(roomID)
+			room.echo = false
+			awaitPrompt(room, func() { deleteReplHistory(roomID) })
+			room.echo = true
 			writeToWebsockets([]byte("RUNDONE"), roomID)
 		})
 	})
 }
 
+// TODO: Make this a room method
+func awaitPrompt(room *room, function func()) {
+	waitChan := make(chan struct{})
+	room.setEventListener("promptReady", func(config eventConfig) {
+		room.removeEventListener("promptReady")
+		close(waitChan)
+	})
+	function()
+	<-waitChan
+}
+
 func deleteReplHistory(roomID string) {
 	room := rooms[roomID]
 	cn := room.container
-	var toggleRoomEcho bool
-
-	// Only switch room echo on and off if is not off already
-	if room.echo {
-		room.echo = false
-		toggleRoomEcho = true
-	}
+	var cmd string
 
 	switch room.lang {
 	case "ruby":
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-			if toggleRoomEcho {
-				room.echo = true
-			}
-		})
-		cn.runner.Write([]byte("clear_history;\n"))
+		cmd = "clear_history;\n"
 	case "node":
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-			if toggleRoomEcho {
-				room.echo = true
-			}
-		})
-		cn.runner.Write([]byte(".deleteHistory\n"))
+		cmd = ".deleteHistory\n"
 	}
+
+	cn.runner.Write([]byte(cmd))
 }
 
 func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
