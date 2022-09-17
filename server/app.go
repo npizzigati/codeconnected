@@ -1719,28 +1719,23 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	room.timeoutTimer = time.NewTimer(maxRunTime * time.Second)
 	go func() {
 		<-room.timeoutTimer.C
-		// Send ctrl-c interrupt
 		room.echo = false
-		cn.runner.Write([]byte("\x03")) // send ctrl-c
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-			room.awaitPrompt(func() { deleteReplHistory(roomID) })
-			writeToWebsockets([]byte("CANCELRUN"), roomID)
-			writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
-			displayInitialPrompt(roomID, false, "3")
-			room.echo = true
-		})
+		// Send ctrl-c interrupt
+		room.awaitPrompt(func() { cn.runner.Write([]byte("\x03")) })
+		room.awaitPrompt(func() { deleteReplHistory(roomID) })
+		writeToWebsockets([]byte("CANCELRUN"), roomID)
+		writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
+		displayInitialPrompt(roomID, false, "3")
+		room.echo = true
 	}()
 
 	switch lang {
 	case "ruby":
-		cn.runner.Write([]byte("exec $0\n")) // reset repl
-		room.setEventListener("promptReady", func(config eventConfig) {
-			room.removeEventListener("promptReady")
-			// The following cmd depends on run_codeconnected_code method in ~/.pryrc
-			// file on the runner server:
-			cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
-		})
+		// reset repl
+		room.awaitPrompt(func() { cn.runner.Write([]byte("exec $0\n")) })
+		// The following cmd depends on run_codeconnected_code method in ~/.pryrc
+		// file on the runner server:
+		cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
 		room.setEventListener("startOutput", func(config eventConfig) {
 			room.removeEventListener("startOutput")
 			room.echo = true
