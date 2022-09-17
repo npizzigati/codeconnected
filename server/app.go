@@ -86,6 +86,16 @@ func (r *room) removeEventListener(event string) {
 	delete(r.eventSubscribers, event)
 }
 
+func (r *room) awaitPrompt(function func()) {
+	waitChan := make(chan struct{})
+	r.setEventListener("promptReady", func(config eventConfig) {
+		r.removeEventListener("promptReady")
+		close(waitChan)
+	})
+	function()
+	<-waitChan
+}
+
 var cli *client.Client
 var rooms = make(map[string]*room)
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESS_STORE_SECRET")))
@@ -1121,7 +1131,7 @@ func resetTerminal(roomID string) {
 		room.timeoutTimer.Stop()
 	}
 	room.echo = false
-	awaitPrompt(rooms[roomID], func() { deleteReplHistory(roomID) })
+	room.awaitPrompt(func() { deleteReplHistory(roomID) })
 	room.echo = true
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
@@ -1714,7 +1724,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		cn.runner.Write([]byte("\x03")) // send ctrl-c
 		room.setEventListener("promptReady", func(config eventConfig) {
 			room.removeEventListener("promptReady")
-			awaitPrompt(room, func() { deleteReplHistory(roomID) })
+			room.awaitPrompt(func() { deleteReplHistory(roomID) })
 			writeToWebsockets([]byte("CANCELRUN"), roomID)
 			writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
 			displayInitialPrompt(roomID, false, "3")
@@ -1769,22 +1779,11 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			room.removeEventListener("promptReady")
 			room.timeoutTimer.Stop()
 			room.echo = false
-			awaitPrompt(room, func() { deleteReplHistory(roomID) })
+			room.awaitPrompt(func() { deleteReplHistory(roomID) })
 			room.echo = true
 			writeToWebsockets([]byte("RUNDONE"), roomID)
 		})
 	})
-}
-
-// TODO: Make this a room method
-func awaitPrompt(room *room, function func()) {
-	waitChan := make(chan struct{})
-	room.setEventListener("promptReady", func(config eventConfig) {
-		room.removeEventListener("promptReady")
-		close(waitChan)
-	})
-	function()
-	<-waitChan
 }
 
 func deleteReplHistory(roomID string) {
