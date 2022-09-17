@@ -1913,6 +1913,55 @@ func startRoomCloser() {
 	}()
 }
 
+// Removed orphaned containers (containers that are not used by
+// any rooms) at an interval
+func startOrphanedContainerCloser() {
+	const checkInterval = 60 // Time between checks in seconds
+	go func() {
+		for {
+			time.Sleep(checkInterval * time.Second)
+			closeOrphanedContainers()
+		}
+	}()
+}
+
+func closeOrphanedContainers() {
+	// Get list of containers
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		logger.Println("Error in getting container list: ", err)
+	}
+
+	var orphanIDs []string
+	for _, container := range containers {
+		orphanIDs = append(orphanIDs, container.ID)
+	}
+
+	// Iterate over rooms and remove containers in use from orphan list
+	for _, room := range rooms {
+		if i := indexOf(orphanIDs, room.container.ID); i != -1 {
+			orphanIDs = append(orphanIDs[:i], orphanIDs[i+1:]...)
+		}
+	}
+
+	// Remove orphans
+	for _, orphanID := range orphanIDs {
+		logger.Printf("removing orphan container: %s\n", orphanID)
+		if err := stopAndRemoveContainer(orphanID); err != nil {
+			logger.Println("error in stopping/removing container: ", err)
+		}
+	}
+}
+
+func indexOf(list []string, queryItem string) int {
+	for i, e := range list {
+		if e == queryItem {
+			return i
+		}
+	}
+	return -1
+}
+
 func stopAndRemoveContainer(containername string) error {
 	logger.Println("Removing container: ", containername)
 	ctx := context.Background()
@@ -1941,6 +1990,7 @@ func main() {
 	initSesClient()
 	initDBConnectionPool()
 	startRoomCloser()
+	startOrphanedContainerCloser()
 	store.Options = &sessions.Options{
 		SameSite: http.SameSiteStrictMode,
 	}
