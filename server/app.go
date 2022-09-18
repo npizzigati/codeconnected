@@ -86,13 +86,13 @@ func (r *room) removeEventListener(event string) {
 	delete(r.eventSubscribers, event)
 }
 
-func (r *room) awaitPrompt(function func()) {
+func (r *room) await(event string, callback func()) {
 	waitChan := make(chan struct{})
-	r.setEventListener("promptReady", func(config eventConfig) {
-		r.removeEventListener("promptReady")
+	r.setEventListener(event, func(config eventConfig) {
+		r.removeEventListener(event)
 		close(waitChan)
 	})
-	function()
+	callback()
 	<-waitChan
 }
 
@@ -1132,7 +1132,7 @@ func resetTerminal(roomID string) {
 		room.timeoutTimer.Stop()
 	}
 	room.echo = false
-	room.awaitPrompt(func() { deleteReplHistory(roomID) })
+	room.await("promptReady", func() { deleteReplHistory(roomID) })
 	room.echo = true
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
@@ -1722,8 +1722,8 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		<-room.timeoutTimer.C
 		room.echo = false
 		// Send ctrl-c interrupt
-		room.awaitPrompt(func() { cn.runner.Write([]byte("\x03")) })
-		room.awaitPrompt(func() { deleteReplHistory(roomID) })
+		room.await("promptReady", func() { cn.runner.Write([]byte("\x03")) })
+		room.await("promptReady", func() { deleteReplHistory(roomID) })
 		writeToWebsockets([]byte("CANCELRUN"), roomID)
 		writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
 		displayInitialPrompt(roomID, false, "3")
@@ -1733,7 +1733,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	switch lang {
 	case "ruby":
 		// reset repl
-		room.awaitPrompt(func() { cn.runner.Write([]byte("exec $0\n")) })
+		room.await("promptReady", func() { cn.runner.Write([]byte("exec $0\n")) })
 		// The following cmd depends on run_codeconnected_code method in ~/.pryrc
 		// file on the runner server:
 		cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
@@ -1775,7 +1775,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			room.removeEventListener("promptReady")
 			room.timeoutTimer.Stop()
 			room.echo = false
-			room.awaitPrompt(func() { deleteReplHistory(roomID) })
+			room.await("promptReady", func() { deleteReplHistory(roomID) })
 			room.echo = true
 			writeToWebsockets([]byte("RUNDONE"), roomID)
 		})
