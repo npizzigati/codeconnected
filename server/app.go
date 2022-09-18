@@ -1026,13 +1026,14 @@ loop:
 		attemptLangConn(lang, roomID)
 		select {
 		case <-success:
-			logger.Printf("Stopping loop to attempt language connection")
+			logger.Printf("Language connection successful -- stopping retry loop")
 			r.echo = true
 			resetTerminal(roomID)
 			displayInitialPrompt(roomID, true, "1")
 			return nil
 		case <-time.After(time.Duration(waitTime) * time.Millisecond):
 			tries++
+			logger.Printf("Try No. %d to open language connection", tries)
 			if tries >= maxTries {
 				break loop
 			}
