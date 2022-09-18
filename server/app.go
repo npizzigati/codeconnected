@@ -1007,7 +1007,7 @@ func openLanguageConnection(lang, roomID string) error {
 	// Number of attempts to make
 	maxTries := 5
 	tries := 0
-	// Wait until prompt is ready
+	// Wait time between tries
 	waitTime := 4000
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func(config eventConfig) {
@@ -1951,6 +1951,11 @@ func closeOrphanedContainers() {
 			orphanIDs = append(orphanIDs[:i], orphanIDs[i+1:]...)
 		}
 	}
+
+	// TODO: Could this possibly remove a container that has not
+	// been connected to a room yet? -- Should I create a flag
+	// indicating creation process and not run removal if flag set?
+	// I think so.
 
 	// Remove orphans
 	for _, orphanID := range orphanIDs {
