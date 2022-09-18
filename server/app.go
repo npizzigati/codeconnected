@@ -1791,6 +1791,10 @@ func deleteReplHistory(roomID string) {
 		cmd = "clear_history;\n"
 	case "node":
 		cmd = ".deleteHistory\n"
+	case "postgres":
+		// Do nothing for postgres, but send newline so promptReady
+		// event fires
+		cmd = "\n"
 	}
 
 	cn.runner.Write([]byte(cmd))
