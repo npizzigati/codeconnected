@@ -50,10 +50,6 @@ type containerDetails struct {
 	ttyCols             int
 }
 
-type eventConfig struct {
-	count int
-}
-
 type room struct {
 	wsockets         []*websocket.Conn
 	creatorUserID    int
@@ -63,21 +59,21 @@ type room struct {
 	echo             bool
 	timeoutTimer     *time.Timer
 	container        *containerDetails
-	eventSubscribers map[string]func(eventConfig)
+	eventSubscribers map[string]func()
 	termHist         []byte
 	status           string
 	expiry           int64
 }
 
-func (r *room) emit(event string, config eventConfig) {
+func (r *room) emit(event string) {
 	if callback, ok := r.eventSubscribers[event]; ok {
-		callback(config)
+		callback()
 	}
 }
 
-func (r *room) setEventListener(event string, callback func(config eventConfig)) {
+func (r *room) setEventListener(event string, callback func()) {
 	if r.eventSubscribers == nil {
-		r.eventSubscribers = make(map[string]func(eventConfig))
+		r.eventSubscribers = make(map[string]func())
 	}
 	r.eventSubscribers[event] = callback
 }
@@ -86,13 +82,30 @@ func (r *room) removeEventListener(event string) {
 	delete(r.eventSubscribers, event)
 }
 
-func (r *room) await(event string, callback func()) {
+// Enables synchronous execution of a certain side effect of the
+// passed in function. Will block until the passed in event
+// triggers.  We need to specify whether we are going to toggle
+// room echo here (turn it off before function, if not already
+// off, and back on after the side effect event triggers) because
+// in some cases, such as in switching on the room output when
+// run output starts, it is essential to switch room echo back on
+// nearly instantaneously, or else it will be turned on after a
+// delay, and some data will not be echoed. (Channels are
+// relatively slow, and turning the echo back on when this method
+// returns is not fast enough.)
+func (r *room) await(sideEffectEvent string, funcWithSideEffect func(), shouldToggleEcho bool) {
 	waitChan := make(chan struct{})
-	r.setEventListener(event, func(config eventConfig) {
-		r.removeEventListener(event)
+	if shouldToggleEcho && r.echo {
+		r.echo = false
+	}
+	r.setEventListener(sideEffectEvent, func() {
+		r.echo = true
+		r.removeEventListener(sideEffectEvent)
 		close(waitChan)
 	})
-	callback()
+	// preEventFunc will run *first*, and then event will trigger
+	// (generally, preEventFunc will indirectly cause event to trigger)
+	funcWithSideEffect()
 	<-waitChan
 }
 
@@ -759,14 +772,14 @@ func startRunnerReader(roomID string) {
 
 			if string(ru) == "\n" {
 				newlineCount++
-				room.emit("newline", eventConfig{count: newlineCount})
+				room.emit("newline" + strconv.Itoa(newlineCount))
 			}
 
 			// Add char to fake terminal buffer
 			fakeTermBuffer = append(fakeTermBuffer, byteSlice...)
 
 			if bytes.HasSuffix(fakeTermBuffer, []byte("START")) {
-				room.emit("startOutput", eventConfig{})
+				room.emit("startOutput")
 				// Skip over current character, with is that last
 				// character in start sequence
 				continue
@@ -785,7 +798,7 @@ func startRunnerReader(roomID string) {
 					fakeTermBuffer = ansiEscapes.ReplaceAll(fakeTermBuffer, []byte(""))
 					// Check whether fakeTermBuffer ends with prompt termination
 					if promptTermination.Match(fakeTermBuffer) {
-						room.emit("promptReady", eventConfig{})
+						room.emit("promptReady")
 						fakeTermBuffer = []byte{}
 						newlineCount = 0
 					}
@@ -1010,7 +1023,7 @@ func openLanguageConnection(lang, roomID string) error {
 	// Wait time between tries
 	waitTime := 4000
 	success := make(chan struct{})
-	r.setEventListener("promptReady", func(config eventConfig) {
+	r.setEventListener("promptReady", func() {
 		logger.Printf("Prompt ready in room %s. Should stop attempts to open lang connection now.", roomID)
 		close(success)
 		r.removeEventListener("promptReady")
@@ -1131,9 +1144,7 @@ func resetTerminal(roomID string) {
 	if room.timeoutTimer != nil {
 		room.timeoutTimer.Stop()
 	}
-	room.echo = false
-	room.await("promptReady", func() { deleteReplHistory(roomID) })
-	room.echo = true
+	room.await("promptReady", func() { deleteReplHistory(roomID) }, true)
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
 
@@ -1722,8 +1733,8 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		<-room.timeoutTimer.C
 		room.echo = false
 		// Send ctrl-c interrupt
-		room.await("promptReady", func() { cn.runner.Write([]byte("\x03")) })
-		room.await("promptReady", func() { deleteReplHistory(roomID) })
+		room.await("promptReady", func() { cn.runner.Write([]byte("\x03")) }, false)
+		room.await("promptReady", func() { deleteReplHistory(roomID) }, false)
 		writeToWebsockets([]byte("CANCELRUN"), roomID)
 		writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
 		displayInitialPrompt(roomID, false, "3")
@@ -1733,53 +1744,32 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	switch lang {
 	case "ruby":
 		// reset repl
-		room.await("promptReady", func() { cn.runner.Write([]byte("exec $0\n")) })
+		room.await("promptReady", func() { cn.runner.Write([]byte("exec $0\n")) }, false)
 		// The following cmd depends on run_codeconnected_code method in ~/.pryrc
 		// file on the runner server:
-		cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
-		room.setEventListener("startOutput", func(config eventConfig) {
-			room.removeEventListener("startOutput")
-			room.echo = true
-			room.emit("runOutputStarted", eventConfig{})
-		})
-	case "postgres":
-		cn.runner.Write([]byte("\\i code.sql\n"))
-		room.setEventListener("newline", func(config eventConfig) {
-			if config.count == 1 {
-				room.removeEventListener("newline")
-				room.echo = true
-				room.emit("runOutputStarted", eventConfig{})
-			}
-		})
-	case "node":
-		cn.runner.Write([]byte(".runUserCode code.js\n"))
 
+		room.await("startOutput", func() {
+			cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
+		}, true)
+	case "postgres":
+		room.await("newline1", func() { cn.runner.Write([]byte("\\i code.sql\n")) }, true)
+	case "node":
 		// Turn echo back on right before output begins
-		extraLinesBeforeStdOutput := 2
 		// Account for output workaround (adding null; on newline at
 		// end of file) in custom node launcher
 		linesAddedInCustomNodeLauncher := 1
-		room.setEventListener("newline", func(config eventConfig) {
-			if config.count == linesOfCode+extraLinesBeforeStdOutput+linesAddedInCustomNodeLauncher {
-				room.removeEventListener("newline")
-				room.echo = true
-				room.emit("runOutputStarted", eventConfig{})
-			}
-		})
+		extraLinesBeforeStdOutput := 2
+		totalNewLinesBeforeStdOutput := linesOfCode + linesAddedInCustomNodeLauncher + extraLinesBeforeStdOutput
+		room.await("newline"+strconv.Itoa(totalNewLinesBeforeStdOutput), func() {
+			cn.runner.Write([]byte(".runUserCode code.js\n"))
+		}, true)
 	}
-	room.setEventListener("runOutputStarted", func(config eventConfig) {
-		logger.Println("********Run output started*********")
-		room.removeEventListener("runOutputStarted")
-		room.setEventListener("promptReady", func(config eventConfig) {
-			logger.Println("********Run done*********")
-			room.removeEventListener("promptReady")
-			room.timeoutTimer.Stop()
-			room.echo = false
-			room.await("promptReady", func() { deleteReplHistory(roomID) })
-			room.echo = true
-			writeToWebsockets([]byte("RUNDONE"), roomID)
-		})
-	})
+	logger.Println("********Run output started*********")
+	room.await("promptReady", func() {}, false)
+	logger.Println("********Run done*********")
+	room.timeoutTimer.Stop()
+	room.await("promptReady", func() { deleteReplHistory(roomID) }, true)
+	writeToWebsockets([]byte("RUNDONE"), roomID)
 }
 
 func deleteReplHistory(roomID string) {
