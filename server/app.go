@@ -1734,7 +1734,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		room.echo = false
 		// Send ctrl-c interrupt
 		room.await("promptReady", func() { cn.runner.Write([]byte("\x03")) }, false)
-		room.await("promptReady", func() { deleteReplHistory(roomID) }, false)
+		room.await("promptReady", func() { deleteReplHistory(roomID) }, true)
 		writeToWebsockets([]byte("CANCELRUN"), roomID)
 		writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
 		displayInitialPrompt(roomID, false, "3")
