@@ -1408,6 +1408,13 @@ function CodeArea () {
         resetTerminal();
       } else if (ev.data === 'RUNTIMEOUT') {
         console.log('RUN TIMEOUT!!!!!!!!!!');
+        window.alert('Something went wrong.');
+      } else if (ev.data === 'SOMETHINGWRONG') {
+        window.alert('Something went wrong.');
+      } else if (ev.data === 'RESTARTINGCONTAINER') {
+        setRunnerReady(false);
+      } else if (ev.data === 'CONTAINERRESTARTED') {
+        setRunnerReady(true);
       } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
         console.log('ev.data: ' + ev.data);
         running.current = false;
