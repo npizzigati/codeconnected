@@ -38,6 +38,22 @@ import (
 	"time"
 )
 
+type containerExecCreateError struct {
+	dockerErrMessage string
+}
+
+func (e containerExecCreateError) Error() string {
+	return fmt.Sprintf("ExecCreate error (original Docker err: %s)", e.dockerErrMessage)
+}
+
+type containerExecAttachError struct {
+	dockerErrMessage string
+}
+
+func (e containerExecAttachError) Error() string {
+	return fmt.Sprintf("ExecAttach error (original Docker err: %s)", e.dockerErrMessage)
+}
+
 type containerDetails struct {
 	ID                  string
 	execID              string
@@ -57,7 +73,8 @@ type room struct {
 	codeSessionID    int
 	initialContent   string
 	echo             bool
-	timeoutTimer     *time.Timer
+	runTimeoutTimer  *time.Timer
+	abortRunChan     chan struct{}
 	container        *containerDetails
 	eventSubscribers map[string]func()
 	termHist         []byte
@@ -150,7 +167,7 @@ var sesCli *sesv2.Client
 const activationTimeout = 5 * time.Minute
 const anonRoomTimeout = 15 * time.Minute
 const maxRunTime = 10 * time.Second
-const containerStartupTimeout = 10 * time.Second
+const runnerStartupTimeout = 13 * time.Second
 
 // Logger
 var logger = log.New(os.Stderr, "LOG: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -442,6 +459,7 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		initialContent: rm.InitialContent,
 		container:      &containerDetails{},
 		status:         "created",
+		abortRunChan:   make(chan struct{}),
 	}
 
 	rooms[roomID] = &room
@@ -556,7 +574,7 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	room.status = "preparing"
 	logger.Println("*************rm.RoomID: ", rm.RoomID)
 	logger.Println("**************Going to start container********************")
-	if err = startUpContainer(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
+	if err = startUpRunner(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
 		logger.Printf("Error starting up container for room %s: %s\n", roomID, err)
 		room.status = "failed"
 		logger.Println("********Room preparation failed. Room will be closed********")
@@ -573,7 +591,10 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		logger.Println("Error retrieving status: ", err)
 		// TODO: Replace this http error with a meaningful json
 		// response to be handled by the front end
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		room.status = "failed"
+		logger.Println("********Room preparation failed. Room will be closed********")
+		closeRoom(roomID)
+		sendJsonResponse(w, &responseModel{Status: room.status})
 		return
 	}
 
@@ -701,7 +722,6 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// If first websocket in room, display initial repl message/prompt
 	if len(room.wsockets) == 1 {
-		// resetTerminal(roomID)
 		displayInitialPrompt(roomID, true, "1")
 	}
 
@@ -757,12 +777,27 @@ func startRunnerReader(roomID string) {
 	go func() {
 		logger.Println("Reading from connection\n")
 		var timer *time.Timer
+		var peek []byte
+		var err error
 		for {
 			// Check for 8-byte docker multiplexing header and discard
 			// if present
-			peek, err := cn.bufReader.Peek(1)
-			// Peek will fail if reader is EOF (err == EOF)
+			peek, err = cn.bufReader.Peek(1)
+			// Peek will fail with err == io.EOF when TCP connection
+			// with runner goes down (i.e. in unstable connection
+			// conditions)
 			if err != nil {
+				if err == io.EOF {
+					logger.Println("EOF error in runner reader")
+				}
+				// Stop the run timeout timer, since we've lost
+				// connection with the runner, and we don't want this
+				// timeout to fire and abortRun to be executed, since
+				// abortRun will then timeout waiting for prompt, starting
+				// another runner restart process
+				if room.runTimeoutTimer != nil {
+					room.runTimeoutTimer.Stop()
+				}
 				logger.Println("peek error: ", err)
 				break
 			}
@@ -777,6 +812,7 @@ func startRunnerReader(roomID string) {
 
 			ru, _, err := cn.bufReader.ReadRune()
 			byteSlice := []byte(string(ru))
+			logger.Println("Rune read: ", ru, string(ru))
 			if err == io.EOF {
 				logger.Println("EOF hit in runner output")
 				break
@@ -833,12 +869,10 @@ func startRunnerReader(roomID string) {
 		// Try to reestablish connection if anybody is in room
 		// and restart flag is true
 		if len(room.wsockets) > 0 && cn.runnerReaderRestart == true {
-			logger.Println("Trying to reestablish connection")
-			cn.connection.Close()
-			stopAndRemoveContainer(cn.ID)
-			if err := startUpContainer(room.lang, roomID, room.termRows, room.termCols); err != nil {
-				logger.Printf("Error starting container for room %s: %s\n", roomID, err)
-				writeToWebsockets([]byte("SOMETHINGWRONG"), roomID)
+			logger.Println("Trying to reopen language connection")
+			if err := openLanguageConnection(room.lang, roomID); err != nil {
+				writeToWebsockets([]byte("CONTAINERERROR"), roomID)
+				restartRunner(roomID)
 			}
 		}
 	}()
@@ -853,10 +887,10 @@ func writeToWebsockets(text []byte, roomID string) {
 		if textString != "RESETTERMINAL" &&
 			textString != "RUNDONE" &&
 			textString != "CANCELRUN" &&
-			textString != "SOMETHINGWRONG" &&
-			textString != "RESTARTINGCONTAINER" &&
-			textString != "CONTAINERRESTARTED" &&
-			textString != "RUNTIMEOUT" {
+			textString != "TIMEOUT" &&
+			textString != "CONTAINERERROR" &&
+			textString != "RESTARTINGRUNNER" &&
+			textString != "RUNNERRESTARTED" {
 			room.termHist = append(room.termHist, text...)
 		}
 	}
@@ -879,18 +913,8 @@ func sendToContainer(message []byte, roomID string) {
 	}
 	logger.Println("runner write error: ", err)
 	logger.Println("trying to reestablish connection")
-	cn.runnerReaderRestart = false
-	cn.connection.Close()
-	stopAndRemoveContainer(cn.ID)
-	writeToWebsockets([]byte("RESTARTINGCONTAINER"), roomID)
-	if err := startUpContainer(room.lang, roomID, room.termRows, room.termCols); err != nil {
-		logger.Printf("Error starting container for room %s: %s\n", roomID, err)
-	}
-	if err := room.awaitSideEffect("promptReady", func() {}, 10*time.Second, false); err != nil {
-		writeToWebsockets([]byte("RUNTIMEOUT"), roomID)
-		return
-	}
-	writeToWebsockets([]byte("CONTAINERRESTARTED"), roomID)
+	writeToWebsockets([]byte("CONTAINERERROR"), roomID)
+	restartRunner(roomID)
 }
 
 func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -919,80 +943,61 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Copy contents of user program to container.
 	err = cli.CopyToContainer(context.Background(), cn.ID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
 	if err != nil {
-		panic(err)
+		logger.Println("Error copying user code to container:", err)
 	}
 
+	// TODO: Return failure (in json form) if this fails (if any of
+	// the above error cases happen)
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Successfully wrote code to container"))
 }
 
-func startUpContainer(lang, roomID string, rows int, cols int) error {
-	room := rooms[roomID]
-	cn := room.container
-	ctx := context.Background()
-	cmd := []string{"bash"}
-	var resp container.ContainerCreateCreatedBody
-	timedOutCreateCloser := time.NewTimer(containerCreateTimeout)
-	logger.Println("********About to call createContainer for room: ", roomID)
-	// Creating the container can take a long time (> 20 sec) if tcp
-	// connection with runner is down, so we set up a race and see
-	// if the failed start closer timeout finishes first
-	type createContainerReturn struct {
-		resp container.ContainerCreateCreatedBody
-		err  error
-	}
-	createContainerReturnChan := make(chan createContainerReturn)
+func startUpRunner(lang, roomID string, rows int, cols int) error {
+	timer := time.NewTimer(runnerStartupTimeout)
+	returnChan := make(chan error)
 	go func() {
+		room := rooms[roomID]
+		cn := room.container
+		ctx := context.Background()
+		cmd := []string{"bash"}
+		logger.Println("********About to call createContainer for room: ", roomID)
+		// Creating the container can take a long time (> 20 sec) if tcp
+		// connection with runner is down, so we set up a race and see
+		// if the timeout timer finishes first
 		resp, err := createContainer(ctx, cmd)
-		createContainerReturnChan <- createContainerReturn{
-			resp: resp,
-			err:  err,
-		}
-	}()
-	select {
-	case <-timedOutCreateCloser.C:
-		return errors.New("Container creation timed out")
-	case returnValues := <-createContainerReturnChan:
-		if returnValues.err != nil {
-			return returnValues.err
-		}
-		resp = returnValues.resp
-		logger.Println("********resp ID from attempt to create container: ", resp.ID)
-	}
-
-	timedOutStartCloser := time.NewTimer(containerStartTimeout)
-	startContainerReturnChan := make(chan error)
-	go func() {
-		err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
-		startContainerReturnChan <- err
-	}()
-	select {
-	case <-timedOutStartCloser.C:
-		return errors.New("Container start timed out")
-	case err := <-startContainerReturnChan:
 		if err != nil {
-			return err
+			returnChan <- err
 		}
-	}
+		logger.Println("********resp ID from attempt to create container: ", resp.ID)
+		if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+			returnChan <- err
+		}
 
-	logger.Println("Setting new container id to: ", resp.ID)
-	cn.ID = resp.ID
+		logger.Println("Setting new container id to: ", resp.ID)
+		cn.ID = resp.ID
 
-	logger.Println("Will try to set rows to: ", rows)
-	if err := resizeTTY(cn, cols, rows); err != nil {
-		return err
+		logger.Println("Will try to set rows to: ", rows)
+		if err := resizeTTY(cn, cols, rows); err != nil {
+			returnChan <- err
+		}
+		// Sql container needs a pause to startup postgres
+		// This will give openLanguageConnection a better chance of
+		// correctly opening psql on the first try
+		if lang == "postgres" {
+			time.Sleep(3 * time.Second)
+		}
+		if err := openLanguageConnection(lang, roomID); err != nil {
+			returnChan <- err
+		}
+		returnChan <- nil
+	}()
+	select {
+	case returnValue := <-returnChan:
+		return returnValue
+	case <-timer.C:
+		return errors.New("Container startup timed out")
 	}
-	// Sql container needs a pause to startup postgres
-	// This will give openLanguageConnection a better chance of
-	// correctly opening psql on the first try
-	if lang == "postgres" {
-		time.Sleep(3 * time.Second)
-	}
-	if err := openLanguageConnection(lang, roomID); err != nil {
-		return err
-	}
-	return nil
 }
 
 func resizeTTY(cn *containerDetails, cols, rows int) error {
@@ -1017,14 +1022,42 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	cn := room.container
 	room.lang = lang
 	logger.Println("Switching language")
+	if room.runTimeoutTimer != nil {
+		room.runTimeoutTimer.Stop()
+	}
+
+	// Chose abort chan to signal to runCode to abort run and send
+	// http response (if we were running code when runner restarted)
+	close(room.abortRunChan)
+	// Immediately reassign a new chan for the next use
+	room.abortRunChan = make(chan struct{})
+
 	// Set the restart flag to false so that the reader doesn't
 	// automatically restart when we close the connection
 	cn.runnerReaderRestart = false
 	// Connection must be closed here to switch language
+	// since this will end runner loop (runner peek will return a
+	// tcp error -- use of a closed connection)
 	cn.connection.Close()
+
+	// Wait until runner reader is inactive
+	runnerReaderInactiveChan := make(chan struct{})
+	go func() {
+		for {
+			if !cn.runnerReaderActive {
+				close(runnerReaderInactiveChan)
+				break
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+	}()
+	<-runnerReaderInactiveChan
+
 	err := openLanguageConnection(lang, roomID)
 	if err != nil {
 		logger.Println(err)
+		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
+		restartRunner(roomID)
 	}
 
 	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
@@ -1033,6 +1066,7 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 }
 
 func openLanguageConnection(lang, roomID string) error {
+	logger.Println("Going to open language connection")
 	var r *room
 	var ok bool
 	if r, ok = rooms[roomID]; !ok {
@@ -1043,7 +1077,7 @@ func openLanguageConnection(lang, roomID string) error {
 	maxTries := 5
 	tries := 0
 	// Wait time between tries
-	waitTime := 4000
+	waitTime := 4000 * time.Millisecond
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func() {
 		logger.Printf("Prompt ready in room %s. Should stop attempts to open lang connection now.", roomID)
@@ -1052,13 +1086,28 @@ func openLanguageConnection(lang, roomID string) error {
 	})
 loop:
 	for {
+		if r.container.runnerReaderActive {
+			logger.Println("Runner reader already active. Exiting loop.")
+			break loop
+		}
 		logger.Println("Attempting language connection")
 		// Do not attempt language connection if room does not exist anymore
 		if _, ok := rooms[roomID]; !ok {
 			logger.Println("Room no longer exists")
 			break loop
 		}
-		attemptLangConn(lang, roomID)
+		if err := attemptLangConn(lang, roomID); err != nil {
+			switch err.(type) {
+			case containerExecCreateError:
+				// This is a fatal error for this open language
+				// connection process -- stopped or inexistent
+				// container
+				logger.Println("unable to create exec process:", err)
+				break loop
+			case containerExecAttachError:
+				logger.Println("unable to start/attach to exec process: ", err)
+			}
+		}
 		select {
 		case <-success:
 			logger.Printf("Language connection successful -- stopping retry loop")
@@ -1066,12 +1115,12 @@ loop:
 			resetTerminal(roomID)
 			displayInitialPrompt(roomID, true, "1")
 			return nil
-		case <-time.After(time.Duration(waitTime) * time.Millisecond):
+		case <-time.After(waitTime):
 			tries++
-			logger.Printf("Try No. %d to open language connection", tries)
-			if tries >= maxTries {
+			if tries > maxTries {
 				break loop
 			}
+			logger.Printf("Try No. %d to open language connection", tries)
 		}
 	}
 	return errors.New("unable to open language connection (could not get prompt)")
@@ -1086,7 +1135,7 @@ func closeContainerConnection(connection types.HijackedResponse) {
 	}
 }
 
-func attemptLangConn(lang, roomID string) {
+func attemptLangConn(lang, roomID string) error {
 	logger.Println("Attempting lang connection, lang: '", lang, "' ", "roomID: '", roomID, "'")
 	var room *room
 	var ok bool
@@ -1117,21 +1166,22 @@ func attemptLangConn(lang, roomID string) {
 
 	resp, err := cli.ContainerExecCreate(ctx, cn.ID, execOpts)
 	if err != nil {
-		logger.Println("unable to create exec process: ", err)
-		return
+		// This error will be returned is container is not
+		// running or non-existing;
+		return containerExecCreateError{dockerErrMessage: err.Error()}
 	}
 
 	cn.connection, err = cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
-		logger.Println("unable to start/attach to exec process: ", err)
-		return
+		return containerExecAttachError{dockerErrMessage: err.Error()}
 	}
 
 	cn.execID = resp.ID
 	cn.runner = cn.connection.Conn
 	cn.bufReader = bufio.NewReader(cn.connection.Reader)
 	startRunnerReader(roomID)
+	return nil
 }
 
 func displayInitialPrompt(roomID string, welcome bool, promptNum string) {
@@ -1157,18 +1207,19 @@ func displayInitialPrompt(roomID string, welcome bool, promptNum string) {
 	writeToWebsockets(message, roomID)
 }
 
-// TODO: make this a room method
+// TODO: make this a room method?
 func resetTerminal(roomID string) {
+	logger.Println("Resetting terminal in room:", roomID)
 	writeToWebsockets([]byte("RESETTERMINAL"), roomID)
 	// Also reset terminal history
 	room := rooms[roomID]
 	room.termHist = []byte("")
-	if room.timeoutTimer != nil {
-		room.timeoutTimer.Stop()
+	if room.runTimeoutTimer != nil {
+		room.runTimeoutTimer.Stop()
 	}
-	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
-		writeToWebsockets([]byte("RUNTIMEOUT"), roomID)
-	}
+	// if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
+	// 	writeToWebsockets([]byte("TIMEOUT"), roomID)
+	// }
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
 }
 
@@ -1738,7 +1789,33 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	sendJsonResponse(w, map[string]bool{"roomExists": exists})
 }
 
-func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) {
+func abortRun(roomID string) {
+	logger.Println("Aborting run in room: ", roomID)
+	// TODO: Use room.runTimeoutTimer field to stop this
+	// procedure when resetting terminal
+	room := rooms[roomID]
+	cn := room.container
+	room.echo = false
+	// Send ctrl-c interrupt
+	if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("\x03")) }, 2*time.Second, false); err != nil {
+		logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
+		writeToWebsockets([]byte("TIMEOUT"), roomID)
+		restartRunner(roomID)
+		return
+	}
+	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
+		logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
+		writeToWebsockets([]byte("TIMEOUT"), roomID)
+		restartRunner(roomID)
+		return
+	}
+	writeToWebsockets([]byte("CANCELRUN"), roomID)
+	writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
+	displayInitialPrompt(roomID, false, "3")
+	room.echo = true
+}
+
+func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) error {
 	room := rooms[roomID]
 	cn := room.container
 	// Max run time in seconds
@@ -1749,42 +1826,14 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	}
 
 	writeToWebsockets([]byte("\r\n\r\nRunning your code...\r\n"), roomID)
-
-	// Emit run timeout after x seconds to prevent long-running code
-	room.timeoutTimer = time.NewTimer(maxRunTime)
-	defer room.timeoutTimer.Stop()
-	go func() {
-		<-room.timeoutTimer.C
-		room.echo = false
-		// Send ctrl-c interrupt
-		if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("\x03")) }, 2*time.Second, false); err != nil {
-			logger.Printf("Error waiting for side effect in room %s: %s", roomID, err)
-			// This should cause a popup on client, aborting run, too
-			// (run button back to normal, etc.)
-			writeToWebsockets([]byte("RUNTIMEOUT"), roomID)
-			// Disconnect and close container, then open and attach a
-			// new one
-			abortContainer(room)
-		}
-		if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
-			writeToWebsockets([]byte("RUNTIMEOUT"), roomID)
-		}
-		writeToWebsockets([]byte("CANCELRUN"), roomID)
-		writeToWebsockets([]byte("\r\nExecution interrupted because time limit exceeded.\r\n"), roomID)
-		displayInitialPrompt(roomID, false, "3")
-		room.echo = true
-	}()
-
 	switch lang {
 	case "ruby":
 		// reset repl
 		if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("exec $0\n")) }, 3*time.Second, false); err != nil {
-			logger.Printf("Error waiting for side effect in room %s: %s", roomID, err)
-			writeToWebsockets([]byte("RUNTIMEOUT"), roomID)
-			// Disconnect and close container, then open and attach a
-			// new one
-			abortContainer(room)
-			return
+			logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
+			writeToWebsockets([]byte("TIMEOUT"), roomID)
+			restartRunner(roomID)
+			return errors.New("Container Timeout")
 		}
 		// The following cmd depends on run_codeconnected_code method in ~/.pryrc
 		// file on the runner server:
@@ -1792,11 +1841,18 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
 		}, 3*time.Second, true)
 		if err != nil {
-			writeToWebsockets([]byte("RUNTIMEOUT"), roomID)
-			return
+			logger.Printf("Timeout waiting for start of output in room %s: %s", roomID, err)
+			writeToWebsockets([]byte("TIMEOUT"), roomID)
+			restartRunner(roomID)
+			return errors.New("Container Timeout")
 		}
 	case "postgres":
-		room.awaitSideEffect("newline1", func() { cn.runner.Write([]byte("\\i code.sql\n")) }, 2*time.Second, true)
+		if err := room.awaitSideEffect("newline1", func() { cn.runner.Write([]byte("\\i code.sql\n")) }, 2*time.Second, true); err != nil {
+			logger.Printf("Timeout waiting for newline1 in room %s: %s", roomID, err)
+			writeToWebsockets([]byte("TIMEOUT"), roomID)
+			restartRunner(roomID)
+			return errors.New("Container Timeout")
+		}
 	case "node":
 		// Turn echo back on right before output begins
 		// Account for output workaround (adding null; on newline at
@@ -1804,15 +1860,43 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		linesAddedInCustomNodeLauncher := 1
 		extraLinesBeforeStdOutput := 2
 		totalNewLinesBeforeStdOutput := linesOfCode + linesAddedInCustomNodeLauncher + extraLinesBeforeStdOutput
-		room.awaitSideEffect("newline"+strconv.Itoa(totalNewLinesBeforeStdOutput), func() {
-			cn.runner.Write([]byte(".runUserCode code.js\n"))
-		}, 2*time.Second, true)
+		err := room.awaitSideEffect("newline"+strconv.Itoa(totalNewLinesBeforeStdOutput),
+			func() { cn.runner.Write([]byte(".runUserCode code.js\n")) }, 2*time.Second, true)
+		if err != nil {
+			logger.Printf("Timeout waiting for newlinex in room %s: %s", roomID, err)
+			writeToWebsockets([]byte("TIMEOUT"), roomID)
+			restartRunner(roomID)
+			return errors.New("Container Timeout")
+		}
 	}
 	logger.Println("********Run output started*********")
-	room.awaitSideEffect("promptReady", func() {}, maxRunTime+2, false)
+
+	runFinishedChan := make(chan struct{})
+	room.setEventListener("promptReady", func() {
+		room.removeEventListener("promptReady")
+		close(runFinishedChan)
+	})
+	room.runTimeoutTimer = time.NewTimer(maxRunTime)
+	select {
+	case <-room.runTimeoutTimer.C:
+		abortRun(roomID)
+		return errors.New("Container or run timeout")
+	case <-room.abortRunChan:
+		return errors.New("Container or run timeout")
+	case <-runFinishedChan:
+		room.runTimeoutTimer.Stop()
+	}
+
 	logger.Println("********Run done*********")
-	room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true)
+
+	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
+		logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
+		writeToWebsockets([]byte("TIMEOUT"), roomID)
+		restartRunner(roomID)
+		return errors.New("Container Timeout")
+	}
 	writeToWebsockets([]byte("RUNDONE"), roomID)
+	return nil
 }
 
 func deleteReplHistory(roomID string) {
@@ -1856,7 +1940,12 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	runCode(pm.RoomID, pm.Lang, pm.Lines, pm.PromptLineEmpty)
+	if err := runCode(pm.RoomID, pm.Lang, pm.Lines, pm.PromptLineEmpty); err != nil {
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
+	}
+
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1936,7 +2025,35 @@ func closeRoom(roomID string) {
 	delete(rooms, roomID)
 }
 
+func restartRunner(roomID string) {
+	logger.Println("Restarting runner")
+	var room *room
+	var ok bool
+	// Do nothing if room does not exist
+	if room, ok = rooms[roomID]; !ok {
+		return
+	}
+	// Chose abort chan to signal to runCode to abort run and send
+	// http response (if we were running code when runner restarted)
+	close(room.abortRunChan)
+	// Immediately reassign a new chan for the next use
+	room.abortRunChan = make(chan struct{})
+
+	abortContainer(room)
+	writeToWebsockets([]byte("RESTARTINGRUNNER"), roomID)
+	if err := startUpRunner(room.lang, roomID, room.termRows, room.termCols); err != nil {
+		logger.Printf("Error starting runner for room %s: %s\n", roomID, err)
+		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
+		return
+	}
+	writeToWebsockets([]byte("RUNNERRESTARTED"), roomID)
+}
+
 func abortContainer(room *room) {
+	logger.Println("Aborting container:", room.container.ID)
+	// Set the restart flag to false so that the reader
+	// doesn't automatically restart when we close the connection
+	room.container.runnerReaderRestart = false
 	// Close hijacked connection with runner
 	closeContainerConnection(room.container.connection)
 	// Remove room container
@@ -1970,6 +2087,8 @@ func startOrphanedContainerCloser() {
 	}()
 }
 
+// TODO: This should somehow check to make sure containers were not just
+// created and about to be attached to a room
 func closeOrphanedContainers() {
 	// Get list of containers
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})

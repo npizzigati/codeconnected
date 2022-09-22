@@ -127,6 +127,7 @@ function CodeArea () {
     theme: 'dark'
   };
 
+  // TODO: Change this to a dialog with single ok button
   const roomClosedDialogConfig = {
     message: {
       icon: { path: './images/attention.png', alt: 'Attention' },
@@ -677,7 +678,9 @@ function CodeArea () {
     switchLanguageStatus.current = ydoc.current.getMap('switch language status');
     switchLanguageStatus.current.set('active', false);
     switchLanguageStatus.current.observe(() => {
+      console.log('firing switchLanguageStatus');
       if (switchLanguageStatus.current.get('active') === true) {
+        console.log('Setting runnerReady to false');
         setRunnerReady(false);
       } else {
         setRunnerReady(true);
@@ -1406,17 +1409,20 @@ function CodeArea () {
     ws.onmessage = ev => {
       if (ev.data === 'RESETTERMINAL') {
         resetTerminal();
-      } else if (ev.data === 'RUNTIMEOUT') {
-        console.log('RUN TIMEOUT!!!!!!!!!!');
+      } else if (ev.data === 'TIMEOUT' || ev.data === 'CONTAINERERROR') {
+        running.current = false;
+        runButtonDone();
+        // TODO: Replace window.alert with actual dialog
         window.alert('Something went wrong.');
-      } else if (ev.data === 'SOMETHINGWRONG') {
-        window.alert('Something went wrong.');
-      } else if (ev.data === 'RESTARTINGCONTAINER') {
+      } else if (ev.data === 'RESTARTINGRUNNER') {
         setRunnerReady(false);
-      } else if (ev.data === 'CONTAINERRESTARTED') {
+      } else if (ev.data === 'RUNNERRESTARTED') {
         setRunnerReady(true);
       } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
-        console.log('ev.data: ' + ev.data);
+        // tmp
+        if (ev.data === 'CANCELRUN') {
+          console.log('Run cancelled!!!!!');
+        }
         running.current = false;
         runButtonDone();
       } else {
@@ -1428,7 +1434,7 @@ function CodeArea () {
   }
 
   function runButtonStart () {
-    runButtonDomRef.current.classList.add('running');
+    runButtonDomRef.current?.classList.add('running');
     // Seconds to wait before showing stop button
     const stopDisplayWait = 2;
     setTimeout(() => {
