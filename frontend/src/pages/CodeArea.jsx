@@ -718,8 +718,7 @@ function CodeArea () {
       return;
     }
 
-    // Collaborative editing
-    // Code editor
+    // Yjs collaborative data
     ydoc.current = new Y.Doc();
     editorContents.current = ydoc.current.getMap('editor contents');
     switchLanguageStatus.current = ydoc.current.getMap('switch language status');
@@ -735,7 +734,7 @@ function CodeArea () {
     flagRun.current.observe(handleYjsObserveEvent);
 
     // Get room status. If room isn't ready (connected to
-    // container), send request for it to be made ready.
+    // runner), send request for it to be made ready.
     setShowContent(true);
     const { status } = await getRoomStatus(roomID);
     console.log(status);
