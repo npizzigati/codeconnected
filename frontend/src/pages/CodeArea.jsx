@@ -99,6 +99,7 @@ function CodeArea () {
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const [showRoomClosedDialog, setShowRoomClosedDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  let setupDoneTimestamp;
 
   const backToHomeDialogConfig = {
     message: {
@@ -667,6 +668,13 @@ function CodeArea () {
       if (!isActiveFlag()) {
         return;
       }
+      // Do not change run button if client has just joined
+      // session, to prevent case where run started and finished
+      // before client joined, but within 1 sec active flag
+      // limit, causing run button to hang in stop mode
+      if ((Date.now() - setupDoneTimestamp) < 1000) {
+        return;
+      }
       runButtonStart();
       running.current = true;
       break;
@@ -896,6 +904,7 @@ function CodeArea () {
     setPrevTermClientHeight();
     await setupUser();
     startAutoSaver();
+    setupDoneTimestamp = Date.now();
     setupDone.current = true;
   }
 
