@@ -790,14 +790,6 @@ func startRunnerReader(roomID string) {
 				if err == io.EOF {
 					logger.Println("EOF error in runner reader")
 				}
-				// Stop the run timeout timer, since we've lost
-				// connection with the runner, and we don't want this
-				// timeout to fire and abortRun to be executed, since
-				// abortRun will then timeout waiting for prompt, starting
-				// another runner restart process
-				if room.runTimeoutTimer != nil {
-					room.runTimeoutTimer.Stop()
-				}
 				logger.Println("peek error: ", err)
 				break
 			}
