@@ -818,7 +818,6 @@ function CodeArea () {
 
     ws.current = openWs(roomID);
 
-
     yCode.current = ydoc.current.getText('codemirror');
 
     // y.js connection provider
