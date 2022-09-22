@@ -2078,7 +2078,7 @@ func startRoomCloser() {
 // Removed orphaned containers (containers that are not used by
 // any rooms) at an interval
 func startOrphanedContainerCloser() {
-	const checkInterval = 60 // Time between checks in seconds
+	const checkInterval = 120 // Time between checks in seconds
 	go func() {
 		for {
 			time.Sleep(checkInterval * time.Second)
@@ -2087,13 +2087,12 @@ func startOrphanedContainerCloser() {
 	}()
 }
 
-// TODO: This should somehow check to make sure containers were not just
-// created and about to be attached to a room
 func closeOrphanedContainers() {
 	// Get list of containers
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
 		logger.Println("Error in getting container list: ", err)
+		return
 	}
 
 	var orphanIDs []string
@@ -2101,17 +2100,18 @@ func closeOrphanedContainers() {
 		orphanIDs = append(orphanIDs, container.ID)
 	}
 
-	// Iterate over rooms and remove containers in use from orphan list
-	for _, room := range rooms {
-		if i := indexOf(orphanIDs, room.container.ID); i != -1 {
-			orphanIDs = append(orphanIDs[:i], orphanIDs[i+1:]...)
+	for i := 0; i < 3; i++ {
+		// Iterate over rooms and remove containers in use from orphan list
+		for _, room := range rooms {
+			if i := indexOf(orphanIDs, room.container.ID); i != -1 {
+				orphanIDs = append(orphanIDs[:i], orphanIDs[i+1:]...)
+			}
 		}
-	}
 
-	// TODO: Could this possibly remove a container that has not
-	// been connected to a room yet? -- Should I create a flag
-	// indicating creation process and not run removal if flag set?
-	// I think so.
+		// Pause to allow any containers in the process of being
+		// assigned to rooms to be assigned
+		time.Sleep(2 * time.Second)
+	}
 
 	// Remove orphans
 	for _, orphanID := range orphanIDs {
