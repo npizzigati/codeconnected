@@ -474,7 +474,7 @@ function CodeArea () {
   function executeReplAction (ev) {
     switch (ev.target.dataset.value) {
     case 'clear':
-      setTerminalClearFlag();
+      setYjsFlag(flagClear.current);
       break;
     case 'reset':
       switchLanguage(language);
@@ -661,6 +661,53 @@ function CodeArea () {
     return -1;
   }
 
+  function handleYjsObserveEvent (ev) {
+    switch (ev.target) {
+    case flagRun.current:
+      if (!isActiveFlag()) {
+        return;
+      }
+      runButtonStart();
+      running.current = true;
+      break;
+    case flagClear.current:
+      if (!isActiveFlag()) {
+        return;
+      }
+      clearTerminal();
+      break;
+    case switchLanguageStatus.current:
+      if (switchLanguageStatus.current.get('active') === true) {
+        console.log('Setting runnerReady to false');
+        setRunnerReady(false);
+      } else {
+        setRunnerReady(true);
+      }
+      break;
+    case codeOptions.current:
+      lang.current = ev.target.get('language');
+      setLanguage(lang.current);
+      setCmLanguage(lang.current);
+      showTitles(lang.current);
+      break;
+    }
+
+    function isActiveFlag () {
+      // If date last pushed onto flag shared array type is over
+      // 1 second old, disregard, to avoid problem where the last
+      // flag is triggered immediately on new clients logging in,
+      // no matter how old it is (a new client will compare the
+      // zero value of its initialized flag to the actual value
+      // in the shared flag and this will trigger the observe
+      // event)
+      const lastTimestamp = ev.target.get(ev.target.length - 1);
+      if ((Date.now() - lastTimestamp) > 1000) {
+        return false;
+      }
+      return true;
+    }
+  }
+
   async function setup () {
     if (!(await roomExists(roomID))) {
       if (setupCanceled.current) {
@@ -677,15 +724,15 @@ function CodeArea () {
     editorContents.current = ydoc.current.getMap('editor contents');
     switchLanguageStatus.current = ydoc.current.getMap('switch language status');
     switchLanguageStatus.current.set('active', false);
-    switchLanguageStatus.current.observe(() => {
-      console.log('firing switchLanguageStatus');
-      if (switchLanguageStatus.current.get('active') === true) {
-        console.log('Setting runnerReady to false');
-        setRunnerReady(false);
-      } else {
-        setRunnerReady(true);
-      }
-    });
+    switchLanguageStatus.current.observe(handleYjsObserveEvent);
+    codeOptions.current = ydoc.current.getMap('code options');
+    codeOptions.current.observe(handleYjsObserveEvent);
+
+    // Yjs flags
+    flagClear.current = ydoc.current.getArray('flag-clear');
+    flagClear.current.observe(handleYjsObserveEvent);
+    flagRun.current = ydoc.current.getArray('flag-run');
+    flagRun.current.observe(handleYjsObserveEvent);
 
     // Get room status. If room isn't ready (connected to
     // container), send request for it to be made ready.
@@ -829,28 +876,6 @@ function CodeArea () {
       });
     }, pruneIntervalSeconds * 1000);
 
-    flagClear.current = ydoc.current.getArray('flag-clear');
-    flagClear.current.observe(ev => {
-      clearTerminal();
-    });
-
-    flagRun.current = ydoc.current.getArray('flag-run');
-    flagRun.current.observe(ev => {
-      runButtonStart();
-      running.current = true;
-    });
-
-    const yCodeOptions = ydoc.current.getMap('code options');
-    yCodeOptions.observe(ev => {
-      const newLang = ev.target.get('language');
-      lang.current = newLang;
-      setLanguage(newLang);
-      setCmLanguage(newLang);
-      showTitles(newLang);
-    });
-    // Copy a reference to React state
-    codeOptions.current = yCodeOptions;
-
     console.log('lang.current right before setting cm content: ' + lang.current);
     // If this is the first person in a new room,
     // editorContents.current.has(lang.current) will be false.
@@ -935,7 +960,7 @@ function CodeArea () {
     term.current.onData((data) => {
       // If ctrl-l (lowecase L) pressed
       if (data.charCodeAt() === 12) {
-        setTerminalClearFlag();
+        setYjsFlag(flagClear.current);
       } else {
         ws.current.send(data.toString());
       }
@@ -1289,16 +1314,12 @@ function CodeArea () {
   }
 
   /**
-   * --Shared flags--
-   * We don't care about the value added, we just want to
-   * trigger the observe event
+   * --Shared flag setter--
+   * Push a timestamp onto the shared flag to trigger the desired
+   * action.
    */
-  function setTerminalClearFlag () {
-    flagClear.current.push([1]);
-  }
-
-  function setRunFlag () {
-    flagRun.current.push([1]);
+  function setYjsFlag (flag) {
+    flag.push([Date.now()]);
   }
 
   // TODO: Make this work for Ctrl-L too
@@ -1458,7 +1479,7 @@ function CodeArea () {
   }
 
   function executeContent () {
-    setRunFlag();
+    setYjsFlag(flagRun.current);
     const prompt = /> $/;
     const { lastLine } = getLastTermLineAndNumber();
     console.log('prompt ready? ' + prompt.test(lastLine));
