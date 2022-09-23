@@ -63,6 +63,9 @@ function CodeArea () {
   const setupDone = useRef(false);
   const ws = useRef(null);
   const wsProvider = useRef(null);
+  const wsPongReceiveTimeout = useRef(null);
+  const wsPingSendInterval = useRef(null);
+  const onlineCheckerInterval = useRef(null);
   const flagClear = useRef(null);
   const flagRun = useRef(null);
   const codeOptions = useRef(null);
@@ -79,6 +82,7 @@ function CodeArea () {
   const yCode = useRef(null);
   const isAuthedCreator = useRef(false);
   const switchLanguageStatus = useRef(null);
+  const isOnline = useRef(null);
   const resizeBarDomRef = useRef(null);
   const resizerOverlayDomRef = useRef(null);
   const initialX = useRef(null);
@@ -155,20 +159,20 @@ function CodeArea () {
     setShowBackToHomeDialog(false);
   }
 
+  function onlineEventHandler () {
+    handleConnectionChange();
+  }
+
   useEffect(() => {
-    function onlineEventHandler () {
-      console.log('now online');
-      location.reload();
-    }
     // When resizing screen, it's useful to have the body be the
     // same color as the content background, to avoid background
     // artifacts
     document.body.style.backgroundColor = '#0d1117';
-    // Check whether room exists when user comes online. This
-    // is so that users returning from sleep or otherwise being
-    // offline can automatically return to home page if room
-    // has closed.
-    window.addEventListener('online', onlineEventHandler);
+    // Note that the 'online' event does not guarantee that the
+    // device is connected to the Internet, only that it
+    // connected to a router or LAN. Also note that the event may
+    // not fire when the user's device wakes from sleep
+    document.addEventListener('nowonline', onlineEventHandler);
 
     // Fire custom events on keydown
     document.addEventListener('keydown', fireKeydownEvents);
@@ -190,7 +194,7 @@ function CodeArea () {
     })();
 
     return function cleanup () {
-      window.removeEventListener('online', onlineEventHandler);
+      document.removeEventListener('nowonline', onlineEventHandler);
       document.removeEventListener('keydown', fireKeydownEvents);
       document.removeEventListener('escapePressed', closeModals);
       removeUserFromParticipants();
@@ -721,8 +725,9 @@ function CodeArea () {
       if (setupCanceled.current) {
         return;
       }
-      console.log('room does not exist');
-      navigate('/');
+      // Don't use React's navigate here because the user
+      // won't be removed from room participants
+      window.location = window.location.origin;
       return;
     }
 
@@ -895,6 +900,7 @@ function CodeArea () {
       // joining user will find the key
       editorContents.current.set(lang.current, '');
     }
+
     setRunnerReady(true);
     showTitleRow();
     setRoomStatusOpen(roomID);
@@ -903,8 +909,68 @@ function CodeArea () {
     setPrevTermClientHeight();
     await setupUser();
     startAutoSaver();
+    startOnlineChecker();
+    startWebsocketConnectionPinger();
     setupDoneTimestamp = Date.now();
     setupDone.current = true;
+  }
+
+  async function startOnlineChecker () {
+    console.log('Starting online checker');
+    isOnline.current = await checkOnlineStatus();
+    onlineCheckerInterval.current = setInterval(async () => {
+      const wasOnline = isOnline.current;
+      isOnline.current = await checkOnlineStatus();
+      console.log('isOnline: ' + isOnline.current);
+      if (!wasOnline && isOnline.current) {
+        document.dispatchEvent(new Event('nowonline'));
+      }
+    }, 2000);
+  }
+
+  async function checkOnlineStatus () {
+    // Note that this won't return false on a localhost dev
+    // server, since we're pinging our own local server
+    try {
+      const online = await fetch('/api/online-check-ping');
+      return online.status >= 200 && online.status < 300; // either true or false
+    } catch (err) {
+      return false; // definitely offline
+    }
+  }
+
+  async function handleConnectionChange () {
+    clearInterval(onlineCheckerInterval.current);
+    clearInterval(wsPingSendInterval.current);
+    if (await roomExists(roomID)) {
+      location.reload();
+    } else {
+      setShowRoomClosedDialog(true);
+    }
+  }
+
+  /**
+   * Ping websocket connection at interval
+   * Server will send back 'WSPONG'
+   */
+  function startWebsocketConnectionPinger () {
+    const timeBetweenPings = 5000; // in ms
+    const timeBeforeTimeout = 500; // in ms
+    wsPingSendInterval.current = setInterval(async () => {
+      isOnline.current = await checkOnlineStatus();
+      if (ws.current == null || !isOnline.current) {
+        return;
+      }
+      try {
+        ws.current.send('WSPING');
+      } catch {
+        handleConnectionChange();
+      }
+      wsPongReceiveTimeout.current = setTimeout(() => {
+        clearInterval(wsPingSendInterval.current);
+        handleConnectionChange();
+      }, timeBeforeTimeout);
+    }, timeBetweenPings);
   }
 
   function populateEditorContents (initialContent) {
@@ -969,7 +1035,11 @@ function CodeArea () {
       if (data.charCodeAt() === 12) {
         setYjsFlag(flagClear.current);
       } else {
-        ws.current.send(data.toString());
+        try {
+          ws.current.send(data.toString());
+        } catch {
+          handleConnectionChange();
+        }
       }
     });
   }
@@ -1446,6 +1516,9 @@ function CodeArea () {
         setRunnerReady(false);
       } else if (ev.data === 'RUNNERRESTARTED') {
         setRunnerReady(true);
+      } else if (ev.data === 'WSPONG') {
+        console.log('Clearing wsPong timeout');
+        clearTimeout(wsPongReceiveTimeout.current);
       } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
         // tmp
         if (ev.data === 'CANCELRUN') {

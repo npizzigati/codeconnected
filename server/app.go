@@ -737,8 +737,11 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			// ws?). I don't think so
 			break
 		}
-
-		sendToContainer(message, roomID)
+		if string(message) == "WSPING" {
+			ws.Write(context.Background(), websocket.MessageText, []byte("WSPONG"))
+		} else {
+			sendToContainer(message, roomID)
+		}
 	}
 }
 
@@ -1789,6 +1792,12 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	sendJsonResponse(w, map[string]bool{"roomExists": exists})
 }
 
+func onlineCheckPing(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(""))
+}
+
 func abortRun(roomID string) {
 	logger.Println("Aborting run in room: ", roomID)
 	// TODO: Use room.runTimeoutTimer field to stop this
@@ -2171,6 +2180,7 @@ func main() {
 	router.POST("/api/prepare-room", prepareRoom)
 	router.POST("/api/activateuser", activateUser)
 	router.GET("/api/does-room-exist", doesRoomExist)
+	router.GET("/api/online-check-ping", onlineCheckPing)
 	router.GET("/api/get-initial-room-data", getInitialRoomData)
 	router.GET("/api/get-room-status", getRoomStatus)
 	router.GET("/api/get-user-info", getUserInfo)
