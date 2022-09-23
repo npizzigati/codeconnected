@@ -102,6 +102,7 @@ function CodeArea () {
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const [showRoomClosedDialog, setShowRoomClosedDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const nowOnlineEvent = new Event('nowonline');
   let setupDoneTimestamp;
 
   const backToHomeDialogConfig = {
@@ -918,11 +919,15 @@ function CodeArea () {
     console.log('Starting online checker');
     isOnline.current = await checkOnlineStatus();
     onlineCheckerInterval.current = setInterval(async () => {
+      if (!isOnline.current) {
+        setRunnerReady(false);
+      }
       const wasOnline = isOnline.current;
       isOnline.current = await checkOnlineStatus();
       console.log('isOnline: ' + isOnline.current);
       if (!wasOnline && isOnline.current) {
-        document.dispatchEvent(new Event('nowonline'));
+        console.log('About to dispatch nowonline event');
+        document.dispatchEvent(nowOnlineEvent);
       }
     }, 2000);
   }
@@ -945,6 +950,7 @@ function CodeArea () {
       location.reload();
     } else {
       setShowRoomClosedDialog(true);
+      setShowSpinner(false);
     }
   }
 
@@ -1263,6 +1269,7 @@ function CodeArea () {
   }
 
   async function roomExists (roomID) {
+    console.log('Checking to see if room exists');
     const options = {
       method: 'GET',
       mode: 'cors'

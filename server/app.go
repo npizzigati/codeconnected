@@ -81,6 +81,7 @@ type room struct {
 	termRows         int
 	termCols         int
 	status           string
+	lastExistCheck   int64
 	expiry           int64
 }
 
@@ -740,7 +741,11 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		if string(message) == "WSPING" {
 			ws.Write(context.Background(), websocket.MessageText, []byte("WSPONG"))
 		} else {
-			sendToContainer(message, roomID)
+			if err := sendToContainer(message, roomID); err != nil {
+				logger.Println(err)
+				logger.Println("trying to reestablish connection")
+				restartRunner(roomID)
+			}
 		}
 	}
 }
@@ -906,18 +911,21 @@ func writeToWebsockets(text []byte, roomID string) {
 	}
 }
 
-func sendToContainer(message []byte, roomID string) {
-	room := rooms[roomID]
-	cn := room.container
-
-	_, err := cn.runner.Write(message)
-	if err == nil {
-		return
+func sendToContainer(message []byte, roomID string) error {
+	var room *room
+	var ok bool
+	if room, ok = rooms[roomID]; !ok {
+		myErr := fmt.Sprintf("room %s does not exist", roomID)
+		return errors.New(myErr)
+		// TODO: Use this error handling wherever room is accessed?
 	}
-	logger.Println("runner write error: ", err)
-	logger.Println("trying to reestablish connection")
-	writeToWebsockets([]byte("CONTAINERERROR"), roomID)
-	restartRunner(roomID)
+	cn := room.container
+	if _, err := cn.runner.Write(message); err != nil {
+		myErr := fmt.Sprintf("Runner write error: %s", err)
+		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
+		return errors.New(myErr)
+	}
+	return nil
 }
 
 func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1785,6 +1793,8 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	var exists bool
 	if _, found := rooms[roomID]; found {
 		exists = true
+		// Record time of last check (Unix time in seconds)
+		rooms[roomID].lastExistCheck = time.Now().Unix()
 		logger.Printf("room %s does exist", roomID)
 	} else {
 		exists = false
@@ -2010,7 +2020,12 @@ func closeEmptyRooms() {
 		logger.Println("roomID: ", roomID, "status: ", room.status, "container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		// Check if room container exists to make sure we're not
 		// deleting rooms that are in the process of being created
-		if len(room.wsockets) == 0 && room.status == "open" {
+		// Also check time since last "does room exist check"; if
+		// there was a recent check, we don't want to delete the room
+		// since a user may be about to join
+		timeSinceLastExistsCheck := time.Now().Unix() - room.lastExistCheck
+		logger.Println("Time since last room exists check: ", timeSinceLastExistsCheck)
+		if len(room.wsockets) == 0 && room.status == "open" && timeSinceLastExistsCheck > 10 {
 			closeRoom(roomID)
 		}
 	}
@@ -2023,15 +2038,18 @@ func closeRoom(roomID string) {
 	if room, ok = rooms[roomID]; !ok {
 		return
 	}
-	logger.Println("remove room: ", roomID)
-	logger.Println("removing room container: ", room.container.ID)
+	container := room.container
+	// Remove empty room from rooms map We have to delete the room
+	// from the rooms map first, before removing container, because
+	// container removal procedure can cause delay
+	delete(rooms, roomID)
+	logger.Println("removed room: ", roomID)
+	logger.Println("removing room container: ", container.ID)
 	// Update room access time if code session associated with it
 	if room.codeSessionID != -1 {
 		updateRoomAccessTime(room.codeSessionID)
 	}
-	abortContainer(room)
-	// Remove empty room from rooms map
-	delete(rooms, roomID)
+	abortContainer(container)
 }
 
 func restartRunner(roomID string) {
@@ -2048,7 +2066,7 @@ func restartRunner(roomID string) {
 	// Immediately reassign a new chan for the next use
 	room.abortRunChan = make(chan struct{})
 
-	abortContainer(room)
+	abortContainer(room.container)
 	writeToWebsockets([]byte("RESTARTINGRUNNER"), roomID)
 	if err := startUpRunner(room.lang, roomID, room.termRows, room.termCols); err != nil {
 		logger.Printf("Error starting runner for room %s: %s\n", roomID, err)
@@ -2058,22 +2076,21 @@ func restartRunner(roomID string) {
 	writeToWebsockets([]byte("RUNNERRESTARTED"), roomID)
 }
 
-func abortContainer(room *room) {
-	logger.Println("Aborting container:", room.container.ID)
+func abortContainer(container *containerDetails) {
+	logger.Println("Aborting container:", container.ID)
 	// Set the restart flag to false so that the reader
 	// doesn't automatically restart when we close the connection
-	room.container.runnerReaderRestart = false
+	container.runnerReaderRestart = false
 	// Close hijacked connection with runner
-	closeContainerConnection(room.container.connection)
+	closeContainerConnection(container.connection)
 	// Remove room container
-	err := stopAndRemoveContainer(room.container.ID)
+	err := stopAndRemoveContainer(container.ID)
 	if err != nil {
 		logger.Println("error in stopping/removing container: ", err)
 	}
 }
 
-// Remove old unused containers/close rooms
-// at an interval
+// Remove empty rooms at an interval
 func startRoomCloser() {
 	const checkInterval = 60 // Time between checks in seconds
 	go func() {
