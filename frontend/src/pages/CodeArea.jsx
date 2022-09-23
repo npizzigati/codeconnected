@@ -1,7 +1,7 @@
 'use strict';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 import PuffLoader from 'react-spinners/PuffLoader';
 
