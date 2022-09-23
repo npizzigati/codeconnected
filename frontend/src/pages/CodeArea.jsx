@@ -725,8 +725,6 @@ function CodeArea () {
       if (setupCanceled.current) {
         return;
       }
-      // Don't use React's navigate here because the user
-      // won't be removed from room participants
       window.location = window.location.origin;
       return;
     }
