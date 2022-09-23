@@ -1,7 +1,7 @@
 'use strict';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 import PuffLoader from 'react-spinners/PuffLoader';
 
@@ -35,7 +35,6 @@ import { handlePointerDown, debounce, changeCSSInnerHeight, setupWindowResizeLis
 // down the server with rooms still open. Currently the client's
 // terminals just freeze.
 function CodeArea () {
-  const navigate = useNavigate();
   const params = useParams();
   const roomID = params.roomID;
   const initialTermRows = 200;
