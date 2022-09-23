@@ -741,11 +741,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		if string(message) == "WSPING" {
 			ws.Write(context.Background(), websocket.MessageText, []byte("WSPONG"))
 		} else {
-			if err := sendToContainer(message, roomID); err != nil {
-				logger.Println(err)
-				logger.Println("trying to reestablish connection")
-				restartRunner(roomID)
-			}
+			sendToContainer(message, roomID)
 		}
 	}
 }
@@ -911,21 +907,18 @@ func writeToWebsockets(text []byte, roomID string) {
 	}
 }
 
-func sendToContainer(message []byte, roomID string) error {
-	var room *room
-	var ok bool
-	if room, ok = rooms[roomID]; !ok {
-		myErr := fmt.Sprintf("room %s does not exist", roomID)
-		return errors.New(myErr)
-		// TODO: Use this error handling wherever room is accessed?
-	}
+func sendToContainer(message []byte, roomID string) {
+	room := rooms[roomID]
 	cn := room.container
-	if _, err := cn.runner.Write(message); err != nil {
-		myErr := fmt.Sprintf("Runner write error: %s", err)
-		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
-		return errors.New(myErr)
+
+	_, err := cn.runner.Write(message)
+	if err == nil {
+		return
 	}
-	return nil
+	logger.Println("runner write error: ", err)
+	logger.Println("trying to reestablish connection")
+	writeToWebsockets([]byte("CONTAINERERROR"), roomID)
+	restartRunner(roomID)
 }
 
 func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
