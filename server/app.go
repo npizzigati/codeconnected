@@ -1883,6 +1883,10 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		linesAddedInCustomNodeLauncher := 1
 		extraLinesBeforeStdOutput := 2
 		totalNewLinesBeforeStdOutput := linesOfCode + linesAddedInCustomNodeLauncher + extraLinesBeforeStdOutput
+		// Add one to total lines to omit if prompt line is not empty
+		if !promptLineEmpty {
+			totalNewLinesBeforeStdOutput += 1
+		}
 		err := room.awaitSideEffect("newline"+strconv.Itoa(totalNewLinesBeforeStdOutput),
 			func() { cn.runner.Write([]byte(".runUserCode code.js\n")) }, 2*time.Second, true)
 		if err != nil {
