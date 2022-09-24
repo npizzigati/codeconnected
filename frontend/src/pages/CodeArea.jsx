@@ -321,7 +321,7 @@ function CodeArea () {
                 title={cmTitle}
                 callback={(ev) => {
                   switchLanguage(ev.target.dataset.value);
-                  // updateCodeSession();
+                  updateCodeSession();
                 }}
                 config={{ staticTitle: true }}
               />
@@ -1191,13 +1191,13 @@ function CodeArea () {
   }
 
   async function updateCodeSession () {
-    console.log('updating code session');
     // Only do this if user is the signed-in creating user since
     // otherwise we don't save sessions, and it is enough to
     // update the editor contents when we switch sessions
     if (!isAuthedCreator.current) {
       return;
     }
+    console.log('updating code session');
     const body = JSON.stringify({ codeSessionID: codeSessionID.current, language: lang.current, content: JSON.stringify(editorContents.current.toJSON()) });
     const options = {
       method: 'POST',
@@ -1376,7 +1376,6 @@ function CodeArea () {
     editorContents.current.set(lang.current, cmRef.current.getValue());
     console.log('editor contents before switch: ' + JSON.stringify(editorContents.current.toJSON()));
     codeOptions.current.set('language', newLang);
-    // TODO: Should I update the code session here?
     const options = {
       method: 'POST',
       mode: 'cors',

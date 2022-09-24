@@ -11,6 +11,7 @@ function CodeSessions ({ authed, setShowAuth }) {
   const [showCSessions, setShowCSessions] = useState(true);
   const navigate = useNavigate();
   const isCanceled = useRef(false);
+  const languageAbbr = { ruby: 'R', node: 'JS', postgres: 'PG' };
   let formattedSessions;
   useEffect(() => {
     (async () => {
@@ -21,7 +22,6 @@ function CodeSessions ({ authed, setShowAuth }) {
     })();
 
     return function cleanup () {
-      console.log('Cleaning up after CodeSessions component');
       isCanceled.current = true;
     };
   }, []);
@@ -96,7 +96,6 @@ function CodeSessions ({ authed, setShowAuth }) {
 
   async function buildSessionList () {
     const { sessionCount, codeSessions } = await getCodeSessions();
-    console.log(JSON.stringify(codeSessions));
     if (isCanceled.current) {
       return;
     }
@@ -127,11 +126,11 @@ function CodeSessions ({ authed, setShowAuth }) {
     }, updateIntervalTime * 1000);
   }
 
-  function getLOC (content) {
-    const lines = content.split('\n');
+  function calculateLines (langContent) {
+    const lines = langContent.split('\n');
 
     // Remove trailing empty lines
-    // First get last line number
+    // First get last line number (index starts at 0)
     let lastLineNum;
     for (let i = lines.length - 1; i >= 0; i--) {
       if (lines[i] !== '') {
@@ -139,7 +138,30 @@ function CodeSessions ({ authed, setShowAuth }) {
         break;
       }
     }
-    return lines.slice(0, lastLineNum + 1).length;
+    return (lastLineNum === undefined) ? 0 : lastLineNum + 1;
+  }
+
+  function getLOC (allContentString) {
+    // JSON.parse will choke on empty string, so manually return
+    // value for that case
+    if (allContentString === '') {
+      return 0;
+    }
+    const LOCArray = [];
+    const allContent = JSON.parse(allContentString);
+    const languageKeys = Object.keys(allContent);
+    // If only one language has content, just return the number
+    // of lines
+    if (languageKeys.length === 1) {
+      return calculateLines(allContent[languageKeys[0]]);
+    }
+    // Else return a string with language abbreviations before
+    // each count
+    Object.keys(allContent).forEach(lang => {
+      const lines = calculateLines(allContent[lang]);
+      LOCArray.push(languageAbbr[lang] + ':' + lines.toString());
+    });
+    return LOCArray.join(' ');
   }
 
   async function launch (language, sessID, content) {
