@@ -1034,6 +1034,10 @@ function CodeArea () {
     term.current.resize(term.current.cols, initialTermRows);
     writeToTerminal(initialHist);
     term.current.onData((data) => {
+      // Ignore all keypresses except ctrl-c if code running
+      if (running.current && data.charCodeAt() !== 3) {
+        return;
+      }
       // If ctrl-l (lowecase L) pressed
       if (data.charCodeAt() === 12) {
         setYjsFlag(flagClear.current);
