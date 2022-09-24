@@ -887,7 +887,11 @@ func startRunnerReader(roomID string) {
 }
 
 func writeToWebsockets(text []byte, roomID string) {
-	room := rooms[roomID]
+	var room *room
+	var ok bool
+	if room, ok = rooms[roomID]; !ok {
+		logger.Println("room does not exist")
+	}
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
 		// Don't write special messages to history
