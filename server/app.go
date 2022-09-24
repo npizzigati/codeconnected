@@ -1977,11 +1977,11 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	logger.Println("Going to update code session")
 	type paramsModel struct {
 		CodeSessionID int
 		Language      string
 		Content       string
+		TimeOnly      bool
 	}
 	var pm paramsModel
 	body, err := io.ReadAll(r.Body)
@@ -1997,7 +1997,9 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		return
 	}
 
-	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content); err != nil {
+	logger.Printf("Going to update code session (timeOnly: %v)\n", pm.TimeOnly)
+
+	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content, pm.TimeOnly); err != nil {
 		logger.Println("error in updating code session: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
@@ -2006,13 +2008,17 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
-func runSessionUpdateQuery(codeSessionID int, language string, content string) error {
-	query := `UPDATE coding_sessions SET when_accessed = $1, lang = $2, editor_contents = $3 WHERE id = $4`
+func runSessionUpdateQuery(codeSessionID int, language string, content string, timeOnly bool) error {
+	var err error
 	currentTime := time.Now().Unix()
-	if _, err := pool.Exec(context.Background(), query, currentTime, language, content, codeSessionID); err != nil {
-		return err
+	if timeOnly {
+		query := `UPDATE coding_sessions SET when_accessed = $1 WHERE id = $2`
+		_, err = pool.Exec(context.Background(), query, currentTime, codeSessionID)
+	} else {
+		query := `UPDATE coding_sessions SET when_accessed = $1, lang = $2, editor_contents = $3 WHERE id = $4`
+		_, err = pool.Exec(context.Background(), query, currentTime, language, content, codeSessionID)
 	}
-	return nil
+	return err
 }
 
 func updateRoomAccessTime(codeSessionID int) {

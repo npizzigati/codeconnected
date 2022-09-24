@@ -321,7 +321,7 @@ function CodeArea () {
                 title={cmTitle}
                 callback={(ev) => {
                   switchLanguage(ev.target.dataset.value);
-                  updateCodeSession();
+                  updateCodeSession({ timeOnly: false });
                 }}
                 config={{ staticTitle: true }}
               />
@@ -909,6 +909,7 @@ function CodeArea () {
     startAutoSaver();
     startOnlineChecker();
     startWebsocketConnectionPinger();
+    startCodeSessionTimeUpdater();
     setupDoneTimestamp = Date.now();
     setupDone.current = true;
   }
@@ -950,6 +951,16 @@ function CodeArea () {
       setShowRoomClosedDialog(true);
       setShowSpinner(false);
     }
+  }
+
+  function startCodeSessionTimeUpdater () {
+    setTimeout(() => {
+      updateCodeSession({ timeOnly: true });
+    }, 20 * 1000);
+    // Also update time when user leaves code page
+    window.addEventListener('beforeunload', () => updateCodeSession({ timeOnly: true }));
+    // For iOS
+    window.addEventListener('pagehide', () => updateCodeSession({ timeOnly: true }));
   }
 
   /**
@@ -1002,7 +1013,7 @@ function CodeArea () {
             return;
           }
           editorContents.current.set(lang.current, cmRef.current.getValue());
-          updateCodeSession();
+          updateCodeSession({ timeOnly: false });
         }, 2000);
       });
     }
@@ -1194,7 +1205,7 @@ function CodeArea () {
     cmRef.current.setOption('mode', cmLangMode);
   }
 
-  async function updateCodeSession () {
+  async function updateCodeSession ({ timeOnly }) {
     // Only do this if user is the signed-in creating user since
     // otherwise we don't save sessions, and it is enough to
     // update the editor contents when we switch sessions
@@ -1202,7 +1213,12 @@ function CodeArea () {
       return;
     }
     console.log('updating code session');
-    const body = JSON.stringify({ codeSessionID: codeSessionID.current, language: lang.current, content: JSON.stringify(editorContents.current.toJSON()) });
+    const body = JSON.stringify({
+      codeSessionID: codeSessionID.current,
+      language: lang.current,
+      content: JSON.stringify(editorContents.current.toJSON()),
+      timeOnly
+    });
     const options = {
       method: 'POST',
       mode: 'cors',
