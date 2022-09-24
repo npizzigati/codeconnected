@@ -1883,7 +1883,8 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		linesAddedInCustomNodeLauncher := 1
 		extraLinesBeforeStdOutput := 2
 		totalNewLinesBeforeStdOutput := linesOfCode + linesAddedInCustomNodeLauncher + extraLinesBeforeStdOutput
-		// Add one to total lines to omit if prompt line is not empty
+		// Add one to total lines to omit if prompt line is not
+		// empty, since ctrl-c before run will add a line
 		if !promptLineEmpty {
 			totalNewLinesBeforeStdOutput += 1
 		}
