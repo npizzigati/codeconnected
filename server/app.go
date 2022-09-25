@@ -72,6 +72,7 @@ type room struct {
 	lang             string
 	codeSessionID    int
 	initialContent   string
+	replVersionInfo  string
 	echo             bool
 	runTimeoutTimer  *time.Timer
 	abortRunChan     chan struct{}
@@ -151,11 +152,6 @@ func (r *room) awaitSideEffect(sideEffectEvent string, funcWithSideEffect func()
 var cli *client.Client
 var rooms = make(map[string]*room)
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESS_STORE_SECRET")))
-var welcomeMessages = map[string][]byte{
-	"ruby":     []byte(""),
-	"node":     []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n"),
-	"postgres": []byte("psql\r\nType \"help\" for help.\r\n"),
-}
 var initialPrompts = map[string][]byte{
 	"ruby":     []byte("[1] pry(main)> "),
 	"node":     []byte("> "),
@@ -1186,6 +1182,10 @@ func attemptLangConn(lang, roomID string) error {
 		return containerExecCreateError{dockerErrMessage: err.Error()}
 	}
 
+	if room.replVersionInfo, err = getReplVersionInfo(lang, cn.ID); err != nil {
+		logger.Println("Error getting repl version:", err)
+	}
+
 	cn.connection, err = cli.ContainerExecAttach(ctx,
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
@@ -1199,21 +1199,107 @@ func attemptLangConn(lang, roomID string) error {
 	return nil
 }
 
+func getReplVersionInfo(lang string, containerID string) (string, error) {
+	var cmd []string
+	switch lang {
+	case "node":
+		cmd = []string{"node", "-v"}
+	case "postgres":
+		cmd = []string{"psql", "--version"}
+	default:
+		return "", nil
+	}
+	execOpts := types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          cmd,
+	}
+
+	resp, err := cli.ContainerExecCreate(context.Background(), containerID, execOpts)
+	if err != nil {
+		return "", err
+	}
+
+	connection, err := cli.ContainerExecAttach(context.Background(),
+		resp.ID, types.ExecStartCheck{})
+	if err != nil {
+		return "", err
+	}
+	defer connection.Close()
+
+	output := make([]byte, 0, 512)
+	// Get 8-byte header of multiplexed stdout/stderr stream
+	// and then read data, and repeat until EOF
+	for {
+		h := make([]byte, 8)
+		_, err := connection.Reader.Read(h)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+
+		// First byte indicates stdout or stderr
+		// var streamType string
+		// if h[0] == 2 {
+		// 	streamType = "stderr"
+		// } else {
+		// 	streamType = "stdout"
+		// }
+
+		// Last 4 bytes represent uint32 size
+		size := h[4] + h[5] + h[6] + h[7]
+		b := make([]byte, size)
+		_, err = connection.Reader.Read(b)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+
+		output = append(output, b...)
+	}
+
+	return string(bytes.TrimSpace(output)), nil
+}
+
+func getWelcomeMessage(roomID, lang string) []byte {
+	// var welcomeMessages = map[string][]byte{
+	// 	"ruby":     []byte(""),
+	// 	"node":     []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n"),
+	// 	"postgres": []byte("psql\r\nType \"help\" for help.\r\n"),
+	// }
+	var welcomeMessage []byte
+	switch lang {
+	case "ruby":
+		welcomeMessage = []byte("")
+	case "node":
+		versionInfo := rooms[roomID].replVersionInfo
+		welcomeMessage = []byte(fmt.Sprintf("Welcome to Node.js %s.\r\nType \".help\" for more information.\r\n", versionInfo))
+	case "postgres":
+		versionInfo := rooms[roomID].replVersionInfo
+		welcomeMessage = []byte(fmt.Sprintf("%s\r\nType \"help\" for help.\r\n", versionInfo))
+	}
+	return welcomeMessage
+}
+
 func displayInitialPrompt(roomID string, welcome bool, promptNum string) {
 	lang := rooms[roomID].lang
 	var message, intro []byte
 	switch lang {
 	case "ruby":
-		intro = welcomeMessages["ruby"]
+		intro = getWelcomeMessage(roomID, "ruby")
 		// Replace line number with correct line number (i.e., it's
 		// not always 1, as in when we interrupt execution due to
 		// timeout and then print prompt)
 		message = bytes.Replace(initialPrompts["ruby"], []byte("1"), []byte(promptNum), 1)
 	case "node":
-		intro = welcomeMessages["node"]
+		intro = getWelcomeMessage(roomID, "node")
 		message = initialPrompts["node"]
 	case "postgres":
-		intro = welcomeMessages["postgres"]
+		intro = getWelcomeMessage(roomID, "postgres")
 		message = initialPrompts["postgres"]
 	}
 	if welcome {
