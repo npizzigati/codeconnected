@@ -450,10 +450,7 @@ function CodeArea () {
     participantDetails.set('lastRollCall', currentTime);
     participantDetails.set('joinTime', currentTime);
     const stringID = ydoc.current.clientID.toString();
-    // Only add participant if they are not in the map already
-    if (participants.current.get(stringID) === undefined) {
-      participants.current.set(stringID, participantDetails);
-    }
+    participants.current.set(stringID, participantDetails);
     // Remove participant immediately if user leaves room. Note
     // that this doesn't handle the case of a user leaving room
     // because of losing the connection or device sleeping --
