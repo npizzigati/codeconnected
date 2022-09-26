@@ -11,7 +11,6 @@ function CodeSessions ({ authed, setShowAuth }) {
   const [showCSessions, setShowCSessions] = useState(true);
   const navigate = useNavigate();
   const isCanceled = useRef(false);
-  const languageAbbr = { ruby: 'R', node: 'JS', postgres: 'PG' };
   let formattedSessions;
   useEffect(() => {
     (async () => {
@@ -45,7 +44,7 @@ function CodeSessions ({ authed, setShowAuth }) {
                   <div className='table'>
                     <div className='table-row table-row--heading'>
                       <h4 className='table-cell table-cell--heading u-width-2'></h4>
-                      <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
+                      <h4 className='table-cell table-cell--heading u-width-1'>Lines of Code</h4>
                       <h4 className='table-cell table-cell--heading'>Last Accessed</h4>
                     </div>
                     {cSessions}
@@ -74,7 +73,7 @@ function CodeSessions ({ authed, setShowAuth }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className='table-cell'>&nbsp;{langNameTrans(cSession.lang)}</span>
+        <span className='table-cell'>&nbsp;&nbsp;<span className='u-pad-right-nano'>{getLangIcon(cSession.lang)}</span>{langNameTrans(cSession.lang)}</span>
         <span className='table-cell'>{getLOC(cSession.content)}</span>
         <span className='table-cell'>{dateTrans(cSession.when_accessed)}</span>
       </p>
@@ -147,7 +146,6 @@ function CodeSessions ({ authed, setShowAuth }) {
     if (allContentString === '') {
       return 0;
     }
-    const LOCArray = [];
     const allContent = JSON.parse(allContentString);
     const languageKeys = Object.keys(allContent);
     // If only one language has content, just return the number
@@ -155,13 +153,52 @@ function CodeSessions ({ authed, setShowAuth }) {
     if (languageKeys.length === 1) {
       return calculateLines(allContent[languageKeys[0]]);
     }
-    // Else return a string with language abbreviations before
+    // Else return a span with language before
     // each count
+    const LOCArray = [];
     Object.keys(allContent).forEach(lang => {
       const lines = calculateLines(allContent[lang]);
-      LOCArray.push(languageAbbr[lang] + ':' + lines.toString());
+      if (lines === 0) {
+        return;
+      }
+      LOCArray.push({ lang, LOC: lines.toString() });
     });
-    return LOCArray.join(' ');
+    // If multiple languages were present in content string, but
+    // none of those languages had any lines, the array will be
+    // empty; in this case return a 0
+    if (LOCArray.length === 0) {
+      return 0;
+    }
+    // Sort so languages appear in same order for each entry
+    LOCArray.sort((a, b) => {
+      if (a.lang > b.lang) {
+        return -1;
+      } else if (a.lang < b.lang) {
+        return 1;
+      }
+      return 0;
+    });
+    // Use icons instead of language names
+    const formattedLOC = LOCArray.map((entry, i) =>
+      <span
+        key={i}
+      >
+        {getLangIcon(entry.lang)}
+        <span>{entry.LOC}&nbsp;</span>
+      </span>
+    );
+    return formattedLOC;
+  }
+
+  function getLangIcon (lang) {
+    switch (lang) {
+    case 'ruby':
+      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/ruby.png' alt='Ruby icon' />;
+    case 'node':
+      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/js.png' alt='Ruby icon' />;
+    case 'postgres':
+      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/postgres.png' alt='Ruby icon' />;
+    }
   }
 
   async function launch (language, sessID, content) {

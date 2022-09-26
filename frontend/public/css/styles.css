@@ -424,10 +424,9 @@ body.is-resizing {
 }
 
 .table-cell:not(.table-cell--heading) {
-    background-color: #eeeeee;
-    border: solid 1px white;
+    background-color: white;
+    border: solid 1px #336791;
     border-style: solid none;
-    padding-left: 0.3em;
     padding-top: 0.2em;
 }
 
@@ -445,7 +444,7 @@ body.is-resizing {
 }
 
 .table-cell.shade {
-    background-color: #e4e4e4;
+    background-color: #fafafa;
 }
 
 .sign-in-link {
