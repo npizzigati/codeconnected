@@ -238,7 +238,7 @@ body.is-resizing {
     flex: 1;
     padding: 0.5em 0.5em 0.5em;
     background: #1d252c;
-    box-shadow: 0 1px 5px 2px #444;
+    box-shadow: 0 1px 2px 1px #444;
     /* border-bottom: 1px solid #777; */
 }
 
@@ -253,7 +253,7 @@ body.is-resizing {
 #home > footer {
     flex: 1;
     background: #1d252c;
-    box-shadow: 0 -2px 2px 2px #444;
+    box-shadow: 0 -1px 1px 1px #444;
     display: flex;
     align-items: center;
     justify-content: center;
