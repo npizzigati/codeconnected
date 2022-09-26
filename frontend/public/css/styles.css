@@ -527,6 +527,8 @@ body.is-resizing {
 .popup-dialog__text {
     font-family: 'Lato', sans-serif;
     font-size: 1.3em;
+    text-align: center;
+    display: inline-block;
 }
 
 .popup-dialog__text--small {

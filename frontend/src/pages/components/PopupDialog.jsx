@@ -20,14 +20,12 @@ function PopupDialog ({ config }) {
             />
           </div>
           <div className='media__text media__text--constrained'>
-            <div>
-              <span className='popup-dialog__text'>
-                {config.message.text}
-              </span>
-            </div>
+            <span className='popup-dialog__text'>
+              {config.message.text}
+            </span>
           </div>
         </div>
-        <div className='aligned-block'>
+        <div className='aligned-block u-pad-left-12'>
           {buildOptionRows()}
         </div>
       </div>
