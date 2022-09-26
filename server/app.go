@@ -1112,11 +1112,11 @@ loop:
 			case containerExecCreateError:
 				// This is a fatal error for this open language
 				// connection process -- stopped or inexistent
-				// container
-				logger.Println("unable to create exec process:", err)
+				// container -- so we break loop
+				logger.Println("Unable to create exec process:", err)
 				break loop
 			case containerExecAttachError:
-				logger.Println("unable to start/attach to exec process: ", err)
+				logger.Println("Unable to start/attach to exec process:", err)
 			}
 		}
 		select {
@@ -1199,6 +1199,20 @@ func attemptLangConn(lang, roomID string) error {
 	return nil
 }
 
+// Determine whether the output from the command is actually a
+// repl version, and not some other text returned from the
+// command (e.g., a shell error message)
+func isReplVersionSane(lang string, output []byte) bool {
+	var match bool
+	switch lang {
+	case "node":
+		match, _ = regexp.Match(`^v\d{1,3}\.\d{1,3}(?:\.\d{1,3})?$`, output)
+	case "postgres":
+		match, _ = regexp.Match(`^psql.*\d{1,3}\.\d{1,3}(?:\.\d{1,3}).*$`, output)
+	}
+	return match
+}
+
 func getReplVersionInfo(lang string, containerID string) (string, error) {
 	var cmd []string
 	switch lang {
@@ -1209,6 +1223,20 @@ func getReplVersionInfo(lang string, containerID string) (string, error) {
 	default:
 		return "", nil
 	}
+	var output []byte
+	var err error
+	if output, err = executeSingleCmdInContainer(containerID, cmd); err != nil {
+		return "", err
+	}
+	trimmedOutput := bytes.TrimSpace(output)
+	if isReplVersionSane(lang, trimmedOutput) {
+		return string(trimmedOutput), nil
+	} else {
+		return "", errors.New("Repl version is not sane")
+	}
+}
+
+func executeSingleCmdInContainer(containerID string, cmd []string) ([]byte, error) {
 	execOpts := types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -1217,13 +1245,13 @@ func getReplVersionInfo(lang string, containerID string) (string, error) {
 
 	resp, err := cli.ContainerExecCreate(context.Background(), containerID, execOpts)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	connection, err := cli.ContainerExecAttach(context.Background(),
 		resp.ID, types.ExecStartCheck{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer connection.Close()
 
@@ -1237,7 +1265,7 @@ func getReplVersionInfo(lang string, containerID string) (string, error) {
 			break
 		}
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		// First byte indicates stdout or stderr
@@ -1256,13 +1284,12 @@ func getReplVersionInfo(lang string, containerID string) (string, error) {
 			break
 		}
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		output = append(output, b...)
 	}
-
-	return string(bytes.TrimSpace(output)), nil
+	return output, nil
 }
 
 func getWelcomeMessage(roomID, lang string) []byte {
@@ -1272,15 +1299,22 @@ func getWelcomeMessage(roomID, lang string) []byte {
 	// 	"postgres": []byte("psql\r\nType \"help\" for help.\r\n"),
 	// }
 	var welcomeMessage []byte
+	replVersionInfo := rooms[roomID].replVersionInfo
 	switch lang {
 	case "ruby":
 		welcomeMessage = []byte("")
 	case "node":
-		versionInfo := rooms[roomID].replVersionInfo
-		welcomeMessage = []byte(fmt.Sprintf("Welcome to Node.js %s.\r\nType \".help\" for more information.\r\n", versionInfo))
+		insertion := ""
+		if replVersionInfo != "" {
+			insertion = " " + replVersionInfo
+		}
+		welcomeMessage = []byte(fmt.Sprintf("Welcome to Node.js%s.\r\nType \".help\" for more information.\r\n", insertion))
 	case "postgres":
-		versionInfo := rooms[roomID].replVersionInfo
-		welcomeMessage = []byte(fmt.Sprintf("%s\r\nType \"help\" for help.\r\n", versionInfo))
+		insertion := "psql (PostgreSQL)\r\n"
+		if replVersionInfo != "" {
+			insertion = replVersionInfo + "\r\n"
+		}
+		welcomeMessage = []byte(fmt.Sprintf("%sType \"help\" for help.\r\n", insertion))
 	}
 	return welcomeMessage
 }
