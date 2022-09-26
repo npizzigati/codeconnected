@@ -1625,6 +1625,10 @@ body.is-resizing {
     padding-bottom: 1.2em;
 }
 
+.u-pad-right-nano {
+    padding-right: 0.1em;
+}
+
 .u-pad-right-1 {
     padding-right: 0.3em;
 }
