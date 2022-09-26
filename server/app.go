@@ -332,7 +332,7 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		[]string{
 			"SELECT id, lang, editor_contents, when_accessed",
 			"FROM coding_sessions WHERE user_id = $1",
-			"ORDER BY when_accessed DESC LIMIT 5"}
+			"ORDER BY when_accessed DESC LIMIT 10"}
 	query := strings.Join(queryLines, " ")
 	rows, err := pool.Query(context.Background(), query, userID)
 	if err != nil {
