@@ -216,10 +216,6 @@ body.is-resizing {
 }
 
 #home {
-    display: flex;
-    flex-direction: column;
-    /* background-color: var(--main-bg-color); */
-    /* background: no-repeat url("./circuit-board.jpg"); */
     background-size: cover;
     height: var(--inner-height);
     /* Don't show scrollbars on Firefox*/
@@ -235,28 +231,36 @@ body.is-resizing {
 
 #home > header {
     display: flex;
-    flex: 1;
-    padding: 0.5em 0.5em 0.5em;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4em;
+    padding: 0.4em 0.7em 0.5em 0.5em;
     background: #0f162c;
-    box-shadow: 0 1px 2px 1px #444;
-    /* border-bottom: 1px solid #777; */
+    background: linear-gradient(#0f162c, #162141);
+    box-shadow: 0 1px 4px 1px #162141;
 }
 
 #home > main {
-    flex: 10;
+    padding: 0 2em;
     display: flex;
     flex-direction: column;
     gap: 2em;
-    margin: 1em 1em 0;
+    margin: 5em 1em 1em;
 }
 
 #home > footer {
-    flex: 1;
+    position: fixed;
+    bottom: 0;
+    height: 2em;
+    width: 100%;
     background: #19254a;
-    box-shadow: 0 -1px 1px 1px #444;
+    box-shadow: 0 -1px 1px 1px #11224a;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-top: 0.1em;
     opacity: 1;
     transition: opacity 0.3s;
 }
@@ -268,11 +272,12 @@ body.is-resizing {
     color: #b7b7b7;
 }
 
+.message--small {
+    font-size: 0.8em;
+}
+
 .message--micro {
-    display: inline;
-    font-family: 'Lato', sans-serif;
     font-size: 0.5em;
-    color: #b7b7b7;
 }
 
 .image-link {
@@ -1702,6 +1707,14 @@ body.is-resizing {
 }
 
 .u-clickable {
+    cursor: pointer;
+}
+
+.u-no-wrap {
+    white-space: nowrap;
+}
+
+.u-cursor-pointer {
     cursor: pointer;
 }
 

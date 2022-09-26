@@ -38,7 +38,7 @@ function CodeSessions ({ authed, setShowAuth }) {
     <div className='flex-container flex-container--col'>
       {authed
         ? <div>
-            <h1 className='u-center-text u-marg-top-3 u-marg-bot-2 '>Resume a session</h1>
+            <h1 className='u-center-text u-marg-top-1 u-marg-bot-1'>Resume a session</h1>
             {showCSessions
               ? <div className='table-wrapper'>
                   <div className='table'>

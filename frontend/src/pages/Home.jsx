@@ -118,7 +118,7 @@ function Home () {
             </div>
           </CSSTransition>
           <header>
-            <div className='flex-pane'>
+            <div className='flex-pane flex-container flex-container--vert-centered'>
               <div className='media u-marg-left-1'>
                 <div className='media__image-container'>
                   <img className='media__image media__image--small u-marg-top-2' src='./images/codeconnected.png' alt='Logo' />
@@ -134,11 +134,11 @@ function Home () {
                 </div>
               </div>
             </div>
-            <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered u-marg-right-2'>
+            <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered'>
               {auth
-                ? <div className='u-marg-left-auto'><UserQuickdash setAuthed={setAuth} /></div>
+                ? <div><UserQuickdash setAuthed={setAuth} /></div>
                 : <div
-                    className='sign-in-link u-marg-left-auto'
+                    className='sign-in-link'
                     onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
                   >
                     Sign in
@@ -156,7 +156,7 @@ function Home () {
                     className='list-item'
                   >
                     <div
-                      className='media media--with-background media--centered media--constrained'
+                      className='media media--with-background media--centered media--constrained u-cursor-pointer'
                       onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
                     >
                       <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
@@ -173,7 +173,7 @@ function Home () {
                     className='list-item'
                   >
                     <div
-                      className='media media--with-background media--centered media--constrained'
+                      className='media media--with-background media--centered media--constrained u-cursor-pointer'
                       onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
                     >
                       <div className='media__image-container'>
@@ -190,7 +190,7 @@ function Home () {
                     className='list-item'
                   >
                     <div
-                      className='media media--with-background media--centered media--constrained'
+                      className='media media--with-background media--centered media--constrained u-cursor-pointer'
                       onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
                     >
                       <div className='media__image-container'>
@@ -213,15 +213,15 @@ function Home () {
             </div>
           </main>
           <footer ref={footerDomRef}>
-            <div className='media u-pad-bot-4'>
+            <div className='media u-pad-bot-1'>
               <div className='media__text'>
-                <div className='site-name'>
-                  <span className='site-name site-name--color1 site-name--micro'>code</span>
-                  <span className='site-name site-name--color2 site-name--micro'>connected</span>
-                  <span className='message--micro'>&nbsp;is open source software</span>
+                <div className='u-no-wrap'>
+                  <span className='site-name site-name--color1 site-name--small'>code</span>
+                  <span className='site-name site-name--color2 site-name--small'>connected</span>
+                  <span className='message'>&nbsp;is open source software</span>
                 </div>
               </div>
-              <div className='media__image-container u-pad-top-2'>
+              <div className='media__image-container'>
                 <a className='image-link' href='https://github.com/npizzigati/codeconnected' />
               </div>
             </div>
@@ -235,6 +235,7 @@ function Home () {
    * (Before fix, footer was not always fixed at bottom of
    * screen.) Hide quickly and then show (fade in) footer
    * when changing screen size, to avoid flickering
+   * TODO: Check whether this fix is still necessary, since footer is now fixed
    */
   function fixViewport () {
     if (footerDomRef.current === null) {
