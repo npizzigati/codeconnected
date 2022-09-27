@@ -391,27 +391,33 @@ function CodeArea () {
    * Reset codemirror, terminal panes to sane widths
    */
   function sanelyAdjustPanelWidths () {
+    console.log('Sanely adjusting panel widths');
     if (cmContainerDomRef.current === null || termContainerDomRef === null) {
       return;
     }
     const currentCmWidth = cmContainerDomRef.current.offsetWidth;
+    console.log('currentCmWidth: ' + currentCmWidth);
     const currentTermWidth = termContainerDomRef.current.offsetWidth;
+    console.log('currentTermWidth: ' + currentTermWidth);
     const totalWidth = currentCmWidth + currentTermWidth;
     const totalMinWidth = minCmWidth + minTermWidth;
     // If no user-resizing is possible (panel widths total more
     // than total possible minimum widths), set panels to equal
     // half width
     if (totalWidth < totalMinWidth) {
+      console.log('no user resizing possible; setting to half width')
       const halfWidthString = pixelfy((currentCmWidth + currentTermWidth) / 2, true);
       cmContainerDomRef.current.style.width = halfWidthString;
       termContainerDomRef.current.style.width = halfWidthString;
+    // Otherwise set either pane that is below the minimum to its
+    // minimum width
     } else if (currentCmWidth < minCmWidth) {
-      // Otherwise set either pane that is below the minimum to its
-      // minimum width
+      console.log('cm width too narrow -- expanding')
       const delta = minCmWidth - currentCmWidth;
       termContainerDomRef.current.style.width = pixelfy(currentTermWidth - delta, true);
       cmContainerDomRef.current.style.width = pixelfy(minCmWidth, true);
     } else if (currentTermWidth < minTermWidth) {
+      console.log(' width too narrow -- expanding');
       const delta = minTermWidth - currentTermWidth;
       cmContainerDomRef.current.style.width = pixelfy(currentCmWidth - delta, true);
       termContainerDomRef.current.style.width = pixelfy(minTermWidth, true);
