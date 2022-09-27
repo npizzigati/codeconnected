@@ -218,15 +218,11 @@ body.is-resizing {
 #home {
     background-size: cover;
     height: var(--inner-height);
-    /* Don't show scrollbars on Firefox*/
-    scrollbar-width: none;
+    scrollbar-width: auto;
 }
 
-/* Don't show scrollbars on home page */
-/* Works on Chrome, Edge, and Safari */
 #home::-webkit-scrollbar {
-    height: 0px;
-    width: 0px;
+    width: 5px;
 }
 
 #home > header {
@@ -709,6 +705,7 @@ body.is-resizing {
 #code-area {
     background: var(--code-area-bg-color);
     height: var(--inner-height);
+    overflow: hidden;
 }
 
 #code-area.hidden {
@@ -729,13 +726,44 @@ body.is-resizing {
 }
 
 #code-area > main {
-    /* flex: 20; */
     height: calc(var(--inner-height) - var(--code-area-header-height) - var(--code-area-header-padding-top) - var(--code-area-bottom-margin));
-    display: flex;
     padding: 0.5em;
     /* Prevent default touch actions (this allows resizing the panes
        to work with the resize bar, among other things) */
     touch-action: none;
+}
+
+/* Scrollbar rules */
+/* Works on Firefox */
+#code-area, #code-area * {
+  scrollbar-width: thin;
+  scrollbar-color: #1d252c;
+}
+
+/* Works on Chrome, Edge, and Safari */
+code-area *::-webkit-scrollbar {
+    height: 5px;
+    width: 0px;
+}
+
+/* Remove white dot in corner */
+code-area *::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+/* Track */
+code-area *::-webkit-scrollbar-track {
+  background: black;
+}
+
+/* Handle */
+code-area *::-webkit-scrollbar-thumb {
+  background: #1d252c;
+}
+
+/* Handle on hover */
+code-area *::-webkit-scrollbar-thumb:hover {
+  background: #2f3e54;
 }
 
 #code-area .user-quickdash {
@@ -1384,38 +1412,6 @@ body.is-resizing {
     width: 2px;
     border-right: 2px gray dotted;
     border-left: 2px gray dotted;
-}
-
-/* Works on Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #1d252c;
-}
-
-/* Works on Chrome, Edge, and Safari */
-::-webkit-scrollbar {
-    height: 5px;
-    width: 0px;
-}
-
-/* Remove white dot in corner */
-::-webkit-scrollbar-corner {
-    background-color: transparent;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: black;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: #1d252c;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #2f3e54;
 }
 
 .react-css-transition-popup-dialog-enter {
