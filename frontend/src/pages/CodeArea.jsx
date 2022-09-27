@@ -136,7 +136,7 @@ function CodeArea () {
   const roomClosedDialogConfig = {
     message: {
       icon: { path: './images/attention.png', alt: 'Attention' },
-      text: 'This session was closed or could not be opened.'
+      text: 'This session could not be opened.'
     },
     options: [
       {
