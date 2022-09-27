@@ -233,8 +233,7 @@ body.is-resizing {
     right: 0;
     height: 4em;
     padding: 0.4em 0.7em 0.5em 0.5em;
-    background: #0f162c;
-    background: linear-gradient(#0f162c, #162141);
+    background: linear-gradient(#0d1117, #364761);
     box-shadow: 0 1px 4px 1px #162141;
 }
 
@@ -251,8 +250,8 @@ body.is-resizing {
     bottom: 0;
     height: 2em;
     width: 100%;
-    background: #19254a;
-    box-shadow: 0 -1px 1px 1px #11224a;
+    background: #dddfe4;
+    border-top: 1px solid #364761;
     display: flex;
     align-items: center;
     justify-content: center;
