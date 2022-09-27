@@ -1199,18 +1199,25 @@ func attemptLangConn(lang, roomID string) error {
 	return nil
 }
 
-// Determine whether the output from the command is actually a
-// repl version, and not some other text returned from the
-// command (e.g., a shell error message)
-func isReplVersionSane(lang string, output []byte) bool {
-	var match bool
+func extractVersion(lang string, text []byte) ([]byte, error) {
+	var re *regexp.Regexp
+	var err error
 	switch lang {
+	case "ruby":
+		re, err = regexp.Compile(`^ruby\s\d{1,3}\.\d{1,3}(?:\.\d{1,3})?`)
 	case "node":
-		match, _ = regexp.Match(`^v\d{1,3}\.\d{1,3}(?:\.\d{1,3})?$`, output)
+		re, err = regexp.Compile(`^v\d{1,3}\.\d{1,3}(?:\.\d{1,3})?`)
 	case "postgres":
-		match, _ = regexp.Match(`^psql.*\d{1,3}\.\d{1,3}(?:\.\d{1,3}).*$`, output)
+		re, err = regexp.Compile(`^psql\s\(PostgreSQL\)\s\d{1,3}\.\d{1,3}(?:\.\d{1,3})?`)
 	}
-	return match
+	if err != nil {
+		return nil, err
+	}
+	match := re.Find(text)
+	if match == nil {
+		return nil, errors.New("text does not contain version number")
+	}
+	return match, nil
 }
 
 func getReplVersionInfo(lang string, containerID string) (string, error) {
@@ -1220,6 +1227,8 @@ func getReplVersionInfo(lang string, containerID string) (string, error) {
 		cmd = []string{"node", "-v"}
 	case "postgres":
 		cmd = []string{"psql", "--version"}
+	case "ruby":
+		cmd = []string{"ruby", "--version"}
 	default:
 		return "", nil
 	}
@@ -1229,10 +1238,11 @@ func getReplVersionInfo(lang string, containerID string) (string, error) {
 		return "", err
 	}
 	trimmedOutput := bytes.TrimSpace(output)
-	if isReplVersionSane(lang, trimmedOutput) {
-		return string(trimmedOutput), nil
+	versionInfo, err := extractVersion(lang, trimmedOutput)
+	if err != nil {
+		return "", err
 	} else {
-		return "", errors.New("Repl version is not sane")
+		return string(versionInfo), nil
 	}
 }
 
@@ -1293,16 +1303,15 @@ func executeSingleCmdInContainer(containerID string, cmd []string) ([]byte, erro
 }
 
 func getWelcomeMessage(roomID, lang string) []byte {
-	// var welcomeMessages = map[string][]byte{
-	// 	"ruby":     []byte(""),
-	// 	"node":     []byte("Welcome to Node.js.\r\nType \".help\" for more information.\r\n"),
-	// 	"postgres": []byte("psql\r\nType \"help\" for help.\r\n"),
-	// }
 	var welcomeMessage []byte
 	replVersionInfo := rooms[roomID].replVersionInfo
 	switch lang {
 	case "ruby":
-		welcomeMessage = []byte("")
+		insertion := ""
+		if replVersionInfo != "" {
+			insertion = replVersionInfo + "\r\n"
+		}
+		welcomeMessage = []byte(insertion)
 	case "node":
 		insertion := ""
 		if replVersionInfo != "" {
