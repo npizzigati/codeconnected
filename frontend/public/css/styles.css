@@ -725,6 +725,7 @@ body.is-resizing {
 }
 
 #code-area > main {
+    display: flex;
     height: calc(var(--inner-height) - var(--code-area-header-height) - var(--code-area-header-padding-top) - var(--code-area-bottom-margin));
     padding: 0.5em;
     /* Prevent default touch actions (this allows resizing the panes
