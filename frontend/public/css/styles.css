@@ -62,7 +62,35 @@ body {
     font-size: calc(0.5em + 1vh);
     user-select: none;
     -webkit-user-select: none;
+    overflow: hidden;
 }
+
+/* Scrollbar rules */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 0;
+}
+
+/* Remove white dot in corner */
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #e2e1ef;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #a4a4ae;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #bbbbc6;
+}
+
 
 /* Prevent text from being selected when user is resizing code
    containers */
@@ -219,10 +247,6 @@ body.is-resizing {
     background-size: cover;
     height: var(--inner-height);
     scrollbar-width: auto;
-}
-
-#home::-webkit-scrollbar {
-    width: 5px;
 }
 
 #home > header {
@@ -735,7 +759,7 @@ body.is-resizing {
 
 /* Scrollbar rules */
 /* Works on Firefox */
-#code-area, #code-area * {
+code-area * {
   scrollbar-width: thin;
   scrollbar-color: #1d252c;
 }

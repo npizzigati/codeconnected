@@ -19,7 +19,9 @@ function Home () {
   const [showPreLaunchDialog, setShowPreLaunchDialog] = useState(false);
   const isPreLaunchDialogVisible = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const mainDomRef = useRef(null);
   const footerDomRef = useRef(null);
+  const headerDomRef = useRef(null);
   const authDialogDomRef = useRef(null);
   const preLaunchDialogDomRef = useRef(null);
   const navigate = useNavigate();
@@ -46,7 +48,15 @@ function Home () {
       setAuth(userInfo.auth);
       setAuthChecked(true);
       changeCSSInnerHeight();
-      setupWindowResizeListener(fixViewport);
+      setupWindowResizeListener(() => {
+        fixViewport();
+        debounce(hideOrShowScrollbar, 300);
+      });
+
+      const resizeObserver = new ResizeObserver(() => {
+        hideOrShowScrollbar();
+      });
+      resizeObserver.observe(mainDomRef.current);
     })();
 
     // Fire custom events on keydown
@@ -117,7 +127,7 @@ function Home () {
               <PopupDialog config={popupDialogConfig} />
             </div>
           </CSSTransition>
-          <header>
+          <header ref={headerDomRef}>
             <div className='flex-pane flex-container flex-container--vert-centered'>
               <div className='media u-marg-left-1'>
                 <div className='media__image-container'>
@@ -145,7 +155,7 @@ function Home () {
                   </div>}
             </div>
           </header>
-          <main>
+          <main ref={mainDomRef}>
             <div className='flex-pane flex-pane--narrow'>
               <div className='flex-container flex-container--col'>
                 <div>
@@ -248,6 +258,26 @@ function Home () {
       footerDomRef.current.style.visibility = 'visible';
       footerDomRef.current.style.opacity = 1;
     }, 250);
+  }
+
+  /**
+   * Since we add a margin to the top and bottom of the text area
+   * of the page so that the viewable area will never be under
+   * the fixed header or footer, there is always overflow. This
+   * function will show the scrollbar if necessary (when there is
+   * really text that needs to be scrolled to, and hide it otherwise)
+   */
+  function hideOrShowScrollbar () {
+    if (window === null || footerDomRef.current === null || headerDomRef.current === null || mainDomRef.current === null) {
+      return;
+    }
+    if (window.innerHeight - footerDomRef.current.clientHeight - headerDomRef.current.clientHeight < mainDomRef.current.clientHeight) {
+      document.body.style.overflow = 'scroll';
+    } else {
+      document.body.style.overflow = 'hidden';
+      // Scroll to top to avoid any text being hidden under header
+      window.scrollTo({ top: 0 });
+    }
   }
 
   function fireKeydownEvents (event) {
