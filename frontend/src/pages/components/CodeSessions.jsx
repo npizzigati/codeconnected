@@ -6,20 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { requestRoom } from '../../helpers/launchUtils.js';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
 
-function CodeSessions ({ authed, setShowAuth }) {
+function CodeSessions ({ authed }) {
   const [cSessions, setCSessions] = useState([]);
   const [showCSessions, setShowCSessions] = useState(true);
   const navigate = useNavigate();
   const isCanceled = useRef(false);
+  const sessionsPlaceholder = buildSessionsPlaceholder();
   let formattedSessions;
   useEffect(() => {
-    (async () => {
-      if (!authed) {
-        return;
-      }
-      buildSessionList();
-    })();
-
     return function cleanup () {
       isCanceled.current = true;
     };
@@ -38,31 +32,40 @@ function CodeSessions ({ authed, setShowAuth }) {
     <div className='flex-container flex-container--col'>
       {authed
         ? <div>
-            <h1 className='u-center-text u-marg-top-1 u-marg-bot-1'>Resume a session</h1>
             {showCSessions
               ? <div className='table-wrapper'>
                   <div className='table'>
                     <div className='table-row table-row--heading'>
                       <h4 className='table-cell table-cell--heading u-width-2'></h4>
-                      <h4 className='table-cell table-cell--heading u-width-1'>Lines of Code</h4>
-                      <h4 className='table-cell table-cell--heading'>Last Accessed</h4>
+                      <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
+                      <h4 className='table-cell table-cell--heading'>Accessed</h4>
                     </div>
                     {cSessions}
                   </div>
                 </div>
-              : <div className='u-center-text u-pad-top-4'>
+              : <div>
                   <span className='flex-pane__message'>No sessions yet</span>
                 </div>}
           </div>
-       : <div className='u-center-text u-pad-top-4'>
-           <span
-             className='flex-pane__message'
-           >
-             <span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access&nbsp;previous&nbsp;sessions
-           </span>
+       : <div>
+           {sessionsPlaceholder}
          </div>}
     </div>
   );
+
+  function buildSessionsPlaceholder () {
+    return (
+      <>
+        {(() => {
+          const rows = [];
+          for (let i = 0; i < 3; i++) {
+            rows.push(<div key={i} className='flex-pane__message'>{'... '.repeat(20)}</div>);
+          }
+          return rows;
+        })()}
+      </>
+    );
+  }
 
   function formatSessionList (codeSessions) {
     formattedSessions = codeSessions.map(cSession =>
@@ -75,7 +78,7 @@ function CodeSessions ({ authed, setShowAuth }) {
       >
         <span className='table-cell'>&nbsp;&nbsp;<span className='u-pad-right-nano'>{getLangIcon(cSession.lang)}</span>{langNameTrans(cSession.lang)}</span>
         <span className='table-cell'>{getLOC(cSession.content)}</span>
-        <span className='table-cell'>{dateTrans(cSession.when_accessed)}</span>
+        <span className='table-cell'>{dateTrans(cSession.when_accessed)}&nbsp;</span>
       </p>
     );
     return formattedSessions;

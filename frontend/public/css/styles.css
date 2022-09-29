@@ -34,7 +34,11 @@ button:focus {
 
 h1 {
     font-family: 'Lato', sans-serif;
-    font-size: 1.7rem;
+    font-size: 2.2rem;
+}
+
+h1.light {
+    color: #dce4ef;
 }
 
 h2 {
@@ -122,14 +126,12 @@ body.is-resizing {
 
 .media--bordered {
     border: 1px solid #cbcbcb;
-    border-radius: 4em;
-    padding: 0.5em 2em;
+    border-radius: 7em;
+    padding: 0 2em;
 }
 
 .media--with-background {
-    background: radial-gradient(#f8f8f8, #eeeeee);
-    border-radius: 4em;
-    padding: 0.5em 2em;
+    background: radial-gradient(#f8f8f8, #e5e5e5);
 }
 
 .media--centered {
@@ -142,8 +144,7 @@ body.is-resizing {
 }
 
 .media--with-background:hover {
-    background: #dddddd;
-    border: none;
+    background: #f0f0f0
 }
 
 .media__image-container {
@@ -238,7 +239,7 @@ body.is-resizing {
 .tagline {
     font-family: 'Saira Condensed', sans-serif;
     font-size: 1.3em;
-    color: white;
+    color: #dbe5dc;
     display: block;
     white-space: nowrap;
 }
@@ -247,6 +248,13 @@ body.is-resizing {
     background-size: cover;
     height: var(--inner-height);
     scrollbar-width: auto;
+    background: linear-gradient(
+        to right,
+        #27c0ce 0% 25%,
+        #24b2bf 25% 50%,
+        #22a5b1 50% 75%,
+        #21a1ad 75% 100%
+    );
 }
 
 #home > header {
@@ -257,16 +265,22 @@ body.is-resizing {
     right: 0;
     height: 4em;
     padding: 0.4em 0.7em 0.5em 0.5em;
-    background: linear-gradient(#0d1117, #364761);
-    box-shadow: 0 1px 4px 1px #162141;
+    background: #303f55;
+    background: linear-gradient(
+        to right,
+        #303f55 30%,
+        #425775 30% 55%,
+        #465c7c 55% 80%,
+        #496081 80% 100%
+    );
+    border-bottom: 2px solid #3f439c;
 }
 
 #home > main {
-    padding: 0 2em 2em;
+    padding: 0 0 2em;
     display: flex;
     flex-direction: column;
-    gap: 2em;
-    margin: 5em 1em 1em;
+    margin: 4.5em 0 1em;
 }
 
 #home > footer {
@@ -274,14 +288,50 @@ body.is-resizing {
     bottom: 0;
     height: 2em;
     width: 100%;
-    background: #dddfe4;
+    background: #3f439c;
+    /* background: #dddfe4; */
     border-top: 1px solid #364761;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 0.1em;
+    padding-top: 0.2em;
     opacity: 1;
     transition: opacity 0.3s;
+}
+
+.content-block-1 {
+    display: flex;
+    flex: 1;
+    padding-top: 0.9em;
+    background: linear-gradient(
+        to right,
+        #f2f2f2 88%,
+        #eeeeee 88% 91%,
+        #e7e7e7 91% 94%,
+        #e0e0e0 94% 97%,
+        #d9d9d9 97% 100%
+    );
+}
+
+.content-block-2 {
+    display: flex;
+    flex: 1;
+    padding: 1em 0;
+    background: linear-gradient(
+        to right,
+        #27c0ce 0% 3%,
+        #24b2bf 3% 6%,
+        #22a5b1 6% 9%,
+        #21a1ad 9% 12%,
+        #219ca9 12% 15%
+    );
+}
+
+.code-sessions-container {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .message {
@@ -313,9 +363,9 @@ body.is-resizing {
 }
 
 .flex-pane__message {
+    color: white;
     font-family: 'Lato', sans-serif;
     font-size: 1.4rem;
-    background-color: #f5f5f5;
     padding: 0.5em;
 }
 
@@ -331,11 +381,15 @@ body.is-resizing {
 
 
 .flex-pane--wide {
-    flex: 2;
+    flex: 3;
 }
 
-.flex-pane--narrow {
-    flex: 1;
+.flex-pane--extra-wide {
+    flex: 5;
+}
+
+.flex-pane--medium {
+    flex: 2;
 }
 
 .flex-pane--boxed {
@@ -351,7 +405,7 @@ body.is-resizing {
     display: flex;
 }
 
-.flex-container-wrap {
+.flex-container--wrap {
     flex-wrap: wrap;
 }
 
@@ -373,6 +427,7 @@ body.is-resizing {
 
 .flex-container--spread-out {
     justify-content: space-between;
+    align-content: space-between;
 }
 
 .flex-container--vert-centered {
@@ -400,10 +455,10 @@ body.is-resizing {
 .list-item {
     flex: 1;
     display: flex;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     text-align: center;
-    margin: 0.5em;
+    margin: 0.8em;
 }
 
 .table {
@@ -420,13 +475,13 @@ body.is-resizing {
 
 .table-row {
     display: table-row;
-    line-height: 1.5em;
+    line-height: 2em;
 }
 
 .table-row--heading {
     font-family: 'Jost', sans-serif;
     font-size: 0.9rem;
-    color: #336791;
+    color: #275070;
     line-height: 0.5em;
     white-space: nowrap;
 }
@@ -435,7 +490,7 @@ body.is-resizing {
     font-family: 'Jost', sans-serif;
     font-size: 0.9rem;
     font-weight: 400;
-    color: #444;
+    color: #666;
     white-space: nowrap;
 }
 
@@ -445,13 +500,12 @@ body.is-resizing {
 
 .table-cell {
     display: table-cell;
+    min-width: 8em;
 }
 
 .table-cell:not(.table-cell--heading) {
-    background-color: white;
-    border: solid 1px #336791;
+    background-color: #eeeff3;
     border-style: solid none;
-    padding-top: 0.2em;
 }
 
 /* Round table row corners */
@@ -1635,6 +1689,26 @@ code-area *::-webkit-scrollbar-thumb:hover {
     padding-left: 3.7em;
 }
 
+.u-pad-left-13 {
+    padding-left: 4.1em;
+}
+
+.u-pad-left-14 {
+    padding-left: 4.4em;
+}
+
+.u-pad-left-15 {
+    padding-left: 4.7em;
+}
+
+.u-pad-left-16 {
+    padding-left: 5.1em;
+}
+
+.u-pad-left-17 {
+    padding-left: 5.4em;
+}
+
 .u-pad-bot-1 {
     padding-bottom: 0.3em;
 }
@@ -1703,6 +1777,26 @@ code-area *::-webkit-scrollbar-thumb:hover {
     padding-right: 3.7em;
 }
 
+.u-pad-right-13 {
+    padding-right: 4.1em;
+}
+
+.u-pad-right-14 {
+    padding-right: 4.4em;
+}
+
+.u-pad-right-15 {
+    padding-right: 4.7em;
+}
+
+.u-pad-right-16 {
+    padding-right: 5.1em;
+}
+
+.u-pad-right-17 {
+    padding-right: 5.4em;
+}
+
 .u-center-text {
     text-align: center;
 }
@@ -1740,10 +1834,37 @@ code-area *::-webkit-scrollbar-thumb:hover {
     cursor: pointer;
 }
 
-@media (max-width: 1400px) {
+.u-background-stripes-green {
 }
 
-@media (max-width: 1200px) {
+
+@media (max-width: 1000px) {
+    .content-block-1 {
+        flex-direction: column;
+        background: #f2f2f2;
+    }
+
+    .content-block-2 {
+        flex-direction: column-reverse;
+        background: #21a1ad;
+    }
+
+    .list-item {
+        justify-content: center;
+    }
+
+    .code-sessions-container {
+        justify-content: center;
+    }
+
+    .table-cell {
+        display: table-cell;
+        min-width: 6em;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
 }
 
 @media (max-width: 650px) {

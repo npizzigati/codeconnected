@@ -156,69 +156,74 @@ function Home () {
             </div>
           </header>
           <main ref={mainDomRef}>
-            <div className='flex-pane flex-pane--narrow'>
-              <div className='flex-container flex-container--col'>
+            <div className='content-block-1'>
+              <div className='flex-pane flex-container flex-container--vert-centered flex-container--horiz-centered u-center-text'>
                 <div>
-                  <h1 className='u-marg-top-3 u-marg-bot-2 u-center-text'>Start a new collaborative coding&nbsp;session</h1>
+                  <h1>Start a new collaborative</h1><h1>coding&nbsp;session</h1>
                 </div>
-                <div className='flex-container flex-container-wrap'>
+              </div>
+              <div className='flex-pane'>
+                <div
+                  className='list-item'
+                >
                   <div
-                    className='list-item'
+                    className='media media--bordered media--with-background media--centered media--constrained u-cursor-pointer'
+                    onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
                   >
-                    <div
-                      className='media media--with-background media--centered media--constrained u-cursor-pointer'
-                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
-                    >
-                      <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
-                        <img className='media__image media__image--smaller' src='./images/ruby.png' alt='Ruby icon' />
-                      </div>
-                      <div className='media__text'>
-                        <div className='u-pad-left-1'>
-                          <span className='thin-font'>Ruby</span>
-                        </div>
+                    <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
+                      <img className='media__image media__image--smaller' src='./images/ruby.png' alt='Ruby icon' />
+                    </div>
+                    <div className='media__text'>
+                      <div className='u-pad-left-1'>
+                        <span className='thin-font'>Ruby</span>
                       </div>
                     </div>
                   </div>
+                </div>
+                <div
+                  className='list-item'
+                >
                   <div
-                    className='list-item'
+                    className='media media--bordered media--with-background media--centered media--constrained u-cursor-pointer'
+                    onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
                   >
-                    <div
-                      className='media media--with-background media--centered media--constrained u-cursor-pointer'
-                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
-                    >
-                      <div className='media__image-container'>
-                        <img className='media__image media__image--smaller' src='./images/node.png' alt='Node icon' />
-                      </div>
-                      <div className='media__text'>
-                        <div className='u-pad-left-1'>
-                          <span className='thin-font'>JavaScript</span>
-                        </div>
+                    <div className='media__image-container'>
+                      <img className='media__image media__image--smaller' src='./images/node.png' alt='Node icon' />
+                    </div>
+                    <div className='media__text'>
+                      <div className='u-pad-left-1'>
+                        <span className='thin-font'>JavaScript</span>
                       </div>
                     </div>
                   </div>
+                </div>
+                <div
+                  className='list-item'
+                >
                   <div
-                    className='list-item'
+                    className='media media--bordered media--with-background media--centered media--constrained u-cursor-pointer'
+                    onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
                   >
-                    <div
-                      className='media media--with-background media--centered media--constrained u-cursor-pointer'
-                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
-                    >
-                      <div className='media__image-container'>
-                        <img className='media__image media__image--smaller' src='./images/postgres.png' alt='Postgres icon' />
-                      </div>
-                      <div className='media__text'>
-                        <div className='u-pad-left-1'>
-                          <span className='thin-font'>PostgreSQL</span>
-                        </div>
+                    <div className='media__image-container'>
+                      <img className='media__image media__image--smaller' src='./images/postgres.png' alt='Postgres icon' />
+                    </div>
+                    <div className='media__text'>
+                      <div className='u-pad-left-1'>
+                        <span className='thin-font'>PostgreSQL</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className='flex-pane flex-pane--wide'>
-              <div>
-                <CodeSessions authed={auth} setShowAuth={setShowAuth} />
+            <div className='content-block-2'>
+              <div className='code-sessions-container'>
+                <CodeSessions authed={auth} />
+              </div>
+              <div className='flex-pane flex-container flex-container--vert-centered flex-container--horiz-centered u-center-text'>
+                {auth
+                  ? <h1 className='light'>Resume a session</h1>
+                  : <h1 className='light'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access&nbsp;previous&nbsp;sessions</h1>}
               </div>
             </div>
           </main>
