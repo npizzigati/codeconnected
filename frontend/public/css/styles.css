@@ -139,8 +139,8 @@ body.is-resizing {
 }
 
 .media--constrained {
-    height: 5em;
-    width: 14em;
+    height: 4em;
+    width: 13em;
 }
 
 .media--with-background:hover {
@@ -330,7 +330,7 @@ body.is-resizing {
 .content-block-2--placeholder {
     align-items: center;
     justify-content: center;
-    padding: 7.5em 0;
+    padding: 6.5em 0;
 }
 
 .code-sessions-container {
@@ -463,14 +463,14 @@ body.is-resizing {
     justify-content: start;
     align-items: center;
     text-align: center;
-    margin: 0.8em;
+    margin: 0.7em;
 }
 
 .table {
     display: table;
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 1em;
+    border-spacing: 0 0.6em;
 }
 
 .table-wrapper {
