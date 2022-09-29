@@ -327,6 +327,12 @@ body.is-resizing {
     );
 }
 
+.content-block-2--placeholder {
+    align-items: center;
+    justify-content: center;
+    padding: 7.5em 0;
+}
+
 .code-sessions-container {
     display: flex;
     flex: 1;
@@ -365,13 +371,12 @@ body.is-resizing {
 .flex-pane__message {
     color: white;
     font-family: 'Lato', sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.7rem;
     padding: 0.5em;
 }
 
 .flex-pane__message--small {
-    font-size: 0.8rem;
-    padding: 0.2em;
+    font-size: 1rem;
 }
 
 .flex-pane__sign-in-link {

@@ -216,16 +216,20 @@ function Home () {
                 </div>
               </div>
             </div>
-            <div className='content-block-2'>
-              <div className='code-sessions-container'>
-                <CodeSessions authed={auth} />
-              </div>
-              <div className='flex-pane flex-container flex-container--vert-centered flex-container--horiz-centered u-center-text'>
-                {auth
-                  ? <h1 className='light'>Resume a session</h1>
-                  : <h1 className='light'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access&nbsp;previous&nbsp;sessions</h1>}
-              </div>
-            </div>
+              {auth
+               ? <div className='content-block-2'>
+                   <div className='code-sessions-container'>
+                     <CodeSessions authed={auth} />
+                   </div>
+                   <div className='flex-pane flex-container flex-container--vert-centered flex-container--horiz-centered u-center-text'>
+                     <h1 className='light'>Resume a session</h1>
+                   </div>
+                 </div>
+               : <div className='content-block-2 content-block-2--placeholder'>
+                   <div>
+                     <p className='flex-pane__message'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access&nbsp;previous&nbsp;sessions</p>
+                   </div>
+                 </div>}
           </main>
           <footer ref={footerDomRef}>
             <div className='media u-pad-bot-1'>

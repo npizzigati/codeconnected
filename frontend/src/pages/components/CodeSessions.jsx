@@ -30,26 +30,22 @@ function CodeSessions ({ authed }) {
 
   return (
     <div className='flex-container flex-container--col'>
-      {authed
-        ? <div>
-            {showCSessions
-              ? <div className='table-wrapper'>
-                  <div className='table'>
-                    <div className='table-row table-row--heading'>
-                      <h4 className='table-cell table-cell--heading u-width-2'></h4>
-                      <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
-                      <h4 className='table-cell table-cell--heading'>Accessed</h4>
-                    </div>
-                    {cSessions}
-                  </div>
+      <div>
+        {showCSessions
+          ? <div className='table-wrapper'>
+              <div className='table'>
+                <div className='table-row table-row--heading'>
+                  <h4 className='table-cell table-cell--heading u-width-2'></h4>
+                  <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
+                  <h4 className='table-cell table-cell--heading'>Accessed</h4>
                 </div>
-              : <div>
-                  <span className='flex-pane__message'>No sessions yet</span>
-                </div>}
-          </div>
-       : <div>
-           {sessionsPlaceholder}
-         </div>}
+                {cSessions}
+              </div>
+            </div>
+          : <div>
+              <span className='flex-pane__message'>No sessions yet</span>
+            </div>}
+      </div>
     </div>
   );
 
