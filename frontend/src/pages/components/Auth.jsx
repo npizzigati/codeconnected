@@ -92,7 +92,7 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
     // Reset prelaunch language to null to abort any launching of
     // language room the next time user signs in.
     if (setPreLaunchLanguage !== undefined) {
-      setPreLaunchLanguage(null);
+      setPreLaunchLanguage('');
     }
   }
 
