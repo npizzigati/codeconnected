@@ -59,6 +59,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
               ref={usernameInput}
               data-validation='Username'
               required
+              maxLength='30'
               onChange={handleChange}
             />
           </p>
@@ -85,6 +86,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
               ref={emailInput}
               data-validation='Email'
               required
+              maxLength='70'
               onChange={handleChange}
             />
           </p>
@@ -112,6 +114,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
               data-validation='Password'
               required
               minLength='6'
+              maxLength='70'
               onChange={handleChange}
             />
           </p>
