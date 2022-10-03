@@ -47,7 +47,7 @@ function Home () {
       }
       setAuth(userInfo.auth);
       setAuthChecked(true);
-      changeCSSInnerHeight();
+      // changeCSSInnerHeight();
       setupWindowResizeListener(() => {
         fixViewport();
         debounce(hideOrShowScrollbar, 300);
@@ -131,15 +131,12 @@ function Home () {
             <div className='flex-pane flex-container flex-container--vert-centered'>
               <div className='media u-marg-left-1'>
                 <div className='media__image-container'>
-                  <img className='media__image media__image--small u-marg-top-2' src='./images/codeconnected.png' alt='Logo' />
+                  <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
                 </div>
                 <div className='media__text'>
-                  <div>
-                    <div className='site-name'>
-                      <span className='site-name--color1'>code</span>
-                      <span className='site-name--color2'>connected</span>
-                    </div>
-                    <div className='tagline'>Collaborative code editor, runner and REPL</div>
+                  <div className='site-name site-name--medium'>
+                    <span className='site-name--color1'>code</span>
+                    <span className='site-name--color2'>connected</span>
                   </div>
                 </div>
               </div>
@@ -156,95 +153,86 @@ function Home () {
             </div>
           </header>
           <main ref={mainDomRef}>
-            <div className='content-block-1'>
-              <div className='flex-pane flex-container flex-container--vert-centered flex-container--horiz-centered u-center-text'>
+            <div className='flex-pane' />
+            <div className='flex-pane'>
+              <div className='content-block-1'>
+                <div className='flex-pane flex-pane--medium flex-container flex-container--col u-pad-top-5'>
+                  <div className='content-block-header'>
+                    <h1>&gt;&gt; Start a new collaborative coding&nbsp;session</h1>
+                  </div>
+                  <div>
+                    <div className='aligned-block u-pad-top-5'>
+                      <div
+                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
+                        onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
+                      >
+                        <div className='aligned-block__cell u-center-text'>
+                          <img
+                            className='aligned-block__image aligned-block__image--tiny'
+                            src='./images/ruby.png'
+                            alt='Ruby icon' />
+                        </div>
+                        <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
+                          <span className='thin-font'>Ruby</span>
+                        </div>
+                      </div>
+                      <div
+                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
+                        onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
+                      >
+                        <div className='aligned-block__cell u-center-text'>
+                          <img
+                            className='aligned-block__image aligned-block__image--tiny'
+                            src='./images/js.png'
+                            alt='JS icon' />
+                        </div>
+                        <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
+                          <span className='thin-font'>JavaScript</span>
+                        </div>
+                      </div>
+                      <div
+                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
+                        onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
+                      >
+                        <div className='aligned-block__cell u-center-text'>
+                          <img
+                            className='aligned-block__image aligned-block__image--tiny'
+                            src='./images/postgres.png'
+                            alt='Postgres icon' />
+                        </div>
+                        <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
+                          <span className='thin-font'>PostgreSQL</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className='main-image-container'>
+                      <img className='main-image-1' src='./images/start_session.png' alt='start session' />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='content-block-2'>
                 <div>
-                  <h1>Start a new collaborative</h1><h1>coding&nbsp;session</h1>
-                </div>
-              </div>
-              <div className='flex-pane'>
-                <div
-                  className='list-item'
-                >
-                  <div
-                    className='media media--bordered media--with-background media--centered media--constrained u-cursor-pointer'
-                    onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
-                  >
-                    <div className='media__image-container u-marg-top-2 u-marg-bot-2'>
-                      <img className='media__image media__image--smaller' src='./images/ruby.png' alt='Ruby icon' />
-                    </div>
-                    <div className='media__text'>
-                      <div className='u-pad-left-1'>
-                        <span className='thin-font'>Ruby</span>
-                      </div>
-                    </div>
+                  <div className='content-block-header'>
+                    <h1>&gt;&gt; Resume a session</h1>
                   </div>
                 </div>
-                <div
-                  className='list-item'
-                >
-                  <div
-                    className='media media--bordered media--with-background media--centered media--constrained u-cursor-pointer'
-                    onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
-                  >
-                    <div className='media__image-container'>
-                      <img className='media__image media__image--smaller' src='./images/node.png' alt='Node icon' />
-                    </div>
-                    <div className='media__text'>
-                      <div className='u-pad-left-1'>
-                        <span className='thin-font'>JavaScript</span>
-                      </div>
-                    </div>
+                <div className='flex-pane flex-container'>
+                  <div className='u-pad-top-6'>
+                    <img className='main-image-2' src='./images/launch_saved_session.png' alt='start session' />
                   </div>
-                </div>
-                <div
-                  className='list-item'
-                >
-                  <div
-                    className='media media--bordered media--with-background media--centered media--constrained u-cursor-pointer'
-                    onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
-                  >
-                    <div className='media__image-container'>
-                      <img className='media__image media__image--smaller' src='./images/postgres.png' alt='Postgres icon' />
-                    </div>
-                    <div className='media__text'>
-                      <div className='u-pad-left-1'>
-                        <span className='thin-font'>PostgreSQL</span>
+                  {auth
+                    ? <div className='code-sessions-container'>
+                        <CodeSessions authed={auth} />
                       </div>
-                    </div>
-                  </div>
+                    : <div className='flex-pane u-pad-top-8 u-pad-left-5'>
+                        <p className='flex-pane__message flex-pane__message--small'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access previous&nbsp;sessions</p>
+                      </div>}
                 </div>
               </div>
             </div>
-              {auth
-               ? <div className='content-block-2'>
-                   <div className='code-sessions-container'>
-                     <CodeSessions authed={auth} />
-                   </div>
-                   <div className='flex-pane flex-container flex-container--vert-centered flex-container--horiz-centered u-center-text'>
-                     <h1 className='light'>Resume a session</h1>
-                   </div>
-                 </div>
-               : <div className='content-block-2 content-block-2--placeholder'>
-                   <div>
-                     <p className='flex-pane__message'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access&nbsp;previous&nbsp;sessions</p>
-                   </div>
-                 </div>}
+            <div className='flex-pane' />
           </main>
-          <footer ref={footerDomRef}>
-            <div className='media u-pad-bot-1'>
-              <div className='media__text'>
-                <div className='u-no-wrap'>
-                  <span className='site-name site-name--color1 site-name--small'>code</span>
-                  <span className='site-name site-name--color2 site-name--small'>connected</span>
-                  <span className='message'>&nbsp;is open source software</span>
-                </div>
-              </div>
-              <div className='media__image-container'>
-                <a className='image-link' href='https://github.com/npizzigati/codeconnected' />
-              </div>
-            </div>
-          </footer>
         </div>}
     </>
   );

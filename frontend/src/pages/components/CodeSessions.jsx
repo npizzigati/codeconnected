@@ -36,6 +36,7 @@ function CodeSessions ({ authed }) {
               <div className='table'>
                 <div className='table-row table-row--heading'>
                   <h4 className='table-cell table-cell--heading u-width-2'></h4>
+                  <h4 className='table-cell table-cell--heading u-width-2'></h4>
                   <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
                   <h4 className='table-cell table-cell--heading'>Accessed</h4>
                 </div>
@@ -72,8 +73,9 @@ function CodeSessions ({ authed }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className='table-cell'>&nbsp;&nbsp;<span className='u-pad-right-nano'>{getLangIcon(cSession.lang)}</span>{langNameTrans(cSession.lang)}</span>
-        <span className='table-cell'>{getLOC(cSession.content)}</span>
+        <span className='table-cell u-center-text'>{getLangIcon(cSession.lang)}&nbsp;</span>
+        <span className='table-cell'>{langNameTrans(cSession.lang)}&nbsp;&nbsp;&nbsp;</span>
+        <span className='table-cell'>{getLOC(cSession.content)}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <span className='table-cell'>{dateTrans(cSession.when_accessed)}&nbsp;</span>
       </p>
     );
