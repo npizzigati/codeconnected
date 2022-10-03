@@ -157,7 +157,7 @@ function Home () {
             <div className='flex-pane'>
               <div className='content-block-1'>
                 <div className='flex-pane flex-pane--medium flex-container flex-container--col u-pad-top-5'>
-                  <div className='content-block-header'>
+                  <div className='content-block-header u-pad-top-1'>
                     <h1>&gt;&gt; Start a new collaborative coding&nbsp;session</h1>
                   </div>
                   <div>
