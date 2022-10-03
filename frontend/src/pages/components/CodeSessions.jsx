@@ -11,7 +11,6 @@ function CodeSessions ({ authed }) {
   const [showCSessions, setShowCSessions] = useState(true);
   const navigate = useNavigate();
   const isCanceled = useRef(false);
-  const sessionsPlaceholder = buildSessionsPlaceholder();
   let formattedSessions;
   useEffect(() => {
     return function cleanup () {
@@ -49,20 +48,6 @@ function CodeSessions ({ authed }) {
       </div>
     </div>
   );
-
-  function buildSessionsPlaceholder () {
-    return (
-      <>
-        {(() => {
-          const rows = [];
-          for (let i = 0; i < 3; i++) {
-            rows.push(<div key={i} className='flex-pane__message'>{'... '.repeat(20)}</div>);
-          }
-          return rows;
-        })()}
-      </>
-    );
-  }
 
   function formatSessionList (codeSessions) {
     formattedSessions = codeSessions.map(cSession =>
