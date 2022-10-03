@@ -77,6 +77,7 @@ function CodeSessions ({ authed }) {
         <span className='table-cell'>{langNameTrans(cSession.lang)}&nbsp;&nbsp;&nbsp;</span>
         <span className='table-cell'>{getLOC(cSession.content)}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         <span className='table-cell'>{dateTrans(cSession.when_accessed)}&nbsp;</span>
+        <p className='table-row__underline' />
       </p>
     );
     return formattedSessions;

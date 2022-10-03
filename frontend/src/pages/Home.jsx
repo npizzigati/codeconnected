@@ -170,11 +170,13 @@ function Home () {
                           <img
                             className='aligned-block__image aligned-block__image--tiny'
                             src='./images/ruby.png'
-                            alt='Ruby icon' />
+                            alt='Ruby icon'
+                          />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                           <span className='thin-font'>Ruby</span>
                         </div>
+                        <div className='aligned-block__underline' />
                       </div>
                       <div
                         className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
@@ -184,11 +186,13 @@ function Home () {
                           <img
                             className='aligned-block__image aligned-block__image--tiny'
                             src='./images/js.png'
-                            alt='JS icon' />
+                            alt='JS icon'
+                          />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                           <span className='thin-font'>JavaScript</span>
                         </div>
+                        <div className='aligned-block__underline' />
                       </div>
                       <div
                         className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
@@ -198,11 +202,13 @@ function Home () {
                           <img
                             className='aligned-block__image aligned-block__image--tiny'
                             src='./images/postgres.png'
-                            alt='Postgres icon' />
+                            alt='Postgres icon'
+                          />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
                           <span className='thin-font'>PostgreSQL</span>
                         </div>
+                        <div className='aligned-block__underline' />
                       </div>
                     </div>
                     <div className='main-image-container'>
