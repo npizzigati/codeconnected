@@ -187,7 +187,7 @@ body.is-resizing {
 }
 
 .media__image--nano {
-    height: 0.8em;
+    height: 0.9em;
     width: auto;
 }
 
@@ -427,8 +427,38 @@ body.is-resizing {
 
 .thin-font {
     font-family: 'Jost', sans-serif;
-    font-weight: 300;
+    font-weight: 400;
     font-size: 1.5rem;
+}
+
+.stroked-font {
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    font-size: 1.5rem;
+    position: relative;
+    z-index: 1;
+    /* -webkit-text-stroke: 1px black; */
+    /* text-stroke: 1px black; */
+    text-shadow:
+        -1px -1px 0 var(--main-bg-color),
+         1px -1px 0 var(--main-bg-color),
+         -1px 1px 0 var(--main-bg-color),
+          1px 1px 0 var(--main-bg-color);
+}
+
+.stroked-font-small {
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
+    /* -webkit-text-stroke: 1px black; */
+    /* text-stroke: 1px black; */
+    text-shadow:
+        -1px -1px 0 var(--main-bg-color),
+         1px -1px 0 var(--main-bg-color),
+         -1px 1px 0 var(--main-bg-color),
+          1px 1px 0 var(--main-bg-color);
 }
 
 .list-item {
@@ -461,7 +491,7 @@ body.is-resizing {
 
 .table-row__underline {
     position: absolute;
-    top: 1.4em;
+    top: calc(1.3em);
     left: 0em;
     width: 100%;
     height: 2px;
@@ -611,7 +641,7 @@ body.is-resizing {
 
 .aligned-block__underline {
     position: absolute;
-    top: 2.6em;
+    top: calc(2.8em - 1vh);
     left: 0em;
     width: 100%;
     height: 2px;

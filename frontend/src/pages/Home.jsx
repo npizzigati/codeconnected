@@ -174,7 +174,7 @@ function Home () {
                           />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='thin-font'>Ruby</span>
+                          <span className='stroked-font'>Ruby</span>
                         </div>
                         <div className='aligned-block__underline' />
                       </div>
@@ -185,12 +185,12 @@ function Home () {
                         <div className='aligned-block__cell u-center-text'>
                           <img
                             className='aligned-block__image aligned-block__image--tiny'
-                            src='./images/js.png'
+                            src='./images/js_opaque.png'
                             alt='JS icon'
                           />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='thin-font'>JavaScript</span>
+                          <span className='stroked-font'>JavaScript</span>
                         </div>
                         <div className='aligned-block__underline' />
                       </div>
@@ -206,7 +206,7 @@ function Home () {
                           />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='thin-font'>PostgreSQL</span>
+                          <span className='stroked-font'>PostgreSQL</span>
                         </div>
                         <div className='aligned-block__underline' />
                       </div>
@@ -219,7 +219,7 @@ function Home () {
               </div>
               <div className='content-block-2'>
                 <div>
-                  <div className='content-block-header'>
+                  <div className='content-block-header u-pad-top-6'>
                     <h1>&gt;&gt; Resume a session</h1>
                   </div>
                 </div>
