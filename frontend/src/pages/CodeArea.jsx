@@ -792,6 +792,11 @@ function CodeArea () {
     }
     const initialLang = initialVars.language;
     const initialHist = initialVars.history;
+
+    setupTerminal(initialHist);
+
+    ws.current = openWs(roomID);
+
     const expiry = initialVars.expiry;
     // isAuthedCreator will be true if this user is signed in and is
     // the creator of the room
@@ -819,10 +824,6 @@ function CodeArea () {
     lang.current = initialLang;
     setCmLanguage(initialLang);
     showTitles(initialLang);
-
-    setupTerminal(initialHist);
-
-    ws.current = openWs(roomID);
 
     yCode.current = ydoc.current.getText('codemirror');
 
