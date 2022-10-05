@@ -20,7 +20,7 @@ function PopupDialog ({ config }) {
             />
           </div>
           <div className='media__text media__text--constrained'>
-            <span className='popup-dialog__text'>
+            <span className='popup-dialog__heading-text'>
               {config.message.text}
             </span>
           </div>
@@ -47,7 +47,7 @@ function PopupDialog ({ config }) {
           />
         </div>
         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-          <span className='popup-dialog__text popup-dialog__text--small u-pad-right-1'>
+          <span className='popup-dialog__option-text u-pad-right-1'>
             {option.text}
           </span>
         </div>

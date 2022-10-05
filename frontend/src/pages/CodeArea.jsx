@@ -114,7 +114,7 @@ function CodeArea () {
       {
         number: 1,
         icon: { path: './images/run.png', alt: 'Login' },
-        text: 'Yes, take me back to the home page.',
+        text: 'Yes. Take me back to the home page.',
         callback: () => {
           // Don't use React's navigate here because the user
           // won't be removed from room participants
@@ -124,7 +124,7 @@ function CodeArea () {
       {
         number: 2,
         icon: { path: './images/stop.png', alt: 'Time-limited' },
-        text: 'No, I want to stay here.',
+        text: 'No. I want to stay here.',
         callback: abortBackToHome
       }
     ],
@@ -268,7 +268,7 @@ function CodeArea () {
           </div>
         </CSSTransition>
         <header>
-          <div className='flex-pane flex-container flex-container--vert-top'>
+          <div className='flex-pane flex-container flex-container--cross-start'>
             <div
               className='media u-marg-left-1'
             >
@@ -290,7 +290,7 @@ function CodeArea () {
             </div>
             {timeLeftDisplay !== null && <div className='time-remaining'>{timeLeftDisplay}</div>}
           </div>
-          <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered flex-container--gap u-marg-right-1 u-marg-bot-5'>
+          <div className='flex-pane flex-container flex-container--main-end flex-container--cross-centered flex-container--gap u-marg-right-1 u-marg-bot-5'>
             <Participants participantNames={participantNames} />
             {termEnabled && <Invite />}
             <div className='sign-in-block'>

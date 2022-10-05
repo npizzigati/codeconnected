@@ -34,16 +34,16 @@ function CodeSessions ({ authed }) {
           ? <div className='table-wrapper'>
               <div className='table'>
                 <div className='table-row table-row--heading'>
-                  <h4 className='table-cell table-cell--heading u-width-2'></h4>
-                  <h4 className='table-cell table-cell--heading u-width-2'></h4>
-                  <h4 className='table-cell table-cell--heading u-width-1'>Lines</h4>
+                  <h4 className='table-cell table-cell--heading u-width-2' />
+                  <h4 className='table-cell table-cell--heading u-width-2' />
+                  <h4 className='table-cell table-cell--heading u-width-1'>LOC</h4>
                   <h4 className='table-cell table-cell--heading'>Accessed</h4>
                 </div>
                 {cSessions}
               </div>
             </div>
-          : <div>
-              <span className='flex-pane__message'>No sessions yet</span>
+          : <div className='u-pad-top-5'>
+              <span className='flex-pane__message flex-pane__message--small'>No sessions yet</span>
             </div>}
       </div>
     </div>
@@ -58,11 +58,10 @@ function CodeSessions ({ authed }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className='table-cell u-center-text'>{getLangIcon(cSession.lang)}&nbsp;</span>
-        <span className='table-cell stroked-font stroked-font-small'>{langNameTrans(cSession.lang)}&nbsp;&nbsp;&nbsp;</span>
-        <span className='table-cell stroked-font stroked-font-small'>{getLOC(cSession.content)}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <span className='table-cell stroked-font stroked-font-small'>{dateTrans(cSession.when_accessed)}&nbsp;</span>
-        <p className='table-row__underline' />
+        <span className='table-cell u-center-text u-pad-right-nano'>{getLangIcon(cSession.lang)}</span>
+        <span className='table-cell'>{langNameTrans(cSession.lang)}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span className='table-cell'>{getLOC(cSession.content)}&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span className='table-cell'>{dateTrans(cSession.when_accessed)}&nbsp;&nbsp;&nbsp;&nbsp;</span>
       </p>
     );
     return formattedSessions;
@@ -199,17 +198,12 @@ function CodeSessions ({ authed }) {
     navigate(`/${roomID}`);
   }
 
-
   function dateTrans (unixTimestamp) {
     // Date/time unit constants in ms
     const sec = 1000;
     const min = 60 * sec;
     const hour = 60 * min;
     const day = 24 * hour;
-    // Other date constants
-    const months = ['January', 'February', 'March', 'April', 'May',
-                    'June', 'July', 'August', 'September', 'October',
-                    'November', 'December'];
     // Javascript expects timestamp in ms
     const ms = unixTimestamp * 1000;
     // Calculate time delta
@@ -226,13 +220,13 @@ function CodeSessions ({ authed }) {
     if (days > 10) {
       dateTimeString = accessed.toLocaleDateString();
     } else if (days > 0) {
-      dateTimeString = `About ${days} ${days > 1 ? 'days' : 'day'} ago`;
+      dateTimeString = `~ ${days} ${days > 1 ? 'days' : 'day'} ago`;
     } else if (hours > 0) {
-      dateTimeString = `About ${hours} ${hours > 1 ? 'hours' : 'hour'} ago`;
+      dateTimeString = `~ ${hours} ${hours > 1 ? 'hours' : 'hour'} ago`;
     } else if (minutes > 0) {
-      dateTimeString = `About ${minutes} ${minutes > 1 ? 'minutes' : 'minute'} ago`;
+      dateTimeString = `~ ${minutes} ${minutes > 1 ? 'minutes' : 'minute'} ago`;
     } else {
-      dateTimeString = 'Less than 1 minute ago';
+      dateTimeString = '< 1 minute ago';
     }
     return dateTimeString;
   }

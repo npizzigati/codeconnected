@@ -47,14 +47,13 @@ function Home () {
       }
       setAuth(userInfo.auth);
       setAuthChecked(true);
-      // changeCSSInnerHeight();
+
       setupWindowResizeListener(() => {
-        fixViewport();
-        debounce(hideOrShowScrollbar, 300);
+        debounce(changeCSSInnerHeight, 100);
       });
 
       const resizeObserver = new ResizeObserver(() => {
-        hideOrShowScrollbar();
+        debounce(changeCSSInnerHeight, 100);
       });
       resizeObserver.observe(mainDomRef.current);
     })();
@@ -91,7 +90,8 @@ function Home () {
         callback: continueAnyway
       }
     ],
-    abortCallback: abortPreLaunch
+    abortCallback: abortPreLaunch,
+    theme: 'dark'
   };
 
   return (
@@ -127,22 +127,24 @@ function Home () {
               <PopupDialog config={popupDialogConfig} />
             </div>
           </CSSTransition>
-          <header ref={headerDomRef}>
-            <div className='flex-pane flex-container flex-container--vert-centered'>
-              <div className='media u-marg-left-1'>
-                <div className='media__image-container'>
-                  <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
-                </div>
-                <div className='media__text'>
-                  <div className='site-name site-name--medium'>
-                    <span className='site-name--color1'>code</span>
-                    <span className='site-name--color2'>connected</span>
+          <header>
+              <div className='flex-pane'>
+                <div className='flex-pane flex-container'>
+                  <div className='media u-marg-left-1'>
+                    <div className='media__image-container'>
+                      <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
+                      </div>
+                    <div className='media__text'>
+                      <div className='site-name site-name--medium'>
+                        <span className='site-name--color1'>code</span>
+                        <span className='site-name--color2'>connected</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className='flex-pane flex-container flex-container--right-justified flex-container--vert-centered'>
-              {auth
+              <div className='flex-pane flex-container flex-container--main-end u-pad-top-1 u-pad-right-1'>
+                {auth
                 ? <div><UserQuickdash setAuthed={setAuth} /></div>
                 : <div
                     className='sign-in-link'
@@ -150,20 +152,18 @@ function Home () {
                   >
                     Sign in
                   </div>}
-            </div>
+              </div>
           </header>
           <main ref={mainDomRef}>
-            <div className='flex-pane' />
-            <div className='flex-pane'>
+            <div className='flex-pane flex-pane--wide' />
+            <div className='center-pane'>
               <div className='content-block-1'>
-                <div className='flex-pane flex-pane--medium flex-container flex-container--col u-pad-top-5'>
-                  <div className='content-block-header u-pad-top-1'>
-                    <h1>&gt;&gt; Start a new collaborative coding&nbsp;session</h1>
-                  </div>
+                <div className='flex-pane flex-pane--medium flex-container flex-container--col'>
+                  <h1>Start a new coding&nbsp;session&nbsp;&nbsp;&nbsp;</h1>
                   <div>
-                    <div className='aligned-block u-pad-top-5'>
+                    <div className='aligned-block u-pad-top-2 u-pad-bot-4 u-pad-left'>
                       <div
-                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
+                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
                         onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
                       >
                         <div className='aligned-block__cell u-center-text'>
@@ -174,28 +174,26 @@ function Home () {
                           />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='stroked-font'>Ruby</span>
+                          <span className='thin-font'>Ruby</span>
                         </div>
-                        <div className='aligned-block__underline' />
                       </div>
                       <div
-                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
+                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
                         onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
                       >
                         <div className='aligned-block__cell u-center-text'>
                           <img
                             className='aligned-block__image aligned-block__image--tiny'
-                            src='./images/js_opaque.png'
+                            src='./images/js.png'
                             alt='JS icon'
                           />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='stroked-font'>JavaScript</span>
+                          <span className='thin-font'>JavaScript</span>
                         </div>
-                        <div className='aligned-block__underline' />
                       </div>
                       <div
-                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable'
+                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
                         onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
                       >
                         <div className='aligned-block__cell u-center-text'>
@@ -206,82 +204,39 @@ function Home () {
                           />
                         </div>
                         <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='stroked-font'>PostgreSQL</span>
+                          <span className='thin-font'>PostgreSQL</span>
                         </div>
-                        <div className='aligned-block__underline' />
                       </div>
-                    </div>
-                    <div className='main-image-container'>
-                      <img className='main-image-1' src='./images/start_session.png' alt='start session' />
                     </div>
                   </div>
                 </div>
               </div>
               <div className='content-block-2'>
                 <div>
-                  <div className='content-block-header u-pad-top-6'>
-                    <h1>&gt;&gt; Resume a session</h1>
+                  <div className='content-block-header'>
+                    <h1>Resume a&nbsp;session&nbsp;&nbsp;&nbsp;</h1>
                   </div>
                 </div>
                 <div className='flex-pane flex-container'>
-                  <div className='u-pad-top-6'>
-                    <img className='main-image-2' src='./images/launch_saved_session.png' alt='start session' />
-                  </div>
                   {auth
                     ? <div className='code-sessions-container'>
                         <CodeSessions authed={auth} />
                       </div>
-                    : <div className='flex-pane u-pad-top-8 u-pad-left-5'>
-                        <p className='flex-pane__message flex-pane__message--small'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access previous&nbsp;sessions</p>
+                    : <div className='u-pad-top-5'>
+                        <p className='message message--small'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;</p>
                       </div>}
                 </div>
               </div>
+              <div className='flex-pane flex-container flex-container--main-centered'>
+                <div><img className='content-block-image' src='./images/monster.png' alt='Monster' /></div>
+              </div>
             </div>
-            <div className='flex-pane' />
+            <div className='flex-pane flex-pane--wide' />
           </main>
+          <footer />
         </div>}
     </>
   );
-
-  /**
-   * Fix to be passed in to setupWindowResizeListener
-   * (Before fix, footer was not always fixed at bottom of
-   * screen.) Hide quickly and then show (fade in) footer
-   * when changing screen size, to avoid flickering
-   * TODO: Check whether this fix is still necessary, since footer is now fixed
-   */
-  function fixViewport () {
-    if (footerDomRef.current === null) {
-      return;
-    }
-    footerDomRef.current.style.visibility = 'hidden';
-    footerDomRef.current.style.opacity = 0;
-    debounce(changeCSSInnerHeight, 100);
-    debounce(() => {
-      footerDomRef.current.style.visibility = 'visible';
-      footerDomRef.current.style.opacity = 1;
-    }, 250);
-  }
-
-  /**
-   * Since we add a margin to the top and bottom of the text area
-   * of the page so that the viewable area will never be under
-   * the fixed header or footer, there is always overflow. This
-   * function will show the scrollbar if necessary (when there is
-   * really text that needs to be scrolled to, and hide it otherwise)
-   */
-  function hideOrShowScrollbar () {
-    if (window === null || footerDomRef.current === null || headerDomRef.current === null || mainDomRef.current === null) {
-      return;
-    }
-    if (window.innerHeight - footerDomRef.current.clientHeight - headerDomRef.current.clientHeight < mainDomRef.current.clientHeight) {
-      document.body.style.overflow = 'scroll';
-    } else {
-      document.body.style.overflow = 'hidden';
-      // Scroll to top to avoid any text being hidden under header
-      window.scrollTo({ top: 0 });
-    }
-  }
 
   function fireKeydownEvents (event) {
     // Escape is keyCode 27
