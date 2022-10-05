@@ -696,7 +696,7 @@ body.is-resizing {
     right: 2.2em;
     min-width: 3em;
     height: auto;
-    border-radius: 10px;
+    border-radius: 0.1em;
     background: white;
     box-shadow: 0 0 4px 0.1px #999;
     z-index: var(--user-quickdash-z-index);
@@ -729,16 +729,16 @@ body.is-resizing {
 .user-quickdash__sign-out-button {
     font-family: 'Lato', sans-serif;
     font-size: 0.8rem;
-    color: #555;
-    background-color: #d9d9d9;
+    color: white;
+    background-color: #5e499b;
     border: none;
-    border-radius: 0.8em;
+    border-radius: 0.2em;
     padding: 0.2em 1.2em 0.3em;
     margin: 1em auto 0.5em;
 }
 
 .user-quickdash__sign-out-button:hover {
-    background-color: #cfcfcf;
+    background-color: #6b54b2;
     cursor: pointer;
 }
 
@@ -805,28 +805,6 @@ code-area *::-webkit-scrollbar-thumb {
 /* Handle on hover */
 code-area *::-webkit-scrollbar-thumb:hover {
   background: #2f3e54;
-}
-
-#code-area .user-quickdash {
-    background: var(--code-area-modal-background);
-    box-shadow: none;
-}
-
-#code-area .user-quickdash__heading {
-    color: #e3e3ea;
-}
-
-#code-area .user-quickdash__text {
-    color: #7393b0;
-}
-
-#code-area .user-quickdash__sign-out-button {
-    color: #e3e3ea;
-    background-color: #336791;
-}
-
-#code-area .user-quickdash__sign-out-button:hover {
-    background-color: #042853;
 }
 
 .time-remaining {
@@ -1190,25 +1168,25 @@ code-area *::-webkit-scrollbar-thumb:hover {
     color: white;
     display: block;
     padding: .1em .5em .2em;
-    background-color: #336791;
+    background-color: #5e499b;
     border: none;
-    border-radius: 0.3em;
+    border-radius: 0.1em;
 }
 
 .form__submit-button:focus {
     cursor: pointer;
-    background-color: #042853;
+    background-color: #6b54b2;
     outline: #073b7a solid 2px;
 }
 
 .form__submit-button:hover {
     cursor: pointer;
-    background-color: #042853;
+    background-color: #775dc6;
 }
 
 .form__submit-button:active {
     cursor: pointer;
-    background-color: #073b7a;
+    background-color: #7158bc;
 }
 
 .form__bottom-link {
