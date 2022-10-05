@@ -279,6 +279,11 @@ body.is-resizing {
     border-radius: 0.2em;
 }
 
+.side-pane {
+    flex: 3;
+}
+
+
 .content-block-1 {
     display: flex;
     flex: 1;
@@ -1778,7 +1783,10 @@ code-area *::-webkit-scrollbar-thumb:hover {
     cursor: pointer;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 850px) {
+    .side-pane {
+        flex: 1;
+    }
 }
 
 @media (max-width: 650px) {
@@ -1799,5 +1807,9 @@ code-area *::-webkit-scrollbar-thumb:hover {
     .time-remaining {
         margin: 0.7em 1em;
         font-size: 0.7em;
+    }
+
+    .side-pane {
+        flex: 0.5;
     }
 }

@@ -155,7 +155,7 @@ function Home () {
               </div>
           </header>
           <main ref={mainDomRef}>
-            <div className='flex-pane flex-pane--wide' />
+            <div className='side-pane' />
             <div className='center-pane'>
               <div className='content-block-1'>
                 <div className='flex-pane flex-pane--medium flex-container flex-container--col'>
@@ -231,7 +231,7 @@ function Home () {
                 <div><img className='content-block-image' src='./images/monster.png' alt='Monster' /></div>
               </div>
             </div>
-            <div className='flex-pane flex-pane--wide' />
+            <div className='side-pane' />
           </main>
           <footer />
         </div>}
