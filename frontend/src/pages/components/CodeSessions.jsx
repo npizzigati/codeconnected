@@ -43,7 +43,7 @@ function CodeSessions ({ authed }) {
               </div>
             </div>
           : <div className='u-pad-top-5'>
-              <span className='flex-pane__message flex-pane__message--small'>No sessions yet</span>
+              <span className='message message--small'>No sessions yet</span>
             </div>}
       </div>
     </div>

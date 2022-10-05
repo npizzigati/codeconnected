@@ -223,7 +223,7 @@ function Home () {
                         <CodeSessions authed={auth} />
                       </div>
                     : <div className='u-pad-top-5'>
-                        <p className='message message--small'><span className='flex-pane__sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;</p>
+                        <p className='message message--small'><span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;</p>
                       </div>}
                 </div>
               </div>
