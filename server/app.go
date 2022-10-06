@@ -406,6 +406,7 @@ func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params
 
 	// Do not save sessions with excessively long content
 	if len(csm.Content) > 64000 {
+		logger.Println("Session too long to save")
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 	}
 
