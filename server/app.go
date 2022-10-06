@@ -404,8 +404,6 @@ func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		return
 	}
 
-	logger.Println("content: ", csm.Content)
-	logger.Println("codeSessionID: ", csm.CodeSessionID)
 
 	query := "UPDATE coding_sessions SET editor_contents = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, csm.Content, csm.CodeSessionID); err != nil {
