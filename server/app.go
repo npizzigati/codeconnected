@@ -162,7 +162,7 @@ var sesCli *sesv2.Client
 
 // Timeouts
 const activationTimeout = 5 * time.Minute
-const anonRoomTimeout = 15 * time.Minute
+const anonRoomTimeout = 20 * time.Minute
 const maxRunTime = 10 * time.Second
 const runnerStartupTimeout = 13 * time.Second
 

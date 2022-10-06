@@ -73,7 +73,7 @@ function Home () {
   const popupDialogConfig = {
     message: {
       icon: { path: './images/attention.png', alt: 'Attention' },
-      text: 'Sessions created by unregistered users have a 15-minute time limit'
+      text: 'Sessions created by unregistered users have a 20-minute time limit'
     },
     options: [
       {
