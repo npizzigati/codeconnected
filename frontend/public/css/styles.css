@@ -1388,7 +1388,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
 
 .resizer__overlay {
     position: absolute;
-    width: 2em;
+    width: 1em;
     height: calc(var(--inner-height) - var(--code-area-header-height) - var(--code-area-header-padding-top) - var(--code-area-bottom-margin));
     z-index: var(--resizer-overlay-z-index);
 }
