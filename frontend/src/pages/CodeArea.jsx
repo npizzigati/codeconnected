@@ -271,13 +271,13 @@ function CodeArea () {
         <header>
           <div className='flex-pane flex-container flex-container--cross-start'>
             <div
-              className='media u-marg-left-1'
+              className='media u-marg-left-1 u-marg-top-micro'
             >
               <div
                 className='media__image-container u-clickable'
                 onPointerDown={(ev) => handlePointerDown(ev, setShowBackToHomeDialog, true)}
               >
-                <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
+                <img className='media__image media__image--micro' src='./images/codeconnected.png' alt='Logo' />
               </div>
               <div
                 className='media__text'

@@ -818,7 +818,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
     text-align: center;
     color: white;
     padding: 0.3em 0.2em 0.2em;
-    margin: 0.4em 3em 0 1em;
+    margin: 0.25em 3em 0 1em;
     font-family: 'Lato', sans-serif;
     font-size: 0.9em;
     border-radius: 0.2em;
@@ -1450,6 +1450,14 @@ code-area *::-webkit-scrollbar-thumb:hover {
 }
 
 /* Utility classes */
+.u-marg-top-nano {
+    margin-top: 0.1em;
+}
+
+.u-marg-top-micro {
+    margin-top: 0.2em;
+}
+
 .u-marg-top-1 {
     margin-top: 0.3em;
 }
