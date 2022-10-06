@@ -768,7 +768,7 @@ body.is-resizing {
 .code-area__header-info {
     flex: 1;
     display: flex;
-    justify-content: end;
+    justify-content: flex-end;
     align-items: center;
     gap: 1em;
     margin-right: 0.3em;
