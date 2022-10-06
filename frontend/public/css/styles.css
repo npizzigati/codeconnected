@@ -439,7 +439,7 @@ body.is-resizing {
 
 .table-row {
     display: table-row;
-    line-height: 2em;
+    line-height: 1.5em;
     position: relative;
 }
 
@@ -528,12 +528,12 @@ body.is-resizing {
 .aligned-block__row {
     position: relative;
     display: table-row;
-    line-height: 1.3em;
+    line-height: 1.1em;
 }
 
 .aligned-block__row--wide-spaced {
     display: table-row;
-    line-height: 3em;
+    line-height: 2.3em;
 }
 
 .aligned-block__row--clickable {
@@ -565,7 +565,7 @@ body.is-resizing {
 }
 
 .aligned-block__image--tiny {
-    height: 2.5em;
+    height: 2.0em;
 }
 
 .aligned-block__image--tinier {
@@ -818,7 +818,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
     text-align: center;
     color: white;
     padding: 0.3em 0.2em 0.2em;
-    margin: 0.4em 0 0 1em;
+    margin: 0.4em 3em 0 1em;
     font-family: 'Lato', sans-serif;
     font-size: 0.9em;
     border-radius: 0.2em;
@@ -1083,7 +1083,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
 }
 
 .form {
-    padding: 2.5em 1.2em 1.2em 1.2em;
+    padding: 1.4em 1.2em 1.2em 1.2em;
     margin: 0 auto;
     min-height: 12em;
 }
