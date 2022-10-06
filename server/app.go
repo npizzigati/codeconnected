@@ -404,6 +404,10 @@ func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		return
 	}
 
+	// Do not save sessions with excessively long content
+	if len(csm.Content) > 64000 {
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+	}
 
 	query := "UPDATE coding_sessions SET editor_contents = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, csm.Content, csm.CodeSessionID); err != nil {
