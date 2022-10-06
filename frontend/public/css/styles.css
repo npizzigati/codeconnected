@@ -471,17 +471,12 @@ body.is-resizing {
 }
 
 .sign-in-link {
-    color: white;
-    font-family: 'Lato', sans-serif;
-    font-weight: 700;
-    font-size: 1.3em;
-    text-decoration: underline;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .sign-in-link:hover {
     color: #d22eff;
-    cursor: pointer;
 }
 
 .icon {
@@ -1237,8 +1232,23 @@ code-area *::-webkit-scrollbar-thumb:hover {
     transition: opacity .5s;
 }
 
+.sign-in-block {
+    flex: 1;
+    max-width: fit-content;
+}
+
 .participants-list {
-    position: relative;
+    display: inline;
+}
+
+.participants-list__container {
+    flex: 1;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: fit-content;
+    /* position: relative; */
     font-family: 'Jost', sans-serif;
     font-weight: 400;
     color: #999;

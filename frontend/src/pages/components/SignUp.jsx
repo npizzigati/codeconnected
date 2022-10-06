@@ -40,6 +40,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       </div>
       {activationStatus === 'pre' &&
         <form noValidate className='form' ref={form} onSubmit={handleSubmit}>
+          <p className='form__subheading u-marg-bot-4'>Create a free account</p>
           <p className='form__row'>
             <label className='form__label' htmlFor='username'>
               <img

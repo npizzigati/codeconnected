@@ -22,6 +22,7 @@ function Home () {
   const mainDomRef = useRef(null);
   const authDialogDomRef = useRef(null);
   const preLaunchDialogDomRef = useRef(null);
+  const initialAuthTab = useRef('SignIn');
   const navigate = useNavigate();
   const escapeEvent = new Event('escapePressed');
 
@@ -78,7 +79,7 @@ function Home () {
       {
         number: 1,
         icon: { path: './images/login.png', alt: 'Login' },
-        text: 'Sign in to remove time limit',
+        text: 'Sign in/up to remove time limit',
         callback: preLaunchSignIn
       },
       {
@@ -109,6 +110,7 @@ function Home () {
                 setShowAuth={setShowAuth}
                 setAuthed={setAuth}
                 setPreLaunchLanguage={setPreLaunchLanguage}
+                initialTab={initialAuthTab.current}
                 config={preLaunchLanguage === '' ? {} : { successCallback: () => launch(preLaunchLanguage) }}
               />
             </div>
@@ -141,14 +143,13 @@ function Home () {
                   </div>
                 </div>
               </div>
-              <div className='flex-pane flex-container flex-container--main-end u-pad-top-1 u-pad-right-1'>
+              <div className='flex-pane flex-container flex-container--main-end u-pad-top-2 u-pad-right-2'>
                 {auth
                 ? <div><UserQuickdash setAuthed={setAuth} /></div>
-                : <div
-                    className='sign-in-link'
-                    onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
-                  >
-                    Sign in
+                : <div className='header-text'>
+                    <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
+                    <span> / </span>
+                    <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>Sign up</span>
                   </div>}
               </div>
           </header>
@@ -215,13 +216,18 @@ function Home () {
                     <h1>Resume a&nbsp;session&nbsp;&nbsp;&nbsp;</h1>
                   </div>
                 </div>
-                <div className='flex-pane flex-container'>
+                <div className='flex-pane flex-container u-marg-bot-3'>
                   {auth
                     ? <div className='code-sessions-container'>
                         <CodeSessions authed={auth} />
                       </div>
                     : <div className='u-pad-top-5'>
-                        <p className='message message--small'><span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}>Sign&nbsp;in</span>&nbsp;to&nbsp;access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;</p>
+                        <p className='message message--small'>
+                          <span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
+                          <span> / </span>
+                          <span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>sign up</span>
+                          <span> to access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        </p>
                       </div>}
                 </div>
               </div>
@@ -235,6 +241,16 @@ function Home () {
         </div>}
     </>
   );
+
+  function displaySignIn () {
+    initialAuthTab.current = 'signIn';
+    setShowAuth(true);
+  }
+
+  function displaySignUp () {
+    initialAuthTab.current = 'signUp';
+    setShowAuth(true);
+  }
 
   function fireKeydownEvents (event) {
     // Escape is keyCode 27
@@ -275,6 +291,7 @@ function Home () {
   }
 
   function preLaunchSignIn () {
+    initialAuthTab.current = 'signIn';
     setShowPreLaunchDialog(false);
     setShowAuth(true);
   }

@@ -6,8 +6,8 @@ import SignUp from './SignUp.jsx';
 import PopupDialog from './PopupDialog.jsx';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
 
-function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, config }) {
-  const [selectedTab, setSelectedTab] = useState('signIn');
+function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, initialTab, config }) {
+  const [selectedTab, setSelectedTab] = useState(initialTab);
   const [savedActivationStatus, setSavedActivationStatus] = useState('pre');
   const [savedSignInStatus, setSavedSignInStatus] = useState('pre');
   const [showTabSwitchDialog, setShowTabSwitchDialog] = useState(false);

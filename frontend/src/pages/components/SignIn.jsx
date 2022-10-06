@@ -42,6 +42,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       </div>
       {status === 'pre' &&
         <form noValidate className='form' onSubmit={handleSubmit}>
+          <p className='form__subheading u-marg-bot-4'>Log in to your account</p>
           <p className='form__row'>
             <label className='form__label' htmlFor='email'>
               <img

@@ -56,6 +56,7 @@ function CodeArea () {
   const replTitleRowDomRef = useRef(null);
   const backToHomeDialogDomRef = useRef(null);
   const roomClosedDialogDomRef = useRef(null);
+  const initialAuthTab = useRef('SignIn');
   const prevTermClientHeight = useRef(0);
   const term = useRef(null);
   const setupCanceled = useRef(false);
@@ -240,7 +241,7 @@ function CodeArea () {
           unmountOnExit
         >
           <div className='auth' ref={authDomRef}>
-            <Auth setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />
+            <Auth initialTab={initialAuthTab.current} setShowAuth={setShowAuth} setAuthed={setAuthed} config={{}} />
           </div>
         </CSSTransition>
         <CSSTransition
@@ -290,17 +291,16 @@ function CodeArea () {
             </div>
             {timeLeftDisplay !== null && <div className='time-remaining'>{timeLeftDisplay}</div>}
           </div>
-          <div className='flex-pane flex-container flex-container--main-end flex-container--cross-centered flex-container--gap u-marg-right-1 u-marg-bot-5'>
+          <div className='code-area__header-info'>
             <Participants participantNames={participantNames} />
             {termEnabled && <Invite />}
             <div className='sign-in-block'>
               {authed
                 ? <div><UserQuickdash setAuthed={setAuthed} /></div>
-                : <div
-                    className='sign-in-link'
-                    onPointerDown={(ev) => handlePointerDown(ev, setShowAuth, true)}
-                  >
-                    Sign in
+                : <div>
+                    <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
+                    <span> / </span>
+                    <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>Sign up</span>
                   </div>}
             </div>
           </div>
@@ -386,6 +386,16 @@ function CodeArea () {
       </div>
     </>
   );
+
+  function displaySignIn () {
+    initialAuthTab.current = 'signIn';
+    setShowAuth(true);
+  }
+
+  function displaySignUp () {
+    initialAuthTab.current = 'signUp';
+    setShowAuth(true);
+  }
 
   /**
    * Reset codemirror, terminal panes to sane widths
