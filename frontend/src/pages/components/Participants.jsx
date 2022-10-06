@@ -9,24 +9,24 @@ function Participants ({ participantNames }) {
 
   return (
     <div
-      className='participants-list'
+      className='participants-list__container'
       onPointerDown={ev => handlePointerDown(ev, toggleNames)}
       onPointerEnter={displayTooltip}
       onPointerLeave={hideTooltip}
     >
       {showNames
-        ? <div>
+        ? <div className='participants-list'>
             <span className='participants-list__label'>Participants: </span>
-            <span className='participants-list__count'>{participantNames?.join(', ')}</span>
+            <span className='participants-list__names'>{participantNames?.join(', ')}</span>
           </div>
-        : <div>
+        : <div className='participants-list'>
             <span className='participants-list__label'>Participants: </span>
-            <span className='participants-list__count'>{participantNames?.length}</span>
+            <span>{participantNames?.length}</span>
           </div>
       }
-      {showTooltip &&
+      {showTooltip && !showNames &&
         <div className='tooltip'>
-          <span className='tooltip__text'>Click to {showNames ? 'hide' : 'show'} names</span>
+          <span className='tooltip__text'>Click to show names</span>
         </div>
       }
     </div>

@@ -270,6 +270,14 @@ body.is-resizing {
     width: 100%;
 }
 
+.header-text {
+    color: white;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 1em;
+    white-space: nowrap;
+}
+
 .center-pane {
     flex: 2;
     display: flex;
@@ -755,6 +763,22 @@ body.is-resizing {
     /* Prevent default touch actions (this allows resizing the panes
        to work with the resize bar, among other things) */
     touch-action: none;
+}
+
+.code-area__header-info {
+    flex: 1;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 1em;
+    margin-right: 0.3em;
+    margin-bottom: 1.5em;
+    min-width: 0;
+    color: white;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 1em;
+    white-space: nowrap;
 }
 
 /* Scrollbar rules */
@@ -1257,7 +1281,6 @@ code-area *::-webkit-scrollbar-thumb:hover {
     border-radius: 0.4em;
     padding: 0.3em;
     cursor: pointer;
-    white-space: nowrap;
     z-index: var(--participants-list-z-index);
 }
 
@@ -1265,14 +1288,16 @@ code-area *::-webkit-scrollbar-thumb:hover {
     padding-right: 0.1em;
 }
 
-.participants-list__count {
+.participants-list__names {
 }
 
 .tooltip {
     position: absolute;
-    top: 2em;
-    left: -1em;
-    right: -1em;
+    margin-top: 0.7em;
+    margin-left: -0.7em;
+    /* top: 2em; */
+    /* left: -1em; */
+    /* right: -1em; */
     text-align: center;
     z-index: var(--tooltip-z-index)
 }
@@ -1285,6 +1310,8 @@ code-area *::-webkit-scrollbar-thumb:hover {
 }
 
 .invite__button {
+    flex: 1;
+    max-width: fit-content;
     font-family: 'Jost', sans-serif;
     font-weight: 500;
     color: #458dc4;
@@ -1782,16 +1809,12 @@ code-area *::-webkit-scrollbar-thumb:hover {
 
 @media (max-width: 850px) {
     .side-pane {
-        flex: 1;
+        flex: 1.5;
     }
 }
 
 @media (max-width: 650px) {
-    .participants-list {
-        display: none;
-    }
-
-    .sign-in-block {
+    .participants-list__container {
         display: none;
     }
 }
