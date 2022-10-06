@@ -20,8 +20,6 @@ function Home () {
   const isPreLaunchDialogVisible = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
   const mainDomRef = useRef(null);
-  const footerDomRef = useRef(null);
-  const headerDomRef = useRef(null);
   const authDialogDomRef = useRef(null);
   const preLaunchDialogDomRef = useRef(null);
   const navigate = useNavigate();
