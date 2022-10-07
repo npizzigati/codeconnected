@@ -11,10 +11,12 @@ Your verification code is %s.
 
 Enter it in the codeconnected sign-up dialog to complete your registration.
 
-If you have any questions, or if you don't know why you received this, please reply to this email.
+If you have any questions, please reply to this email.
 
 Thanks!
-The codeconnected team`
+The codeconnected team
+
+Note: This email was sent as part of an automated sign-up process. If you were not expecting it, you can safely ignore it. No account will be created using this email without your consent.`
 
 const passwordResetEmailTemplate = `Hi!
 
@@ -22,7 +24,7 @@ Your password reset code is %s.
 
 Enter it in the codeconnected password reset dialog to complete the reset process.
 
-If you have any questions, or if you don't know why you received this, please reply to this email.
+If you have any questions, please reply to this email.
 
 Thanks!
 The codeconnected team`
