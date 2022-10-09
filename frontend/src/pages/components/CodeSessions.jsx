@@ -84,11 +84,12 @@ function CodeSessions ({ authed }) {
     if (isCanceled.current) {
       return;
     }
-    if (sessionCount === 0) {
-      // Clear code sessions for the unlikely case that a user
-      // has signed out of a session with saved code sessions and
-      // signed in with another username without saved code
-      // sessions
+    if (sessionCount === undefined || sessionCount === 0) {
+      // Abort if there was a problem getting session data or if
+      // there are no sessions. Also clear code sessions for the
+      // unlikely case that a user has signed out of a session
+      // with saved code sessions and signed in with another
+      // username without saved code sessions.
       setCSessions([]);
       setShowCSessions(false);
       return;
@@ -257,7 +258,6 @@ function CodeSessions ({ authed }) {
       const response = await fetch('/api/get-code-sessions', options);
       return await response.json();
     } catch (error) {
-      console.log('Error fetching code sessions: ' + error);
       return {};
     }
   }
