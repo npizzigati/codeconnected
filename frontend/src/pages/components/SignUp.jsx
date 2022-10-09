@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
+import FadeLoader from 'react-spinners/FadeLoader';
 
 function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
   const [email, setEmail] = useState('');
@@ -15,13 +16,18 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
   const [codeValidationError, setCodeValidationError] = useState('');
   const [activationStatus, setActivationStatus] = useState('pre');
   const [activationCode, setActivationCode] = useState('');
-  const [resendPopupMessage, setResendPopupMessage] = useState('');
+  const [popupMessage, setPopupMessage] = useState('');
+  const [failureMessage, setFailureMessage] = useState('');
+  const [showSpinner, setShowSpinner] = useState(false);
+  const [showBackdrop, setShowBackdrop] = useState(false);
   const usernameInput = useRef(null);
   const emailInput = useRef(null);
   const passwordInput = useRef(null);
   const passwordDupInput = useRef(null);
   const codeInput = useRef(null);
   const form = useRef(null);
+  const popupTimeout = useRef(null);
+  const spinnerStartTimeout = useRef(null);
   const inputFieldSize = '25';
   const inputs = [usernameInput, emailInput, passwordInput, passwordDupInput];
 
@@ -36,10 +42,21 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
   return (
     <>
       <div className='popup-container'>
-        <div className='popup'>{resendPopupMessage}</div>
+        <div className='popup'>{popupMessage}</div>
       </div>
       {activationStatus === 'pre' &&
         <form noValidate className='form' ref={form} onSubmit={handleSubmit}>
+          {showBackdrop && <div className='backdrop backdrop--transparent backdrop--level2' />}
+          {showSpinner &&
+            <div>
+              <div className='spinner-container spinner-container--small'>
+                <FadeLoader
+                  color='#369999'
+                  loading={showSpinner}
+                  size={50}
+                />
+              </div>
+            </div>}
           <p className='form__subheading u-marg-bot-4'>Create a free account</p>
           <p className='form__row'>
             <label className='form__label' htmlFor='username'>
@@ -154,6 +171,17 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       {activationStatus === 'underway' &&
         <div className='activation'>
           <form className='form' noValidate onSubmit={handleCodeSubmit}>
+            {showBackdrop && <div className='backdrop backdrop--transparent backdrop--level2' />}
+            {showSpinner &&
+              <div>
+                <div className='spinner-container spinner-container--small'>
+                  <FadeLoader
+                    color='#369999'
+                    loading={showSpinner}
+                    size={50}
+                  />
+                </div>
+              </div>}
             <div className='form__subheading u-pad-bot-1'>
               A verification code has been sent to your email address:
             </div>
@@ -203,7 +231,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
 
       {activationStatus === 'failure' &&
         <div className='u-pad-top-3 u-pad-bot-3'>
-          <div className='form__subheading'>Your activation request has timed out.</div>
+          <div className='form__subheading'>{failureMessage}</div>
           <span
             className='form__bottom-link u-marg-top-3 u-marg-bot-3'
             onPointerDown={(ev) => handlePointerDown(ev, goBackToSignUp, ev)}
@@ -213,6 +241,20 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
         </div>}
     </>
   );
+
+  function displaySpinnerAndBackdrop () {
+    setShowBackdrop(true);
+    // Delay before starting spinner so that it doesn't show if
+    // response is received quickly
+    spinnerStartTimeout.current = setTimeout(() => setShowSpinner(true), 250);
+  }
+
+  function hideSpinnerAndBackdrop () {
+    setShowBackdrop(false);
+    clearTimeout(spinnerStartTimeout.current);
+    setShowSpinner(false);
+  }
+
 
   function handleGetStartedSubmit (ev) {
     ev.preventDefault();
@@ -249,19 +291,23 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       body: body
     };
 
+    displaySpinnerAndBackdrop();
     try {
-      const response = await fetch('/api/activateuser', options);
-      const results = await response.json();
-      console.log('activation status: ' + results.status);
-      if (results.status === 'success') {
-        console.log('activation successful');
+      const response = await fetch('/api/activate-user', options);
+      const json = await response.json();
+      hideSpinnerAndBackdrop();
+      if (json.status === 'success') {
         setActivationStatus('success');
-      } else {
-        setErrorMessage(codeInput.current, 'Invalid or expired activation code.');
-        codeInput.current.classList.add('invalid');
+        return;
       }
+      if (json.isFatal) {
+        setFailureMessage(json.message);
+        setActivationStatus('failure');
+        return;
+      }
+      showPopup(json.message);
     } catch (error) {
-      console.error('Error fetching json:', error);
+      showPopup('Something went wrong — please try again');
     }
   }
 
@@ -309,17 +355,26 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
     ev.preventDefault();
     setActivationCode('');
     setCodeValidationError('');
+    clearPreFormInputs();
     setActivationStatus('pre');
   }
 
-  function showResendPopup (message) {
-    setResendPopupMessage(message);
-    setTimeout(() => {
-      setResendPopupMessage('');
+  function clearPreFormInputs () {
+    setUsername('');
+    setEmail('');
+    setPassword('');
+    setPasswordDup('');
+  }
+
+  function showPopup (message) {
+    setPopupMessage(message);
+    clearTimeout(popupTimeout.current);
+    popupTimeout.current = setTimeout(() => {
+      setPopupMessage('');
     }, 5000);
   }
 
-  function resendEmail () {
+  async function resendEmail () {
     const body = JSON.stringify({ email, username });
     const options = {
       method: 'POST',
@@ -327,27 +382,24 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: body
     };
-
-    fetch('/api/resend-verification-email', options)
-      .then(response => response.json())
-      .then(json => {
-        console.log(json);
-        if (json.status === 'success') {
-          showResendPopup('A new code was sent to your email');
-          console.log('email resent');
-        } else {
-          // TODO: show 'resend failed' popup
-          console.log('email NOT resent');
-          console.log('reason: ' + json.reason);
-          if (json.reason === 'expired') {
-            setActivationStatus('failure');
-          } else if (json.reason === 'exceeded') {
-            showResendPopup('Code resent maximum number of times');
-          } else {
-            showResendPopup('There was an error with your request. Please try again later.');
-          }
-        }
-      });
+    displaySpinnerAndBackdrop();
+    try {
+      const response = await fetch('/api/resend-verification-email', options);
+      const json = await response.json();
+      hideSpinnerAndBackdrop();
+      if (json.status === 'success') {
+        showPopup('A new code was sent to your email');
+        return;
+      }
+      if (json.isFatal) {
+        setFailureMessage(json.message);
+        setActivationStatus('failure');
+        return;
+      }
+      showPopup(json.message);
+    } catch (error) {
+      showPopup('Something went wrong — please try again');
+    }
   }
 
   function validate (input) {
@@ -411,7 +463,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
     }
   }
 
-  function handleSubmit (ev) {
+  async function handleSubmit (ev) {
     ev.preventDefault();
     resetValidation();
     let allFieldsValid = true;
@@ -443,16 +495,22 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       body: body
     };
 
-    fetch('/api/sign-up', options)
-      .then(response => response.json())
-      .then(json => {
-        if (json.emailUsed) {
-          setErrorMessage(emailInput.current, 'Email in use or pending activation.');
-          emailInput.current.classList.add('invalid');
-        } else {
-          setActivationStatus('underway');
-        }
-      });
+    displaySpinnerAndBackdrop();
+    try {
+      const response = await fetch('/api/sign-up', options);
+      const json = await response.json();
+      hideSpinnerAndBackdrop();
+      if (json.status !== 'success') {
+        console.error('Error in processing sign-up request');
+      } else if (json.emailUsed) {
+        setErrorMessage(emailInput.current, 'Email in use or pending activation.');
+        emailInput.current.classList.add('invalid');
+      } else {
+        setActivationStatus('underway');
+      }
+    } catch (error) {
+      console.error('Error in processing sign-in request:', error);
+    }
   }
 }
 

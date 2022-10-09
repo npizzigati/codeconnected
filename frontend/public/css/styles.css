@@ -522,6 +522,10 @@ body.is-resizing {
     opacity: 0.6;
 }
 
+.backdrop--transparent {
+    opacity: 0;
+}
+
 .aligned-block {
     display: table;
 }
@@ -953,6 +957,12 @@ code-area *::-webkit-scrollbar-thumb:hover {
     transform: translate(-50%, -50%);
 }
 
+.spinner-container--small {
+    position: absolute;
+    height: 10em;
+    width: 10em;
+}
+
 .account-circle {
     display: block;
     height: 2em;
@@ -1235,7 +1245,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
 .popup-container {
     position: absolute;
     left: 0;
-    top: 5vh;
+    top: 3.5vh;
     display: flex;
     width: 100%;
     justify-content: center;

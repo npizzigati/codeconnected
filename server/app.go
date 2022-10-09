@@ -187,19 +187,25 @@ func initSesClient() {
 	sesCli = sesv2.NewFromConfig(cfg)
 }
 
-func sendPasswordResetEmail(emailAddr, resetCode string) {
+func sendPasswordResetEmail(emailAddr, resetCode string) error {
 	subject := "Your password reset code"
 	body := buildPasswordResetEmailBody(resetCode)
-	sendEmail(emailAddr, subject, body)
+	if err := sendEmail(emailAddr, subject, body); err != nil {
+		return err
+	}
+	return nil
 }
 
-func sendVerificationEmail(username, emailAddr, activationCode string) {
+func sendVerificationEmail(username, emailAddr, activationCode string) error {
 	subject := "Verify your email address"
 	body := buildVerificationEmailBody(username, activationCode)
-	sendEmail(emailAddr, subject, body)
+	if err := sendEmail(emailAddr, subject, body); err != nil {
+		return err
+	}
+	return nil
 }
 
-func sendEmail(emailAddr, subject, body string) {
+func sendEmail(emailAddr, subject, body string) error {
 	fromAddr := "codeconnected <contact@codeconnected.dev>"
 	destAddr := sesTypes.Destination{
 		ToAddresses: []string{emailAddr},
@@ -222,12 +228,11 @@ func sendEmail(emailAddr, subject, body string) {
 		FromEmailAddress: &fromAddr,
 		Content:          &emailContent,
 	}
-	output, err := sesCli.SendEmail(context.Background(), &email)
+	_, err := sesCli.SendEmail(context.Background(), &email)
 	if err != nil {
-		logger.Println("Error in sending email: ", err)
-		return
+		return err
 	}
-	logger.Println("sendEmail output: ", output)
+	return nil
 }
 
 func initClient() {
@@ -589,8 +594,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	session, err := store.Get(r, "session")
 	if err != nil {
 		logger.Println("Error retrieving status: ", err)
-		// TODO: Replace this http error with a meaningful json
-		// response to be handled by the front end
 		room.status = "failed"
 		logger.Println("********Room preparation failed. Room will be closed********")
 		closeRoom(roomID)
@@ -937,19 +940,27 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		Filename string
 		RoomID   string
 	}
+
 	var cm contentModel
-	body, err := io.ReadAll(r.Body)
+	var body []byte
+	var err error
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
-		// TODO: replace these panics with useful error messages
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
+		logger.Println("Error unmarshalling:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	tarBuffer, err := makeTarball([]byte(cm.Content), cm.Filename)
 	if err != nil {
-		panic(err)
+		logger.Println("Error making tarball:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	cn := rooms[cm.RoomID].container
@@ -958,13 +969,11 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	err = cli.CopyToContainer(context.Background(), cn.ID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
 	if err != nil {
 		logger.Println("Error copying user code to container:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
-	// TODO: Return failure (in json form) if this fails (if any of
-	// the above error cases happen)
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Successfully wrote code to container"))
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func startUpRunner(lang, roomID string, rows int, cols int) error {
@@ -1376,20 +1385,24 @@ func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		RoomID   string `json:"roomID"`
 	}
 	var cm contentModel
-	body, err := io.ReadAll(r.Body)
+	var body []byte
+	var err error
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
+		logger.Println("Error unmarshalling:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	rooms[cm.RoomID].termHist = []byte(cm.LastLine)
 
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("Successfully cleared history"))
+	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
 func signOut(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1418,31 +1431,34 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		PlainTextPW string `json:"plainTextPW"`
 	}
 	var cm contentModel
-	body, err := io.ReadAll(r.Body)
+	var body []byte
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure", "reason": "Error processing sign-in request"})
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
+		logger.Println("Error unmarshalling:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure", "reason": "Error processing sign-in request"})
+		return
 	}
-	logger.Println("credentials: ", cm.Email, cm.PlainTextPW)
 	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
-
 	emailFound := true
 	signedIn := false
 	var encryptedPW, username string
 	var userID int
 	query := "SELECT encrypted_pw, username, id FROM users WHERE email = $1"
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW, &username, &userID); err != nil {
-		// Will throw error if no records found
+		// Error will throw if no records found
 		emailFound = false
 		logger.Println("select query error: ", err)
 	}
 
 	if emailFound && bcrypt.CompareHashAndPassword([]byte(encryptedPW), []byte(pepperedPW)) == nil {
-		// success
-		logger.Println("*****Successfully signed in")
+		// successful sign in
+		logger.Println("Successfully signed in")
 		signedIn = true
 		session.Values["auth"] = true
 		session.Values["email"] = cm.Email
@@ -1453,23 +1469,15 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			return
 		}
 	} else {
-		logger.Println("*****Sign in was unsuccessful.")
+		logger.Println("Sign in unsuccessful.")
 	}
 
-	type responseModel struct {
-		SignedIn bool `json:"signedIn"`
+	if signedIn {
+		sendJsonResponse(w, map[string]string{"status": "success"})
+	} else {
+		time.Sleep(2 * time.Second)
+		sendJsonResponse(w, map[string]string{"status": "failure", "reason": "Username and/or password incorrect"})
 	}
-	response := &responseModel{
-		SignedIn: signedIn,
-	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
 }
 
 func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1545,11 +1553,15 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
+		logger.Println("Error unmarshalling:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	// Determine whether email is in database
 	query := "SELECT id FROM users WHERE email = $1"
@@ -1561,8 +1573,6 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	}
 
 	if !emailFound {
-		// TODO: Send the reason along with the status, like we do for
-		// the activation process
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1575,8 +1585,8 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	// Enter code and expiry into password reset requests
 	expiry := time.Now().Add(resetTimeout * time.Minute).Unix()
 	code := generateRandomCode()
-	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry) VALUES($1, $2, $3)"
-	if _, err := pool.Exec(context.Background(), query, userID, code, expiry); err != nil {
+	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry, code_attempts) VALUES($1, $2, $3, $4)"
+	if _, err := pool.Exec(context.Background(), query, userID, code, expiry, 0); err != nil {
 		logger.Println("unable to insert password reset request in db: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
@@ -1593,7 +1603,10 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		}
 	}()
 
-	sendPasswordResetEmail(cm.Email, code)
+	if err := sendPasswordResetEmail(cm.Email, code); err != nil {
+		logger.Println("Error in sending password reset email:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+	}
 	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
@@ -1614,6 +1627,20 @@ func sendJsonResponse(w http.ResponseWriter, data interface{}) {
 	w.Write(jsonResp)
 }
 
+func updateResetCodeAttempts(email string) {
+	query := "UPDATE password_reset_requests p SET code_attempts = code_attempts + 1 FROM users u WHERE u.id = p.user_id AND email = $1"
+	if _, err := pool.Exec(context.Background(), query, email); err != nil {
+		logger.Println("Unable to update code_attempts: ", err)
+	}
+}
+
+func updateActivationCodeAttempts(email string) {
+	query := "UPDATE pending_activations SET code_attempts = code_attempts + 1 WHERE email = $1"
+	if _, err := pool.Exec(context.Background(), query, email); err != nil {
+		logger.Println("Unable to update code_attempts: ", err)
+	}
+}
+
 func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type contentModel struct {
 		Email          string `json:"email"`
@@ -1623,79 +1650,75 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong — please try again"})
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
-	}
-	logger.Println("reset code received: ", cm.Code)
-	logger.Println("reset email received: '", cm.Email, "'")
-
-	// Find reset code in db
-	query := "SELECT p.user_id, p.expiry FROM password_reset_requests AS p INNER JOIN users AS u ON p.user_id = u.id WHERE p.reset_code = $1 AND u.email = $2"
-	var userID int
-	var expiry int64
-	var status, reason string
-	if err := pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&userID, &expiry); err != nil {
-		logger.Println("Error in finding user (reset password): ", err)
-		status = "failure"
-		reason = "row not found or other database error"
-	}
-
-	logger.Println("now: ", time.Now().Unix())
-	logger.Println("expiry: ", expiry)
-	// If row was not found, expiry will be 0
-	if expiry != 0 && time.Now().Unix() > expiry {
-		status = "failure"
-		reason = "code expired"
-		// delete expired record
-		deleteRequestRec(userID)
-	}
-
-	if status == "failure" {
-		sendJsonResponse(w, map[string]string{"status": "failure", "reason": reason})
+		logger.Println("Error unmarshalling:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong — please try again"})
 		return
 	}
 
-	logger.Println("Reset password code and user found")
+	query := "SELECT p.user_id, p.expiry, p.code_attempts, p.reset_code FROM password_reset_requests AS p INNER JOIN users AS u ON p.user_id = u.id WHERE u.email = $1"
+	var resetCode string
+	var userID, codeAttempts int
+	var expiry int64
+	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&userID, &expiry, &codeAttempts, &resetCode); err != nil {
+		time.Sleep(2 * time.Second)
+		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Reset code expired"})
+		return
+	}
+
+	if cm.Code != resetCode {
+		updateResetCodeAttempts(cm.Email)
+		time.Sleep(2 * time.Second)
+		if codeAttempts > 2 {
+			deleteRequestRec(userID)
+			sendJsonResponse(w, map[string]string{"status": "failure", "message": "Reset attempts exceeded"})
+			return
+		}
+		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Incorrect reset code"})
+		return
+	}
 
 	// Generate encrypted password
 	pepperedPW := cm.NewPlaintextPW + os.Getenv("PWPEPPER")
 	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
 		bcrypt.DefaultCost)
 	if err != nil {
-		panic(err)
+		logger.Println(err)
+		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong -- please try again"})
+		return
 	}
 
 	// Change password in db
 	query = "UPDATE users SET encrypted_pw = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, encryptedPW, userID); err != nil {
-		logger.Println("unable to insert: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
+		logger.Println(err)
+		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong -- please try again"})
 		return
 	}
-	// Delete completed reset request from database
 	deleteRequestRec(userID)
 	sendJsonResponse(w, map[string]string{"status": "success"})
 }
 
-func deleteRequestRec(userID int) string {
+func deleteRequestRec(userID int) error {
 	query := "DELETE FROM password_reset_requests WHERE user_id = $1"
 	if _, err := pool.Exec(context.Background(), query, userID); err != nil {
-		logger.Println("unable to delete request record: ", err)
-		return "failure"
+		return err
 	}
-	return "success"
+	return nil
 }
 
-func deleteActivationRec(email string) string {
+func deleteActivationRec(email string) error {
 	query := "DELETE FROM pending_activations WHERE email = $1"
 	if _, err := pool.Exec(context.Background(), query, email); err != nil {
 		logger.Println("unable to delete activation record: ", err)
-		return "failure"
+		return err
 	}
-	return "success"
+	return nil
 }
 
 func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1704,33 +1727,65 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		Code  string `json:"code"`
 		Email string `json:"email"`
 	}
+	type responseModel struct {
+		Status  string `json:"status"`
+		IsFatal bool   `json:"isFatal"`
+		Message string `json:"message"`
+	}
+	fatalFailureRes := &responseModel{
+		Status:  "failure",
+		IsFatal: true,
+	}
+	nonFatalFailureRes := &responseModel{
+		Status:  "failure",
+		IsFatal: false,
+	}
+	successRes := &responseModel{
+		Status:  "success",
+		IsFatal: false,
+	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		nonFatalFailureRes.Message = "Something went wrong — please try again"
+		sendJsonResponse(w, nonFatalFailureRes)
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
-	}
-	logger.Println("activation code received: ", cm.Code)
-	// Move user from pending activations to user if code is found
-	query := "SELECT username, encrypted_pw, expiry FROM pending_activations WHERE activation_code = $1 AND email = $2"
-	var username, encryptedPW string
-	var expiry int64
-	// Will throw errow if code is not found
-	if err = pool.QueryRow(context.Background(), query, cm.Code, cm.Email).Scan(&username, &encryptedPW, &expiry); err != nil {
-		logger.Println("query error: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
+		logger.Println("Error unmarshalling:", err)
+		nonFatalFailureRes.Message = "Something went wrong — please try again"
+		sendJsonResponse(w, nonFatalFailureRes)
 		return
 	}
-	logger.Println("now: ", time.Now().Unix())
-	logger.Println("expiry: ", expiry)
-	if time.Now().Unix() > expiry {
-		logger.Println("Activation code has expired")
-		// delete expired record
-		deleteActivationRec(cm.Email)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
+	logger.Println("activation code received: ", cm.Code)
+
+	query := "SELECT username, encrypted_pw, expiry, code_attempts, activation_code FROM pending_activations WHERE email = $1"
+	var codeAttempts int
+	var username, encryptedPW, activationCode string
+	var expiry int64
+	if err = pool.QueryRow(context.Background(), query, cm.Email).Scan(&username, &encryptedPW, &expiry, &codeAttempts, &activationCode); err != nil {
+		// Will throw error if no record found (i.e., activation
+		// request expired and deleted)
+		logger.Println(err)
+		fatalFailureRes.Message = "Your activation code has expired."
+		sendJsonResponse(w, fatalFailureRes)
+		return
+	}
+	if cm.Code != activationCode {
+		updateActivationCodeAttempts(cm.Email)
+		if codeAttempts > 2 {
+			logger.Println("Code attempts exceeded")
+			fatalFailureRes.Message = "Activation attempts exceeded."
+			deleteActivationRec(cm.Email)
+			sendJsonResponse(w, fatalFailureRes)
+			return
+		}
+		nonFatalFailureRes.Message = "Activation code incorrect"
+		// Pause briefly after wrong code entered to impede attacks
+		time.Sleep(2 * time.Second)
+		sendJsonResponse(w, nonFatalFailureRes)
 		return
 	}
 
@@ -1738,14 +1793,14 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	deleteActivationRec(cm.Email)
 	query = "INSERT INTO users(username, email, encrypted_pw) VALUES($1, $2, $3) RETURNING id;"
 	if err := pool.QueryRow(context.Background(), query, username, cm.Email, encryptedPW).Scan(&userID); err != nil {
-		logger.Println("unable to insert user data: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
+		fatalFailureRes.Message = "There was a problem creating your account."
+		sendJsonResponse(w, fatalFailureRes)
 		return
 	}
 
 	if userID == -1 {
-		logger.Println("User ID could not be retrieved")
-		sendJsonResponse(w, map[string]string{"status": "failure"})
+		fatalFailureRes.Message = "There was a problem creating your account."
+		sendJsonResponse(w, fatalFailureRes)
 		return
 	}
 
@@ -1754,11 +1809,12 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	session.Values["username"] = username
 	session.Values["userID"] = userID
 	if err = session.Save(r, w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fatalFailureRes.Message = "Your account was created but we were unable to sign you in. Please return to the sign-in form to sign in."
+		sendJsonResponse(w, fatalFailureRes)
 		return
 	}
 
-	sendJsonResponse(w, map[string]string{"status": "success"})
+	sendJsonResponse(w, successRes)
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1774,11 +1830,15 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
+		logger.Println("Error unmarshalling:", err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 	logger.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
 	logger.Println("baseURL: ", cm.BaseURL)
@@ -1786,7 +1846,9 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
 		bcrypt.DefaultCost)
 	if err != nil {
-		panic(err)
+		logger.Println(err)
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		return
 	}
 
 	expiry := time.Now().Add(activationTimeout).Unix()
@@ -1811,10 +1873,10 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	if !emailUsed {
-		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry, code_resends) VALUES($1, $2, $3, $4, $5, $6)"
-		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0); err != nil {
+		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry, code_resends, code_attempts) VALUES($1, $2, $3, $4, $5, $6, $7)"
+		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0, 0); err != nil {
 			logger.Println("unable to insert activation request: ", err)
-			// TODO: Send error message to frontend
+			sendJsonResponse(w, map[string]string{"status": "failure"})
 			return
 		}
 
@@ -1835,19 +1897,15 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	type responseModel struct {
-		EmailUsed bool `json:"emailUsed"`
+		EmailUsed bool   `json:"emailUsed"`
+		Status    string `json:"status"`
 	}
 	response := &responseModel{
 		EmailUsed: emailUsed,
-	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
+		Status:    "success",
 	}
 
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	sendJsonResponse(w, response)
 }
 
 func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -1855,72 +1913,71 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 		Email    string `json:"email"`
 		Username string `json:"username"`
 	}
+	type responseModel struct {
+		Status  string `json:"status"`
+		IsFatal bool   `json:"isFatal"`
+		Message string `json:"message"`
+	}
+	fatalFailureRes := &responseModel{
+		Status:  "failure",
+		IsFatal: true,
+	}
+	nonFatalFailureRes := &responseModel{
+		Status:  "failure",
+		IsFatal: false,
+	}
+	successRes := &responseModel{
+		Status:  "success",
+		IsFatal: false,
+	}
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		logger.Println("Error reading request body:", err)
+		nonFatalFailureRes.Message = "Something went wrong — please try again"
+		sendJsonResponse(w, nonFatalFailureRes)
+		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		panic(err)
+		logger.Println("Error unmarshalling:", err)
+		nonFatalFailureRes.Message = "Something went wrong — please try again"
+		sendJsonResponse(w, nonFatalFailureRes)
+		return
 	}
 
-	status := "success"
-	var reason string
-
-	// Check/update code resends
 	var codeResends int
 	query := "SELECT code_resends FROM pending_activations WHERE email = $1"
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&codeResends); err != nil {
 		// Will throw error if no record found (i.e., activation
 		// request expired and deleted)
 		logger.Println("Select query error: ", err)
-		status = "failure"
-		reason = "expired"
-	} else if codeResends > 2 {
-		status = "failure"
-		reason = "exceeded"
+		fatalFailureRes.Message = "Activation request has expired."
+		sendJsonResponse(w, fatalFailureRes)
+		return
 	}
-
-	if status == "failure" {
-		logger.Println(reason)
-		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
+	if codeResends > 2 {
+		fatalFailureRes.Message = "Code resent maximum number of times"
+		sendJsonResponse(w, fatalFailureRes)
 		return
 	}
 
-	query = "UPDATE pending_activations SET code_resends = $1 WHERE email = $2"
-	if _, err := pool.Exec(context.Background(), query, codeResends+1, cm.Email); err != nil {
-		logger.Println("Unable to update code_resends: ", err)
-		status = "failure"
-		reason = "database error"
-		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
-		return
-	}
-
-	// Update activation code
+	// Update fields
 	activationCode := generateRandomCode()
-	query = "UPDATE pending_activations SET activation_code = $1 WHERE email = $2"
-	if _, err := pool.Exec(context.Background(), query, activationCode, cm.Email); err != nil {
-		logger.Println("Unable to update activation code: ", err)
-		status = "failure"
-		reason = "database error"
-		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
-		return
-	}
-
-	// Update expiry
 	expiry := time.Now().Add(activationTimeout).Unix()
-	query = "UPDATE pending_activations SET expiry = $1 WHERE email = $2"
-	if _, err := pool.Exec(context.Background(), query, expiry, cm.Email); err != nil {
-		logger.Println("Unable to update expiry: ", err)
-		status = "failure"
-		reason = "database error"
-		sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
+	query = "UPDATE pending_activations SET activation_code = $1, expiry = $2, code_resends = $3, code_attempts = $4 WHERE email = $5"
+	if _, err := pool.Exec(context.Background(), query, activationCode, expiry, codeResends+1, 0, cm.Email); err != nil {
+		fatalFailureRes.Message = "Something went wrong — please try again in 10 minutes."
+		sendJsonResponse(w, fatalFailureRes)
 		return
 	}
 
-	sendVerificationEmail(cm.Username, cm.Email, activationCode)
-	sendJsonResponse(w, map[string]string{"status": status, "reason": reason})
+	if err := sendVerificationEmail(cm.Username, cm.Email, activationCode); err != nil {
+		fatalFailureRes.Message = "Something went wrong — please try again in 10 minutes."
+		sendJsonResponse(w, fatalFailureRes)
+		return
+	}
+	sendJsonResponse(w, successRes)
 }
 
 func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -2337,26 +2394,25 @@ func main() {
 		SameSite: http.SameSiteStrictMode,
 	}
 	router := httprouter.New()
-	router.POST("/api/savecontent", saveContent)
-	// FIXME: Should this be a POST (is it really idempotent)?
-	router.GET("/api/openws", openWs)
-	router.POST("/api/createroom", createRoom)
+	router.POST("/api/save-content", saveContent)
+	router.GET("/api/open-ws", openWs)
+	router.POST("/api/create-room", createRoom)
 	router.POST("/api/prepare-room", prepareRoom)
-	router.POST("/api/activateuser", activateUser)
+	router.POST("/api/activate-user", activateUser)
 	router.GET("/api/does-room-exist", doesRoomExist)
 	router.GET("/api/online-check-ping", onlineCheckPing)
 	router.GET("/api/get-initial-room-data", getInitialRoomData)
 	router.GET("/api/get-room-status", getRoomStatus)
 	router.GET("/api/get-user-info", getUserInfo)
-	router.POST("/api/switchlanguage", switchLanguage)
-	router.POST("/api/runfile", runFile)
+	router.POST("/api/switch-language", switchLanguage)
+	router.POST("/api/run-file", runFile)
 	router.POST("/api/sign-up", signUp)
 	router.POST("/api/sign-in", signIn)
 	router.POST("/api/sign-out", signOut)
 	router.POST("/api/resend-verification-email", resendVerificationEmail)
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
-	router.POST("/api/clientclearterm", clientClearTerm)
+	router.POST("/api/client-clear-term", clientClearTerm)
 	router.POST("/api/save-code-session", saveCodeSession)
 	router.POST("/api/update-code-session", updateCodeSession)
 	router.GET("/api/get-code-sessions", getCodeSessions)

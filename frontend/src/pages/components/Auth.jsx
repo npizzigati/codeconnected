@@ -88,12 +88,12 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, initialTab, confi
   );
 
   function closeAuth () {
-    setShowAuth(false);
-    // Reset prelaunch language to null to abort any launching of
+    // Reset prelaunch language to abort any launching of
     // language room the next time user signs in.
     if (setPreLaunchLanguage !== undefined) {
       setPreLaunchLanguage('');
     }
+    setShowAuth(false);
   }
 
   function closeTabSwitchDialog () {
@@ -109,11 +109,11 @@ function Auth ({ setShowAuth, setAuthed, setPreLaunchLanguage, initialTab, confi
     closeTabSwitchDialog();
   }
 
-  function isSignInUnderway() {
+  function isSignInUnderway () {
     return savedSignInStatus === 'resetPassword';
   }
 
-  function isSignUpUnderway() {
+  function isSignUpUnderway () {
     return savedActivationStatus === 'underway';
   }
 

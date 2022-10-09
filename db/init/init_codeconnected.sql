@@ -16,14 +16,16 @@ CREATE TABLE pending_activations (
   encrypted_pw VARCHAR(100) NOT NULL,
   activation_code VARCHAR(100) NOT NULL,
   expiry BIGINT NOT NULL,
-  code_resends INT NOT NULL
+  code_resends INT NOT NULL,
+  code_attempts INT NOT NULL
 );
 
 CREATE TABLE password_reset_requests (
   id SERIAL PRIMARY KEY,
   user_id INT REFERENCES users(id) ON DELETE CASCADE,
   reset_code VARCHAR(100) NOT NULL,
-  expiry BIGINT NOT NULL
+  expiry BIGINT NOT NULL,
+  code_attempts INT NOT NULL
 );
 
 CREATE TABLE coding_sessions (

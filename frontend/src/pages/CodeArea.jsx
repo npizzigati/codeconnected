@@ -1243,9 +1243,7 @@ function CodeArea () {
       const response = await fetch('/api/update-code-session', options);
       const json = await response.json();
       const status = json.status;
-      if (status === 'success') {
-        //
-      } else {
+      if (status !== 'success') {
         console.error('Error updating code session.');
       }
     } catch (error) {
@@ -1416,7 +1414,7 @@ function CodeArea () {
       headers: { 'Content-Length': '0' }
     };
 
-    fetch(`/api/switchlanguage?roomID=${roomID}&lang=${newLang}`, options)
+    fetch(`/api/switch-language?roomID=${roomID}&lang=${newLang}`, options)
       .then(response => {
         console.log(response);
         termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
@@ -1436,14 +1434,10 @@ function CodeArea () {
     flag.push([Date.now()]);
   }
 
-  // TODO: Make this work for Ctrl-L too
-  function clearTerminal () {
+  async function clearTerminal () {
     term.current.clear();
     const { lastLine } = getLastTermLineAndNumber();
     const roomID = params.roomID;
-    // TODO: Send a post request to server with the last line in
-    // xterm.js, for server to clear history and insert that last
-    // line into history (the prompt line at the top of the screen)
     const body = JSON.stringify({ lastLine, roomID });
     const options = {
       method: 'POST',
@@ -1452,10 +1446,16 @@ function CodeArea () {
       body: body
     };
 
-    fetch('/api/clientclearterm', options)
-      .then(response => {
-        console.log(response);
-      });
+    try {
+      const response = await fetch('/api/client-clear-term', options);
+      const json = await response.json();
+      const status = json.status;
+      if (status !== 'success') {
+        console.error('Error in server request to clear terminal');
+      }
+    } catch (error) {
+      console.error('Error in server request to clear terminal:', error);
+    }
 
     termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
   }
@@ -1525,7 +1525,7 @@ function CodeArea () {
       body: body
     };
     console.log('promptLineEmpty: ' + promptLineEmpty);
-    fetch('/api/runfile', options)
+    fetch('/api/run-file', options)
       .then(response => {
         console.log(response);
       });
@@ -1540,7 +1540,7 @@ function CodeArea () {
     // const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
     //                          `/api/openreplws?lang=${language}`);
     const ws = new WebSocket(window.location.origin.replace(/^http/, 'ws') +
-                             '/api/openws?roomID=' + roomID);
+                             '/api/open-ws?roomID=' + roomID);
     ws.onmessage = ev => {
       if (ev.data === 'RESETTERMINAL') {
         resetTerminal();
@@ -1595,7 +1595,7 @@ function CodeArea () {
     ws.current.send('\x03');
   }
 
-  function executeContent () {
+  async function executeContent () {
     setYjsFlag(flagRun.current);
     const prompt = /> $/;
     const { lastLine } = getLastTermLineAndNumber();
@@ -1628,11 +1628,18 @@ function CodeArea () {
       body: body
     };
 
-    fetch('/api/savecontent', options)
-      .then(response => {
-        console.log(response);
+    try {
+      const response = await fetch('/api/save-content', options);
+      const json = await response.json();
+      const status = json.status;
+      if (status !== 'success') {
+        console.error('Error sending content to server');
+      } else {
         runCode(filename, lines, promptLineEmpty);
-      });
+      }
+    } catch (error) {
+      console.error('Error sending content to server:', error);
+    }
   }
 }
 

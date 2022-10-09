@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { handlePointerDown } from '../../helpers/miscUtils.js';
+import FadeLoader from 'react-spinners/FadeLoader';
 
 function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
   const [email, setEmail] = useState('');
@@ -18,19 +19,20 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
   const [codeValidationError, setCodeValidationError] = useState('');
   const [popupMessage, setPopupMessage] = useState('');
   const [status, setStatus] = useState('pre');
+  const [showSpinner, setShowSpinner] = useState(false);
+  const [showBackdrop, setShowBackdrop] = useState(false);
   const forgotPasswordEmailInput = useRef(null);
+  const resetPasswordForm = useRef(null);
   const emailInput = useRef(null);
   const passwordInput = useRef(null);
   const newPasswordInput = useRef(null);
   const newPasswordDupInput = useRef(null);
   const resetCodeInput = useRef(null);
+  const popupTimeout = useRef(null);
+  const spinnerStartTimeout = useRef(null);
   const inputs = [emailInput, passwordInput];
   const inputFieldSize = '25';
 
-  // Update status saved in Auth component so that the
-  // same information is displayed if the user switches back and
-  // forth from the sign-up to the sign-in tabs, regardless of
-  // user's stage in the sign-in process
   useEffect(() => {
     setSavedSignInStatus(status);
   }, [status]);
@@ -42,6 +44,17 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       </div>
       {status === 'pre' &&
         <form noValidate className='form' onSubmit={handleSubmit}>
+          {showBackdrop && <div className='backdrop backdrop--transparent backdrop--level2' />}
+          {showSpinner &&
+            <div>
+              <div className='spinner-container spinner-container--small'>
+                <FadeLoader
+                  color='#369999'
+                  loading={showSpinner}
+                  size={50}
+                />
+              </div>
+            </div>}
           <p className='form__subheading u-marg-bot-4'>Log in to your account</p>
           <p className='form__row'>
             <label className='form__label' htmlFor='email'>
@@ -106,6 +119,17 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       {status === 'forgotPassword' &&
         <div>
           <form noValidate className='form' onSubmit={handleSubmitForgotPassword}>
+            {showBackdrop && <div className='backdrop backdrop--transparent backdrop--level2' />}
+            {showSpinner &&
+              <div>
+                <div className='spinner-container spinner-container--small'>
+                  <FadeLoader
+                    color='#369999'
+                    loading={showSpinner}
+                    size={50}
+                  />
+                </div>
+              </div>}
             <div className='form__subheading u-pad-bot-3'>
               To reset your password, please first verify your email address:
             </div>
@@ -145,7 +169,18 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
           </form>
         </div>}
       {status === 'resetPassword' &&
-        <form noValidate className='form' onSubmit={handleSubmitPasswordReset}>
+        <form noValidate className='form' ref={resetPasswordForm} onSubmit={handleSubmitPasswordReset}>
+          {showBackdrop && <div className='backdrop backdrop--transparent backdrop--level2' />}
+          {showSpinner &&
+            <div>
+              <div className='spinner-container spinner-container--small'>
+                <FadeLoader
+                  color='#369999'
+                  loading={showSpinner}
+                  size={50}
+                />
+              </div>
+            </div>}
           <div className='form__subheading form__subheading-medium u-pad-bot-3'>
             Choose a new password
           </div>
@@ -244,6 +279,7 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
 
   function goBackToSignIn () {
     setForgotPasswordEmail('');
+    clearPasswordResetValues();
     setStatus('pre');
   }
 
@@ -347,12 +383,32 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
 
   function showPopup (message) {
     setPopupMessage(message);
-    setTimeout(() => {
+    clearTimeout(popupTimeout.current);
+    popupTimeout.current = setTimeout(() => {
       setPopupMessage('');
     }, 5000);
   }
 
-  function handleSubmitPasswordReset (ev) {
+  function clearPasswordResetValues () {
+    setNewPassword('');
+    setNewPasswordDup('');
+    setResetCode('');
+  }
+
+  function displaySpinnerAndBackdrop () {
+    setShowBackdrop(true);
+    // Delay before starting spinner so that it doesn't show if
+    // response is received quickly
+    spinnerStartTimeout.current = setTimeout(() => setShowSpinner(true), 250);
+  }
+
+  function hideSpinnerAndBackdrop () {
+    setShowBackdrop(false);
+    clearTimeout(spinnerStartTimeout.current);
+    setShowSpinner(false);
+  }
+
+  async function handleSubmitPasswordReset (ev) {
     ev.preventDefault();
     const passwordValid = validate(newPasswordInput.current);
     const passwordDupValid = validate(newPasswordDupInput.current);
@@ -361,7 +417,6 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       return;
     }
 
-    console.log('"' + forgotPasswordEmail + '"');
     const body = JSON.stringify({ email: forgotPasswordEmail, code: resetCode, newPlaintextPW: newPassword });
     const options = {
       method: 'POST',
@@ -370,20 +425,21 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       body: body
     };
 
-    fetch('/api/reset-password', options)
-      .then(response => {
-        return response.json();
-      })
-      .then(json => {
-        console.log(json);
-        if (json.status === 'success') {
-          console.log('Password changed successfully');
-          setStatus('success');
-        } else {
-          showPopup('Incorrect or expired reset code');
-          console.log('Password could not be changed because: ' + json.reason);
-        }
-      });
+    displaySpinnerAndBackdrop();
+    try {
+      const response = await fetch('/api/reset-password', options);
+      const json = await response.json();
+      hideSpinnerAndBackdrop();
+      if (json.status === 'success') {
+        setStatus('success');
+      } else if (json.message !== undefined && json.message.length > 0) {
+        showPopup(json.message);
+      } else {
+        showPopup('Error processing password reset request');
+      }
+    } catch (error) {
+      showPopup('Error processing password reset request');
+    }
   }
 
   function handleSubmitForgotPassword (ev) {
@@ -401,22 +457,12 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       body: body
     };
 
-
     showPopup('Check your email for reset code');
     setStatus('resetPassword');
-    fetch('/api/forgot-password', options)
-      .then(response => response.json())
-      .then(json => {
-        console.log('forgotpassword status: ' + json.status);
-        if (json.status === 'success') {
-          console.log('email address found and reset email sent');
-        } else {
-          console.log('email address not found and reset email not sent');
-        }
-      });
+    fetch('/api/forgot-password', options);
   }
 
-  function handleSubmit (ev) {
+  async function handleSubmit (ev) {
     ev.preventDefault();
     let allFieldsValid = true;
     for (let i = 0; i < inputs.length; i++) {
@@ -439,22 +485,23 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       body: body
     };
 
-    fetch('/api/sign-in', options)
-      .then(response => {
-        return response.json();
-      })
-      .then(json => {
-        console.log(json);
-        if (json.signedIn === true) {
-          setShowAuth(false);
-          setAuthed(true);
-          if (config.successCallback) {
-            config.successCallback();
-          }
-        } else {
-          showPopup('Username and/or password incorrect');
+    displaySpinnerAndBackdrop();
+    try {
+      const response = await fetch('/api/sign-in', options);
+      const json = await response.json();
+      hideSpinnerAndBackdrop();
+      if (json.status === 'success') {
+        setShowAuth(false);
+        setAuthed(true);
+        if (config.successCallback) {
+          config.successCallback();
         }
-      });
+      } else {
+        showPopup(json.reason);
+      }
+    } catch (error) {
+      showPopup('Error processing sign-in request');
+    }
   }
 }
 

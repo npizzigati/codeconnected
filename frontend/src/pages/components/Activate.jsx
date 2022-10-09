@@ -20,7 +20,7 @@ function Activate () {
       };
 
       try {
-        const response = await fetch('/api/activateuser', options);
+        const response = await fetch('/api/activate-user', options);
         const results = await response.json();
         console.log('activation status: ' + results.status);
         setStatus(results.status);

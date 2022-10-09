@@ -16,7 +16,7 @@ async function requestRoom (language, codeSessionID = -1, initialContent = '') {
   // out the error from go, but we don't handle the error (we
   // just display our fake prompt and pretend everything went ok))
   try {
-    const response = await fetch('/api/createroom', options);
+    const response = await fetch('/api/create-room', options);
     const json = await response.json();
     console.log(JSON.stringify(json));
     const roomID = json.roomID;
