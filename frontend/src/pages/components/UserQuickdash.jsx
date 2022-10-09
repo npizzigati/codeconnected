@@ -30,7 +30,7 @@ function UserQuickdash ({ setAuthed }) {
       if (isCanceled) {
         return;
       }
-      if (userInfo.auth === false) {
+      if (!userInfo.auth) {
         return;
       }
       setUsername(userInfo.username);
@@ -106,11 +106,9 @@ function UserQuickdash ({ setAuthed }) {
 
     try {
       const response = await fetch('/api/get-user-info', options);
-      const json = await response.json();
-      return json;
+      return await response.json();
     } catch (error) {
-      console.log('Error fetching auth status: ' + error);
-      return false;
+      return { auth: false };
     }
   }
 }

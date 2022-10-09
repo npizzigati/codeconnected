@@ -275,7 +275,6 @@ function Home () {
       const response = await fetch('/api/get-user-info', options);
       return await response.json();
     } catch (error) {
-      console.log('Error fetching auth status: ' + error);
       return { auth: false };
     }
   }

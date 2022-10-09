@@ -1259,11 +1259,10 @@ function CodeArea () {
 
     try {
       const response = await fetch('/api/get-user-info', options);
-      const json = await response.json();
-      return json;
+      return await response.json();
     } catch (error) {
-      console.log('Error fetching auth status: ' + error);
-      return false;
+      showPopup('Error fetching user information');
+      return { auth: false };
     }
   }
 
@@ -1397,7 +1396,7 @@ function CodeArea () {
     }
   }
 
-  function switchLanguage (newLang) {
+  async function switchLanguage (newLang) {
     // The auto saver conflicts with this language switching
     // process since it also sets editorContents.current for the
     // current language when any changes are observed in the
@@ -1413,16 +1412,21 @@ function CodeArea () {
       mode: 'cors',
       headers: { 'Content-Length': '0' }
     };
-
-    fetch(`/api/switch-language?roomID=${roomID}&lang=${newLang}`, options)
-      .then(response => {
-        console.log(response);
+    try {
+      const response = await fetch(`/api/switch-language?roomID=${roomID}&lang=${newLang}`, options);
+      const json = await response.json();
+      if (json.status === 'done') {
         termDomRef.current.scroll({ top: 0, left: 0, behavior: 'smooth' });
         showTitles(newLang);
         cmRef.current.setValue(editorContents.current.has(newLang) ? editorContents.current.get(newLang) : '');
-        console.log('editor contents after switch: ' + JSON.stringify(editorContents.current.toJSON()));
-        switchLanguageStatus.current.set('active', false);
-      });
+      } else {
+        showPopup('Unable to switch language');
+      }
+    } catch (error) {
+      showPopup('Unable to switch language');
+    } finally {
+      switchLanguageStatus.current.set('active', false);
+    }
   }
 
   /**

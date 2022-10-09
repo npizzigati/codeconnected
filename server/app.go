@@ -227,14 +227,8 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		Expiry:          expiry,
 		IsAuthedCreator: isAuthedCreator,
 	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
 
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	sendJsonResponse(w, response)
 }
 
 func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -316,14 +310,7 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		SessionCount: sessionCount,
 		CodeSessions: cSessions,
 	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
-	}
-
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	sendJsonResponse(w, response)
 }
 
 func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -531,7 +518,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err != nil {
 		logger.Println("Error retrieving status: ", err)
 		room.status = "failed"
-		logger.Println("********Room preparation failed. Room will be closed********")
 		closeRoom(roomID)
 		sendJsonResponse(w, &responseModel{Status: room.status})
 		return
@@ -541,7 +527,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var auth, ok bool
 	var expiry int64
 	if auth, ok = session.Values["auth"].(bool); !ok || !auth {
-		logger.Println("Unauthed user")
 		expiry = time.Now().Add(anonRoomTimeout).Unix()
 	} else {
 		expiry = -1
@@ -1014,14 +999,12 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 	err := openLanguageConnection(lang, roomID)
 	if err != nil {
-		logger.Println(err)
 		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
 		restartRunner(roomID)
 	}
-
-	w.Header().Set("Content-Type", "text/plain;charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Success"))
+	// TODO: Return a failure status if we fail to switch rooms
+	// within a certain time limit
+	sendJsonResponse(w, map[string]string{"status": "done"})
 }
 
 func openLanguageConnection(lang, roomID string) error {
@@ -1434,15 +1417,7 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			Auth: false,
 		}
 		logger.Println("user not authorized")
-		jsonResp, err := json.Marshal(response)
-		if err != nil {
-			logger.Println("err in marshaling: ", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonResp)
+		sendJsonResponse(w, response)
 		return
 	}
 
@@ -1451,22 +1426,10 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		ok              bool
 	)
 	if email, ok = session.Values["email"].(string); !ok {
-		logger.Println("Email not found")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if username, ok = session.Values["username"].(string); !ok {
-		logger.Println("Username not found")
-	}
-
-	logger.Println("username and email: ", username, email)
-
-	response := &responseModel{
-		Auth:     true,
-		Email:    email,
-		Username: username,
-	}
-	jsonResp, err := json.Marshal(response)
-	if err != nil {
-		logger.Println("err in marshaling: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	err = session.Save(r, w)
@@ -1475,9 +1438,13 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	response := &responseModel{
+		Auth:     true,
+		Email:    email,
+		Username: username,
+	}
+
+	sendJsonResponse(w, response)
 }
 
 func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
