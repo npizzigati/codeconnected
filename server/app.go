@@ -1,8 +1,6 @@
 package main
 
-// TODO: General: 1. Limit processor time for each container
-//                2. Remove networking
-//                3. Have containers timeout after certain period
+// TODO: General: 3. Have containers timeout after certain period
 //                   of inactivity
 
 import (
@@ -12,22 +10,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"log"
-	"strings"
-	// "github.com/aws/aws-sdk-go-v2"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/sesv2"
-	sesTypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/sessions"
-	// "github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"golang.org/x/crypto/bcrypt"
 	"io"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -35,6 +27,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -158,7 +151,6 @@ var initialPrompts = map[string][]byte{
 	"postgres": []byte("codeuser=> "),
 }
 var pool *pgxpool.Pool
-var sesCli *sesv2.Client
 
 // Timeouts
 const activationTimeout = 5 * time.Minute
@@ -177,62 +169,6 @@ func initDBConnectionPool() {
 		// ...
 	}
 	pool, err = pgxpool.ConnectConfig(context.Background(), config)
-}
-
-func initSesClient() {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		logger.Println("error in loading AWS SES config: ", err)
-	}
-	sesCli = sesv2.NewFromConfig(cfg)
-}
-
-func sendPasswordResetEmail(emailAddr, resetCode string) error {
-	subject := "Your password reset code"
-	body := buildPasswordResetEmailBody(resetCode)
-	if err := sendEmail(emailAddr, subject, body); err != nil {
-		return err
-	}
-	return nil
-}
-
-func sendVerificationEmail(username, emailAddr, activationCode string) error {
-	subject := "Verify your email address"
-	body := buildVerificationEmailBody(username, activationCode)
-	if err := sendEmail(emailAddr, subject, body); err != nil {
-		return err
-	}
-	return nil
-}
-
-func sendEmail(emailAddr, subject, body string) error {
-	fromAddr := "codeconnected <contact@codeconnected.dev>"
-	destAddr := sesTypes.Destination{
-		ToAddresses: []string{emailAddr},
-	}
-	simpleMessage := sesTypes.Message{
-		Subject: &sesTypes.Content{
-			Data: &subject,
-		},
-		Body: &sesTypes.Body{
-			Text: &sesTypes.Content{
-				Data: &body,
-			},
-		},
-	}
-	emailContent := sesTypes.EmailContent{
-		Simple: &simpleMessage,
-	}
-	email := sesv2.SendEmailInput{
-		Destination:      &destAddr,
-		FromEmailAddress: &fromAddr,
-		Content:          &emailContent,
-	}
-	_, err := sesCli.SendEmail(context.Background(), &email)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func initClient() {
