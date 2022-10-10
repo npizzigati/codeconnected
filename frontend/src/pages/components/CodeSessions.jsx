@@ -181,9 +181,9 @@ function CodeSessions ({ authed }) {
     case 'ruby':
       return <img className='media__image media__image--nano u-pad-right-nano' src='./images/ruby.png' alt='Ruby icon' />;
     case 'node':
-      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/js.png' alt='Ruby icon' />;
+      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/js.png' alt='Javascript icon' />;
     case 'postgres':
-      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/postgres.png' alt='Ruby icon' />;
+      return <img className='media__image media__image--nano u-pad-right-nano' src='./images/postgres.png' alt='Postgres icon' />;
     }
   }
 
