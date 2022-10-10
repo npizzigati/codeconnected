@@ -377,11 +377,7 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// TODO: Remove the baseURL stuff from here and js request --
-	// we are no longer sending a link... just the code
-	// Activation timeout in minutes
 	type contentModel struct {
-		BaseURL     string `json:"baseURL"`
 		Username    string `json:"username"`
 		Email       string `json:"email"`
 		PlainTextPW string `json:"plainTextPW"`

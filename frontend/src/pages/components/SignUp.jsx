@@ -479,14 +479,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       return;
     }
 
-    // TODO: The base url is no longer necessary since I only
-    // send the user a code and not a link now. Remove this from
-    // here and from go app.
-    // Send the baseURL so that the activation link can have the
-    // proper address so we can, e.g., test on localhost
-    const portString = (window.location.port === '') ? '' : `:${window.location.port}`;
-    const baseURL = window.location.protocol + '//' + window.location.hostname + portString;
-    const body = JSON.stringify({ baseURL, username, email, plainTextPW: password });
+    const body = JSON.stringify({ username, email, plainTextPW: password });
     const options = {
       method: 'POST',
       mode: 'cors',
