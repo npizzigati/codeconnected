@@ -319,15 +319,14 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("err reading json: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	err = json.Unmarshal(body, &rm)
 	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	logger.Println("*************rm.Language: ", rm.Language)
-	logger.Println("*************rm.CodeSessionID: ", rm.CodeSessionID)
 
 	// If this is an existing code session and the room still
 	// exists (is still open), send back that same room ID
@@ -341,7 +340,6 @@ func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	roomID = generateRoomID()
-	logger.Println("************roomID: ", roomID)
 
 	room := room{
 		lang:           rm.Language,
@@ -375,13 +373,11 @@ func getCodeSessionID(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	var pm paramsModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("err reading json: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -397,11 +393,11 @@ func setRoomStatusOpen(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("err reading json: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	err = json.Unmarshal(body, &rm)
 	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	rooms[rm.RoomID].status = "open"
@@ -432,11 +428,11 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var rm roomModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("err reading json: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	err = json.Unmarshal(body, &rm)
 	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	type responseModel struct {
@@ -465,7 +461,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err = startUpRunner(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
 		logger.Printf("Error starting up container for room %s: %s\n", roomID, err)
 		room.status = "failed"
-		logger.Println("********Room preparation failed. Room will be closed********")
 		closeRoom(roomID)
 		sendJsonResponse(w, &responseModel{Status: room.status})
 		return
@@ -476,7 +471,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	session, err := store.Get(r, "session")
 	if err != nil {
-		logger.Println("Error retrieving status: ", err)
 		room.status = "failed"
 		closeRoom(roomID)
 		sendJsonResponse(w, &responseModel{Status: room.status})
@@ -504,7 +498,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 					currentTime := time.Now().Unix()
 					if currentTime >= expiry {
 						ticker.Stop()
-						logger.Println("!!!!!Room Expired!!!!")
 						closeRoom(roomID)
 						return
 					}
@@ -515,7 +508,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	var userID int
 	if userID, ok = session.Values["userID"].(int); !ok {
-		logger.Println("userID not found")
 		userID = -1
 	}
 
@@ -568,7 +560,6 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 			time.Sleep(2 * time.Second)
 			if err := ws.Ping(ctx); err != nil {
 				ws.Close(websocket.StatusInternalError, "websocket no longer available")
-				logger.Println("---------------------Pong NOT received---------------------")
 
 				// Remove websocket from room
 				var deadIdx int
@@ -582,7 +573,6 @@ func heartbeat(ctx context.Context, ws *websocket.Conn, d time.Duration, room *r
 				return
 			}
 		}
-		logger.Println("---------------------Pong received---------------------")
 		t.Reset(d)
 	}
 }
@@ -616,17 +606,12 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		// Receive command
 		_, message, err := ws.Read(context.Background())
 		if err != nil {
-			logger.Println("error receiving message: ", err, " ", time.Now().String())
-			// TODO: -- I should try to recover after this (reopen
-			// ws?). I don't think so
 			break
 		}
 		if string(message) == "WSPING" {
 			ws.Write(context.Background(), websocket.MessageText, []byte("WSPONG"))
 		} else {
 			if err := sendToContainer(message, roomID); err != nil {
-				logger.Println(err)
-				logger.Println("trying to reestablish connection")
 				restartRunner(roomID)
 			}
 		}
@@ -634,20 +619,15 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func startRunnerReader(roomID string) {
-	logger.Println("Starting runner reader")
-
 	var room *room
 	var ok bool
 	if room, ok = rooms[roomID]; !ok {
-		logger.Printf("room %s does not exist", roomID)
-		// TODO: Abort here (and abort in other functions where room
-		// is found not to exist)
+		return
 	}
 
 	cn := room.container
 	// There should only be one runner reader per container
 	if cn.runnerReaderActive {
-		logger.Println("Runner reader already active")
 		return
 	}
 	cn.runnerReaderActive = true
@@ -666,7 +646,7 @@ func startRunnerReader(roomID string) {
 		logger.Println("Regexp compilation error: ", err)
 	}
 	go func() {
-		logger.Println("Reading from connection\n")
+		// Reading from connection
 		var timer *time.Timer
 		var peek []byte
 		var err error
@@ -678,9 +658,6 @@ func startRunnerReader(roomID string) {
 			// with runner goes down (i.e. in unstable connection
 			// conditions)
 			if err != nil {
-				if err == io.EOF {
-					logger.Println("EOF error in runner reader")
-				}
 				// Stop the run timeout timer, since we've lost
 				// connection with the runner, and we don't want this
 				// timeout to fire and abortRun to be executed, since
@@ -689,7 +666,6 @@ func startRunnerReader(roomID string) {
 				if room.runTimeoutTimer != nil {
 					room.runTimeoutTimer.Stop()
 				}
-				logger.Println("peek error: ", err)
 				break
 			}
 			// Header will begin with ascii value 1
@@ -703,14 +679,11 @@ func startRunnerReader(roomID string) {
 
 			ru, _, err := cn.bufReader.ReadRune()
 			byteSlice := []byte(string(ru))
-			logger.Println("Rune read: ", ru, string(ru))
 			if err == io.EOF {
-				logger.Println("EOF hit in runner output")
 				break
 			}
 			if err != nil {
 				// Runner not connected
-				logger.Println("runner read error: ", err, time.Now().String())
 				break
 			}
 
@@ -755,12 +728,11 @@ func startRunnerReader(roomID string) {
 				writeToWebsockets(byteSlice, roomID)
 			}
 		}
-		logger.Println("runner reader loop ended")
 		cn.runnerReaderActive = false
 		// Try to reestablish connection if anybody is in room
 		// and restart flag is true
 		if len(room.wsockets) > 0 && cn.runnerReaderRestart == true {
-			logger.Println("Trying to reopen language connection")
+			// Try to reopen language connection
 			if err := openLanguageConnection(room.lang, roomID); err != nil {
 				writeToWebsockets([]byte("CONTAINERERROR"), roomID)
 				restartRunner(roomID)
@@ -773,7 +745,7 @@ func writeToWebsockets(text []byte, roomID string) {
 	var room *room
 	var ok bool
 	if room, ok = rooms[roomID]; !ok {
-		logger.Println("room does not exist")
+		return
 	}
 	// Also write to history if at least one client connected
 	if len(room.wsockets) > 0 {
@@ -793,7 +765,7 @@ func writeToWebsockets(text []byte, roomID string) {
 	for _, ws := range room.wsockets {
 		err := ws.Write(context.Background(), websocket.MessageText, text)
 		if err != nil {
-			logger.Println("ws write err: ", "text", text, "; err: ", err)
+			logger.Println("ws write err:", err, "in room:", room)
 		}
 	}
 }
@@ -827,19 +799,16 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var err error
 	body, err = io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	tarBuffer, err := makeTarball([]byte(cm.Content), cm.Filename)
 	if err != nil {
-		logger.Println("Error making tarball:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -849,7 +818,6 @@ func saveContent(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Copy contents of user program to container.
 	err = cli.CopyToContainer(context.Background(), cn.ID, "/home/codeuser/", &tarBuffer, types.CopyToContainerOptions{})
 	if err != nil {
-		logger.Println("Error copying user code to container:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -865,7 +833,6 @@ func startUpRunner(lang, roomID string, rows int, cols int) error {
 		cn := room.container
 		ctx := context.Background()
 		cmd := []string{"bash"}
-		logger.Println("********About to call createContainer for room: ", roomID)
 		// Creating the container can take a long time (> 20 sec) if tcp
 		// connection with runner is down, so we set up a race and see
 		// if the timeout timer finishes first
@@ -873,15 +840,12 @@ func startUpRunner(lang, roomID string, rows int, cols int) error {
 		if err != nil {
 			returnChan <- err
 		}
-		logger.Println("********resp ID from attempt to create container: ", resp.ID)
 		if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 			returnChan <- err
 		}
 
-		logger.Println("Setting new container id to: ", resp.ID)
 		cn.ID = resp.ID
 
-		logger.Println("Will try to set rows to: ", rows)
 		if err := resizeTTY(cn, cols, rows); err != nil {
 			returnChan <- err
 		}
@@ -925,7 +889,6 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	room := rooms[roomID]
 	cn := room.container
 	room.lang = lang
-	logger.Println("Switching language")
 	if room.runTimeoutTimer != nil {
 		room.runTimeoutTimer.Stop()
 	}
@@ -968,7 +931,6 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 }
 
 func openLanguageConnection(lang, roomID string) error {
-	logger.Println("Going to open language connection")
 	var r *room
 	var ok bool
 	if r, ok = rooms[roomID]; !ok {
@@ -982,20 +944,17 @@ func openLanguageConnection(lang, roomID string) error {
 	waitTime := 4000 * time.Millisecond
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func() {
-		logger.Printf("Prompt ready in room %s. Should stop attempts to open lang connection now.", roomID)
 		close(success)
 		r.removeEventListener("promptReady")
 	})
 loop:
 	for {
 		if r.container.runnerReaderActive {
-			logger.Println("Runner reader already active. Exiting loop.")
+			// Runner reader already active -- exit loop
 			break loop
 		}
-		logger.Println("Attempting language connection")
 		// Do not attempt language connection if room does not exist anymore
 		if _, ok := rooms[roomID]; !ok {
-			logger.Println("Room no longer exists")
 			break loop
 		}
 		if err := attemptLangConn(lang, roomID); err != nil {
@@ -1004,15 +963,15 @@ loop:
 				// This is a fatal error for this open language
 				// connection process -- stopped or inexistent
 				// container -- so we break loop
-				logger.Println("Unable to create exec process:", err)
 				break loop
 			case containerExecAttachError:
-				logger.Println("Unable to start/attach to exec process:", err)
+				// This is not a fatal error
+			default:
+				// Any other non-fatal errors, e.g., room not existing
 			}
 		}
 		select {
 		case <-success:
-			logger.Printf("Language connection successful -- stopping retry loop")
 			r.echo = true
 			resetTerminal(roomID)
 			displayInitialPrompt(roomID, true, "1")
@@ -1022,7 +981,6 @@ loop:
 			if tries > maxTries {
 				break loop
 			}
-			logger.Printf("Try No. %d to open language connection", tries)
 		}
 	}
 	return errors.New("unable to open language connection (could not get prompt)")
@@ -1032,17 +990,15 @@ func closeContainerConnection(connection types.HijackedResponse) {
 	// Close connection if it exists
 	// (If it doesn't exist, reader ptr will be nil)
 	if connection.Reader != nil {
-		logger.Println("closing existing connection")
 		connection.Close()
 	}
 }
 
 func attemptLangConn(lang, roomID string) error {
-	logger.Println("Attempting lang connection, lang: '", lang, "' ", "roomID: '", roomID, "'")
 	var room *room
 	var ok bool
 	if room, ok = rooms[roomID]; !ok {
-		logger.Printf("room %s does not exist", roomID)
+		return errors.New("room does not exist")
 	}
 	cn := room.container
 	var cmd []string
@@ -1244,7 +1200,6 @@ func displayInitialPrompt(roomID string, welcome bool, promptNum string) {
 
 // TODO: make this a room method?
 func resetTerminal(roomID string) {
-	logger.Println("Resetting terminal in room:", roomID)
 	writeToWebsockets([]byte("RESETTERMINAL"), roomID)
 	// Also reset terminal history
 	room := rooms[roomID]
@@ -1268,13 +1223,11 @@ func clientClearTerm(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	var err error
 	body, err = io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1313,13 +1266,11 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var body []byte
 	body, err = io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure", "reason": "Error processing sign-in request"})
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure", "reason": "Error processing sign-in request"})
 		return
 	}
@@ -1332,12 +1283,10 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&encryptedPW, &username, &userID); err != nil {
 		// Error will throw if no records found
 		emailFound = false
-		logger.Println("select query error: ", err)
 	}
 
 	if emailFound && bcrypt.CompareHashAndPassword([]byte(encryptedPW), []byte(pepperedPW)) == nil {
 		// successful sign in
-		logger.Println("Successfully signed in")
 		signedIn = true
 		session.Values["auth"] = true
 		session.Values["email"] = cm.Email
@@ -1347,8 +1296,6 @@ func signIn(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	} else {
-		logger.Println("Sign in unsuccessful.")
 	}
 
 	if signedIn {
@@ -1376,7 +1323,6 @@ func getUserInfo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		response := &responseModel{
 			Auth: false,
 		}
-		logger.Println("user not authorized")
 		sendJsonResponse(w, response)
 		return
 	}
@@ -1416,13 +1362,11 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1431,7 +1375,6 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	emailFound := true
 	var userID int
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&userID); err != nil {
-		logger.Println("query error: ", err)
 		emailFound = false
 	}
 
@@ -1439,8 +1382,6 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
-
-	logger.Println("Email was found")
 
 	// Delete any existing password reset requests for user
 	deleteRequestRec(userID)
@@ -1450,7 +1391,6 @@ func forgotPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	code := generateRandomCode()
 	query = "INSERT INTO password_reset_requests(user_id, reset_code, expiry, code_attempts) VALUES($1, $2, $3, $4)"
 	if _, err := pool.Exec(context.Background(), query, userID, code, expiry, 0); err != nil {
-		logger.Println("unable to insert password reset request in db: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1513,13 +1453,11 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong — please try again"})
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong — please try again"})
 		return
 	}
@@ -1551,7 +1489,6 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
 		bcrypt.DefaultCost)
 	if err != nil {
-		logger.Println(err)
 		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong -- please try again"})
 		return
 	}
@@ -1559,7 +1496,6 @@ func resetPassword(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 	// Change password in db
 	query = "UPDATE users SET encrypted_pw = $1 WHERE id = $2"
 	if _, err := pool.Exec(context.Background(), query, encryptedPW, userID); err != nil {
-		logger.Println(err)
 		sendJsonResponse(w, map[string]string{"status": "failure", "message": "Something went wrong -- please try again"})
 		return
 	}
@@ -1578,7 +1514,6 @@ func deleteRequestRec(userID int) error {
 func deleteActivationRec(email string) error {
 	query := "DELETE FROM pending_activations WHERE email = $1"
 	if _, err := pool.Exec(context.Background(), query, email); err != nil {
-		logger.Println("unable to delete activation record: ", err)
 		return err
 	}
 	return nil
@@ -1610,19 +1545,16 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		nonFatalFailureRes.Message = "Something went wrong — please try again"
 		sendJsonResponse(w, nonFatalFailureRes)
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		nonFatalFailureRes.Message = "Something went wrong — please try again"
 		sendJsonResponse(w, nonFatalFailureRes)
 		return
 	}
-	logger.Println("activation code received: ", cm.Code)
 
 	query := "SELECT username, encrypted_pw, expiry, code_attempts, activation_code FROM pending_activations WHERE email = $1"
 	var codeAttempts int
@@ -1631,7 +1563,6 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if err = pool.QueryRow(context.Background(), query, cm.Email).Scan(&username, &encryptedPW, &expiry, &codeAttempts, &activationCode); err != nil {
 		// Will throw error if no record found (i.e., activation
 		// request expired and deleted)
-		logger.Println(err)
 		fatalFailureRes.Message = "Your activation code has expired."
 		sendJsonResponse(w, fatalFailureRes)
 		return
@@ -1639,7 +1570,6 @@ func activateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if cm.Code != activationCode {
 		updateActivationCodeAttempts(cm.Email)
 		if codeAttempts > 2 {
-			logger.Println("Code attempts exceeded")
 			fatalFailureRes.Message = "Activation attempts exceeded."
 			deleteActivationRec(cm.Email)
 			sendJsonResponse(w, fatalFailureRes)
@@ -1693,23 +1623,18 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
-	logger.Println("credentials: ", cm.Username, cm.Email, cm.PlainTextPW)
-	logger.Println("baseURL: ", cm.BaseURL)
 	pepperedPW := cm.PlainTextPW + os.Getenv("PWPEPPER")
 	encryptedPW, err := bcrypt.GenerateFromPassword([]byte(pepperedPW),
 		bcrypt.DefaultCost)
 	if err != nil {
-		logger.Println(err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -1723,14 +1648,12 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var tmp int
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err == nil {
 		// Will throw error if no records found
-		logger.Printf("email %s already registered", cm.Email)
 		emailUsed = true
 	} else {
 		query = "SELECT 1 FROM pending_activations WHERE email = $1"
 		var tmp int
 		if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&tmp); err == nil {
 			// Will throw error if no records found
-			logger.Printf("email %s is pending activation", cm.Email)
 			emailUsed = true
 		}
 	}
@@ -1738,7 +1661,6 @@ func signUp(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if !emailUsed {
 		query = "INSERT INTO pending_activations(username, email, encrypted_pw, activation_code, expiry, code_resends, code_attempts) VALUES($1, $2, $3, $4, $5, $6, $7)"
 		if _, err := pool.Exec(context.Background(), query, cm.Username, cm.Email, encryptedPW, code, expiry, 0, 0); err != nil {
-			logger.Println("unable to insert activation request: ", err)
 			sendJsonResponse(w, map[string]string{"status": "failure"})
 			return
 		}
@@ -1796,14 +1718,12 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	var cm contentModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("Error reading request body:", err)
 		nonFatalFailureRes.Message = "Something went wrong — please try again"
 		sendJsonResponse(w, nonFatalFailureRes)
 		return
 	}
 	err = json.Unmarshal(body, &cm)
 	if err != nil {
-		logger.Println("Error unmarshalling:", err)
 		nonFatalFailureRes.Message = "Something went wrong — please try again"
 		sendJsonResponse(w, nonFatalFailureRes)
 		return
@@ -1814,7 +1734,6 @@ func resendVerificationEmail(w http.ResponseWriter, r *http.Request, p httproute
 	if err := pool.QueryRow(context.Background(), query, cm.Email).Scan(&codeResends); err != nil {
 		// Will throw error if no record found (i.e., activation
 		// request expired and deleted)
-		logger.Println("Select query error: ", err)
 		fatalFailureRes.Message = "Activation request has expired."
 		sendJsonResponse(w, fatalFailureRes)
 		return
@@ -1851,7 +1770,6 @@ func doesRoomExist(w http.ResponseWriter, r *http.Request, p httprouter.Params) 
 		exists = true
 		// Record time of last check (Unix time in seconds)
 		rooms[roomID].lastExistCheck = time.Now().Unix()
-		logger.Printf("room %s does exist", roomID)
 	} else {
 		exists = false
 	}
@@ -1865,7 +1783,6 @@ func onlineCheckPing(w http.ResponseWriter, r *http.Request, p httprouter.Params
 }
 
 func abortRun(roomID string) {
-	logger.Println("Aborting run in room: ", roomID)
 	// TODO: Use room.runTimeoutTimer field to stop this
 	// procedure when resetting terminal
 	room := rooms[roomID]
@@ -1873,13 +1790,11 @@ func abortRun(roomID string) {
 	room.echo = false
 	// Send ctrl-c interrupt
 	if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("\x03")) }, 2*time.Second, false); err != nil {
-		logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
 		writeToWebsockets([]byte("TIMEOUT"), roomID)
 		restartRunner(roomID)
 		return
 	}
 	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
-		logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
 		writeToWebsockets([]byte("TIMEOUT"), roomID)
 		restartRunner(roomID)
 		return
@@ -1905,7 +1820,6 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 	case "ruby":
 		// reset repl
 		if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("exec $0\n")) }, 3*time.Second, false); err != nil {
-			logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
 			restartRunner(roomID)
 			return errors.New("Container Timeout")
@@ -1916,14 +1830,12 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			cn.runner.Write([]byte("run_codeconnected_code('code.rb');\n"))
 		}, 3*time.Second, true)
 		if err != nil {
-			logger.Printf("Timeout waiting for start of output in room %s: %s", roomID, err)
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
 			restartRunner(roomID)
 			return errors.New("Container Timeout")
 		}
 	case "postgres":
 		if err := room.awaitSideEffect("newline1", func() { cn.runner.Write([]byte("\\i code.sql\n")) }, 2*time.Second, true); err != nil {
-			logger.Printf("Timeout waiting for newline1 in room %s: %s", roomID, err)
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
 			restartRunner(roomID)
 			return errors.New("Container Timeout")
@@ -1943,13 +1855,11 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		err := room.awaitSideEffect("newline"+strconv.Itoa(totalNewLinesBeforeStdOutput),
 			func() { cn.runner.Write([]byte(".runUserCode code.js\n")) }, 2*time.Second, true)
 		if err != nil {
-			logger.Printf("Timeout waiting for newlinex in room %s: %s", roomID, err)
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
 			restartRunner(roomID)
 			return errors.New("Container Timeout")
 		}
 	}
-	logger.Println("********Run output started*********")
 
 	runFinishedChan := make(chan struct{})
 	room.setEventListener("promptReady", func() {
@@ -1967,10 +1877,7 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		room.runTimeoutTimer.Stop()
 	}
 
-	logger.Println("********Run done*********")
-
 	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
-		logger.Printf("Timeout waiting for prompt in room %s: %s", roomID, err)
 		writeToWebsockets([]byte("TIMEOUT"), roomID)
 		restartRunner(roomID)
 		return errors.New("Container Timeout")
@@ -2009,13 +1916,11 @@ func runFile(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var pm paramsModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("err reading json: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -2055,7 +1960,6 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	}
 
 	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content, pm.TimeOnly); err != nil {
-		logger.Println("error in updating code session: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -2087,14 +1991,12 @@ func updateRoomAccessTime(codeSessionID int) {
 func closeEmptyRooms() {
 	// Remove rooms where there are no users
 	for roomID, room := range rooms {
-		logger.Println("roomID: ", roomID, "status: ", room.status, "container: ", room.container.ID, "  websockets: ", len(room.wsockets))
 		// Check if room container exists to make sure we're not
 		// deleting rooms that are in the process of being created
 		// Also check time since last "does room exist check"; if
 		// there was a recent check, we don't want to delete the room
 		// since a user may be about to join
 		timeSinceLastExistsCheck := time.Now().Unix() - room.lastExistCheck
-		logger.Println("Time since last room exists check: ", timeSinceLastExistsCheck)
 		if len(room.wsockets) == 0 && room.status == "open" && timeSinceLastExistsCheck > 10 {
 			closeRoom(roomID)
 		}
@@ -2113,8 +2015,6 @@ func closeRoom(roomID string) {
 	// from the rooms map first, before removing container, because
 	// container removal procedure can cause delay
 	delete(rooms, roomID)
-	logger.Println("removed room: ", roomID)
-	logger.Println("removing room container: ", container.ID)
 	// Update room access time if code session associated with it
 	if room.codeSessionID != -1 {
 		updateRoomAccessTime(room.codeSessionID)
@@ -2123,7 +2023,6 @@ func closeRoom(roomID string) {
 }
 
 func restartRunner(roomID string) {
-	logger.Println("Restarting runner")
 	var room *room
 	var ok bool
 	// Do nothing if room does not exist
@@ -2139,7 +2038,6 @@ func restartRunner(roomID string) {
 	abortContainer(room.container)
 	writeToWebsockets([]byte("RESTARTINGRUNNER"), roomID)
 	if err := startUpRunner(room.lang, roomID, room.termRows, room.termCols); err != nil {
-		logger.Printf("Error starting runner for room %s: %s\n", roomID, err)
 		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
 		return
 	}
@@ -2147,7 +2045,6 @@ func restartRunner(roomID string) {
 }
 
 func abortContainer(container *containerDetails) {
-	logger.Println("Aborting container:", container.ID)
 	// Set the restart flag to false so that the reader
 	// doesn't automatically restart when we close the connection
 	container.runnerReaderRestart = false
@@ -2187,7 +2084,6 @@ func closeOrphanedContainers() {
 	// Get list of containers
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
-		logger.Println("Error in getting container list: ", err)
 		return
 	}
 
@@ -2211,7 +2107,6 @@ func closeOrphanedContainers() {
 
 	// Remove orphans
 	for _, orphanID := range orphanIDs {
-		logger.Printf("removing orphan container: %s\n", orphanID)
 		if err := stopAndRemoveContainer(orphanID); err != nil {
 			logger.Println("error in stopping/removing container: ", err)
 		}
@@ -2228,7 +2123,6 @@ func indexOf(list []string, queryItem string) int {
 }
 
 func stopAndRemoveContainer(containername string) error {
-	logger.Println("Removing container: ", containername)
 	ctx := context.Background()
 
 	// close connection
