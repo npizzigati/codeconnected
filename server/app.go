@@ -412,13 +412,14 @@ func createContainer(ctx context.Context, cmd []string) (container.ContainerCrea
 		// Don't specify the non-root user here, since the entrypoint
 		// needs to be root to start up Postgres
 		// The image needs to already be created on the runner server
-		Image:        "myrunner",
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: false,
-		Tty:          true,
-		OpenStdin:    true,
-		Cmd:          cmd,
+		Image:           "myrunner",
+		AttachStdin:     true,
+		AttachStdout:    true,
+		AttachStderr:    false,
+		Tty:             true,
+		OpenStdin:       true,
+		NetworkDisabled: true,
+		Cmd:             cmd,
 	}, nil, nil, nil, "")
 }
 
