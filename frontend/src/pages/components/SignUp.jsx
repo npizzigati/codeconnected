@@ -486,7 +486,6 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
     // proper address so we can, e.g., test on localhost
     const portString = (window.location.port === '') ? '' : `:${window.location.port}`;
     const baseURL = window.location.protocol + '//' + window.location.hostname + portString;
-    console.log('baseURL: ' + baseURL);
     const body = JSON.stringify({ baseURL, username, email, plainTextPW: password });
     const options = {
       method: 'POST',
@@ -501,7 +500,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
       const json = await response.json();
       hideSpinnerAndBackdrop();
       if (json.status !== 'success') {
-        console.error('Error in processing sign-up request');
+        showPopup('Error in processing sign-up request');
       } else if (json.emailUsed) {
         setErrorMessage(emailInput.current, 'Email in use or pending activation.');
         emailInput.current.classList.add('invalid');
@@ -509,7 +508,7 @@ function SignUp ({ setShowAuth, setAuthed, setSavedActivationStatus, config }) {
         setActivationStatus('underway');
       }
     } catch (error) {
-      console.error('Error in processing sign-in request:', error);
+      showPopup('Error in processing sign-up request');
     }
   }
 }

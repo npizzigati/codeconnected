@@ -79,7 +79,7 @@ function UserQuickdash ({ setAuthed }) {
 
     try {
       const response = await fetch('/api/sign-out', options);
-      console.log(await response.json());
+      // TODO: Handle response (i.e., failed sign out)
       setAuthed(false);
     } catch (error) {
       console.error('Error fetching json:', error, ' May not be signed out.');

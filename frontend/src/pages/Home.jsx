@@ -37,7 +37,6 @@ function Home () {
     // same color as the content background, to avoid background
     // artifacts
     document.body.style.backgroundColor = 'white';
-    console.log('Checking user authentication');
     let isCanceled = false;
     (async () => {
       const userInfo = await getUserInfo();
@@ -298,11 +297,10 @@ function Home () {
   async function launch (language) {
     const roomID = await requestRoom(language);
     if (roomID === null) {
-      console.log('Could not create room');
+      // Could not create room
       // TODO: Handle this problem / try again
       return;
     }
-    console.log('RoomID: ' + roomID);
     navigate(`/${roomID}`);
   }
 

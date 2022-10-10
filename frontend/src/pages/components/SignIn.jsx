@@ -448,7 +448,6 @@ function SignIn ({ setShowAuth, setAuthed, setSavedSignInStatus, config }) {
       return;
     }
 
-    console.log('*' + forgotPasswordEmail + '*');
     const body = JSON.stringify({ email: forgotPasswordEmail });
     const options = {
       method: 'POST',

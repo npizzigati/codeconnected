@@ -105,7 +105,6 @@ function CodeSessions ({ authed }) {
       const formattedSessions = formatSessionList(codeSessions);
       if (isCanceled.current || !showCSessions) {
         clearInterval(intervalHandle);
-        console.log('Clearing code sessions interval');
         return;
       }
       setCSessions(formattedSessions);
@@ -191,11 +190,9 @@ function CodeSessions ({ authed }) {
   async function launch (language, sessID, content) {
     const roomID = await requestRoom(language, sessID, content);
     if (roomID === null) {
-      console.log('Could not create room');
       // TODO: Handle this problem / try again
       return;
     }
-    console.log('RoomID: ' + roomID);
     navigate(`/${roomID}`);
   }
 

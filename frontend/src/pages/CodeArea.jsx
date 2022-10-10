@@ -401,33 +401,27 @@ function CodeArea () {
    * Reset codemirror, terminal panes to sane widths
    */
   function sanelyAdjustPanelWidths () {
-    console.log('Sanely adjusting panel widths');
     if (cmContainerDomRef.current === null || termContainerDomRef === null) {
       return;
     }
     const currentCmWidth = cmContainerDomRef.current.offsetWidth;
-    console.log('currentCmWidth: ' + currentCmWidth);
     const currentTermWidth = termContainerDomRef.current.offsetWidth;
-    console.log('currentTermWidth: ' + currentTermWidth);
     const totalWidth = currentCmWidth + currentTermWidth;
     const totalMinWidth = minCmWidth + minTermWidth;
     // If no user-resizing is possible (panel widths total more
     // than total possible minimum widths), set panels to equal
     // half width
     if (totalWidth < totalMinWidth) {
-      console.log('no user resizing possible; setting to half width')
       const halfWidthString = pixelfy((currentCmWidth + currentTermWidth) / 2, true);
       cmContainerDomRef.current.style.width = halfWidthString;
       termContainerDomRef.current.style.width = halfWidthString;
     // Otherwise set either pane that is below the minimum to its
     // minimum width
     } else if (currentCmWidth < minCmWidth) {
-      console.log('cm width too narrow -- expanding')
       const delta = minCmWidth - currentCmWidth;
       termContainerDomRef.current.style.width = pixelfy(currentTermWidth - delta, true);
       cmContainerDomRef.current.style.width = pixelfy(minCmWidth, true);
     } else if (currentTermWidth < minTermWidth) {
-      console.log(' width too narrow -- expanding');
       const delta = minTermWidth - currentTermWidth;
       cmContainerDomRef.current.style.width = pixelfy(currentCmWidth - delta, true);
       termContainerDomRef.current.style.width = pixelfy(minTermWidth, true);
@@ -625,7 +619,6 @@ function CodeArea () {
     try {
       const response = await fetch('/api/get-code-session-id', options);
       const json = await response.json();
-      console.log(JSON.stringify(json));
       return json.codeSessionID;
     } catch (error) {
       console.error('Error preparing room: ', error);
@@ -664,13 +657,10 @@ function CodeArea () {
         return;
       }
       const json = await response.json();
-      console.log(JSON.stringify(json));
       const status = json.status;
       if (status === 'ready') {
-        console.log('Room successfully prepared');
         return json;
       } else {
-        console.log('Error preparing room.');
         return json;
       }
     } catch (error) {
@@ -703,7 +693,6 @@ function CodeArea () {
       break;
     case switchLanguageStatus.current:
       if (switchLanguageStatus.current.get('active') === true) {
-        console.log('Setting runnerReady to false');
         setRunnerReady(false);
       } else {
         setRunnerReady(true);
@@ -761,12 +750,9 @@ function CodeArea () {
     // runner), send request for it to be made ready.
     setShowContent(true);
     const { status } = await getRoomStatus(roomID);
-    console.log(status);
 
     if (status === 'created') {
-      console.log('Will prepare room');
       const prepData = await prepareRoom(roomID);
-      console.log('room status: ' + prepData.status);
       if (prepData.status === 'failed') {
         setShowRoomClosedDialog(true);
         setShowSpinner(false);
@@ -781,7 +767,6 @@ function CodeArea () {
         populateEditorContents(prepData.initialContent);
       }
       // editorContents.current = prepData.initialContent === '' ? {} : JSON.parse(prepData.initialContent);
-      console.log('codeSessionID: ' + codeSessionID.current);
       if (setupCanceled.current) {
         return;
       }
@@ -789,7 +774,6 @@ function CodeArea () {
       // FIXME: Need to test that this is working (joining a room
       // in the preparing stage -- probably better just to send
       // user to the home page)
-      console.log('Room is being prepared');
       // TODO: Show modal message that room is being prepared and
       // maybe retry at intervals
       return;
@@ -899,7 +883,6 @@ function CodeArea () {
       });
     }, pruneIntervalSeconds * 1000);
 
-    console.log('lang.current right before setting cm content: ' + lang.current);
     // If this is the first person in a new room,
     // editorContents.current.has(lang.current) will be false.
     // In that case, insert an empty string, otherwise, insert
@@ -929,7 +912,6 @@ function CodeArea () {
   }
 
   async function startOnlineChecker () {
-    console.log('Starting online checker');
     isOnline.current = await checkOnlineStatus();
     onlineCheckerInterval.current = setInterval(async () => {
       if (!isOnline.current) {
@@ -937,9 +919,7 @@ function CodeArea () {
       }
       const wasOnline = isOnline.current;
       isOnline.current = await checkOnlineStatus();
-      console.log('isOnline: ' + isOnline.current);
       if (!wasOnline && isOnline.current) {
-        console.log('About to dispatch nowonline event');
         document.dispatchEvent(nowOnlineEvent);
       }
     }, 2000);
@@ -1015,9 +995,7 @@ function CodeArea () {
     // user since otherwise we don't save sessions, and it is
     // enough to update the editor contents when we switch
     // sessions
-    console.log('Starting autosaver');
     if (isAuthedCreator.current) {
-      console.log('This is the authedCreator');
       yCode.current.observe(() => {
         if (switchLanguageStatus.current.get('active') === true) {
           return;
@@ -1226,7 +1204,6 @@ function CodeArea () {
     if (!isAuthedCreator.current) {
       return;
     }
-    console.log('updating code session');
     const body = JSON.stringify({
       codeSessionID: codeSessionID.current,
       language: lang.current,
@@ -1298,7 +1275,6 @@ function CodeArea () {
   }
 
   async function roomExists (roomID) {
-    console.log('Checking to see if room exists');
     const options = {
       method: 'GET',
       mode: 'cors'
@@ -1403,9 +1379,7 @@ function CodeArea () {
     // editor. Prevent the conflict by stopping it here and
     // starting it again when this process has finished
     switchLanguageStatus.current.set('active', true);
-    console.log('*************Calling switchLanguage*************');
     editorContents.current.set(lang.current, cmRef.current.getValue());
-    console.log('editor contents before switch: ' + JSON.stringify(editorContents.current.toJSON()));
     codeOptions.current.set('language', newLang);
     const options = {
       method: 'POST',
@@ -1528,11 +1502,8 @@ function CodeArea () {
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: body
     };
-    console.log('promptLineEmpty: ' + promptLineEmpty);
-    fetch('/api/run-file', options)
-      .then(response => {
-        console.log(response);
-      });
+    fetch('/api/run-file', options);
+    // TODO: Handle response from this call
   }
 
   function writeToTerminal (data) {
@@ -1558,13 +1529,8 @@ function CodeArea () {
       } else if (ev.data === 'RUNNERRESTARTED') {
         setRunnerReady(true);
       } else if (ev.data === 'WSPONG') {
-        console.log('Clearing wsPong timeout');
         clearTimeout(wsPongReceiveTimeout.current);
       } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
-        // tmp
-        if (ev.data === 'CANCELRUN') {
-          console.log('Run cancelled!!!!!');
-        }
         running.current = false;
         runButtonDone();
       } else {
@@ -1603,11 +1569,9 @@ function CodeArea () {
     setYjsFlag(flagRun.current);
     const prompt = /> $/;
     const { lastLine } = getLastTermLineAndNumber();
-    console.log('prompt ready? ' + prompt.test(lastLine));
     let promptLineEmpty = true;
     if (!prompt.test(lastLine)) {
       promptLineEmpty = false;
-      console.log('Last line is not empty');
     }
 
     const content = cmRef.current.getValue();
