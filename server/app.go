@@ -1423,6 +1423,7 @@ func generateRandomCode() string {
 func sendJsonResponse(w http.ResponseWriter, data interface{}) {
 	jsonResp, err := json.Marshal(data)
 	if err != nil {
+		// TODO: Pass this error back to caller
 		logger.Println("err in marshaling: ", err)
 	}
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
