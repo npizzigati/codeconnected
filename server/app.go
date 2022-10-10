@@ -1,8 +1,5 @@
 package main
 
-// TODO: General: 3. Have containers timeout after certain period
-//                   of inactivity
-
 import (
 	"bufio"
 	"bytes"
@@ -454,10 +451,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// room is prepared, this request could be made by a second
 	// user. Guard against that.
 	if room.status == "preparing" {
-		// TODO: Do I need to do anything here with respect to thea
-		// change where editor content is now a map of the content
-		// for each language -- e.g., do I need to send the initial
-		// content in the following response?
 		sendJsonResponse(w, &responseModel{Status: room.status})
 		return
 	}
