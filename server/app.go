@@ -195,7 +195,7 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	queryValues := r.URL.Query()
 	roomID := queryValues.Get("roomID")
 	if _, ok := rooms[roomID]; !ok {
-		logger.Printf("Room %s does not exist", roomID)
+		logger.Printf("Attempt to access room %s, which does not exist", roomID)
 	}
 
 	lang := rooms[roomID].lang
@@ -212,7 +212,6 @@ func getInitialRoomData(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	var userID int
 	var ok bool
 	if userID, ok = session.Values["userID"].(int); !ok {
-		logger.Println("userID not found")
 		userID = -1
 	}
 
@@ -240,7 +239,6 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	var userID int
 	var ok bool
 	if userID, ok = session.Values["userID"].(int); !ok {
-		logger.Println("userID not found")
 		userID = -1
 	}
 
@@ -305,7 +303,6 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		cSessions = append(cSessions, cSession)
 	}
 
-	logger.Println("Number of code sessions found: ", sessionCount)
 	response := &responseModel{
 		SessionCount: sessionCount,
 		CodeSessions: cSessions,
@@ -465,8 +462,6 @@ func prepareRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// Close room and notify user if not successfully created in x seconds
 	room.status = "preparing"
-	logger.Println("*************rm.RoomID: ", rm.RoomID)
-	logger.Println("**************Going to start container********************")
 	if err = startUpRunner(room.lang, roomID, rm.Rows, rm.Cols); err != nil {
 		logger.Printf("Error starting up container for room %s: %s\n", roomID, err)
 		room.status = "failed"
@@ -2043,13 +2038,11 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	var pm paramsModel
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Println("err reading json: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
 	err = json.Unmarshal(body, &pm)
 	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
 		sendJsonResponse(w, map[string]string{"status": "failure"})
 		return
 	}
@@ -2060,8 +2053,6 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		logger.Printf("Session %d is excessively long. Will not save.", pm.CodeSessionID)
 		return
 	}
-
-	logger.Printf("Going to update code session (timeOnly: %v)\n", pm.TimeOnly)
 
 	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content, pm.TimeOnly); err != nil {
 		logger.Println("error in updating code session: ", err)
