@@ -765,7 +765,7 @@ func writeToWebsockets(text []byte, roomID string) {
 	for _, ws := range room.wsockets {
 		err := ws.Write(context.Background(), websocket.MessageText, text)
 		if err != nil {
-			logger.Println("ws write err:", err, "in room:", room)
+			logger.Println("ws write err:", err, "in room:", roomID)
 		}
 	}
 }
