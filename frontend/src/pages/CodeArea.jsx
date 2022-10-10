@@ -30,10 +30,6 @@ import Invite from './components/Invite.jsx';
 
 import { handlePointerDown, debounce, changeCSSInnerHeight, setupWindowResizeListener } from '../helpers/miscUtils.js';
 
-// TODO: Somehow ping the server to deal with the case where the
-// room is closed with a client still attached, as in when I shut
-// down the server with rooms still open. Currently the client's
-// terminals just freeze.
 function CodeArea () {
   const params = useParams();
   const roomID = params.roomID;
@@ -133,7 +129,6 @@ function CodeArea () {
     theme: 'dark'
   };
 
-  // TODO: Change this to a dialog with single ok button
   const roomClosedDialogConfig = {
     message: {
       icon: { path: './images/attention.png', alt: 'Attention' },
@@ -1492,8 +1487,6 @@ function CodeArea () {
     return { lastLine: lines[lastLineNum], lastLineNum };
   }
 
-  // TODO: Deactivate run button while this is in progress (among
-  // other controls, such as language switcher)
   function runCode (filename, lines, promptLineEmpty) {
     const body = JSON.stringify({ roomID: params.roomID, lang: lang.current, filename, lines, promptLineEmpty });
     const options = {
@@ -1522,8 +1515,7 @@ function CodeArea () {
       } else if (ev.data === 'TIMEOUT' || ev.data === 'CONTAINERERROR') {
         running.current = false;
         runButtonDone();
-        // TODO: Replace window.alert with actual dialog
-        window.alert('Something went wrong.');
+        showPopup('Something went wrong');
       } else if (ev.data === 'RESTARTINGRUNNER') {
         setRunnerReady(false);
       } else if (ev.data === 'RUNNERRESTARTED') {
