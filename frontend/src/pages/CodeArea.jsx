@@ -147,18 +147,6 @@ function CodeArea () {
     theme: 'dark'
   };
 
-  function abortBackToHome () {
-    setShowBackToHomeDialog(false);
-  }
-
-  function closeModals () {
-    setShowBackToHomeDialog(false);
-  }
-
-  function onlineEventHandler () {
-    handleConnectionChange();
-  }
-
   useEffect(() => {
     // When resizing screen, it's useful to have the body be the
     // same color as the content background, to avoid background
@@ -381,6 +369,18 @@ function CodeArea () {
       </div>
     </>
   );
+
+  function abortBackToHome () {
+    setShowBackToHomeDialog(false);
+  }
+
+  function closeModals () {
+    setShowBackToHomeDialog(false);
+  }
+
+  function onlineEventHandler () {
+    handleConnectionChange();
+  }
 
   function displaySignIn () {
     initialAuthTab.current = 'signIn';
