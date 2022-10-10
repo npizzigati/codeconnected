@@ -313,41 +313,6 @@ func getCodeSessions(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	sendJsonResponse(w, response)
 }
 
-func saveCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	type codeSessionModel struct {
-		CodeSessionID int
-		Content       string
-	}
-	var csm codeSessionModel
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		logger.Println("err reading json: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
-		return
-	}
-	err = json.Unmarshal(body, &csm)
-	if err != nil {
-		logger.Println("err while trying to unmarshal: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
-		return
-	}
-
-	// Do not save sessions with excessively long content
-	if len(csm.Content) > 64000 {
-		logger.Println("Session too long to save")
-		sendJsonResponse(w, map[string]string{"status": "failure"})
-	}
-
-	query := "UPDATE coding_sessions SET editor_contents = $1 WHERE id = $2"
-	if _, err := pool.Exec(context.Background(), query, csm.Content, csm.CodeSessionID); err != nil {
-		logger.Println("unable to update content in coding_sessions: ", err)
-		sendJsonResponse(w, map[string]string{"status": "failure"})
-		return
-	}
-
-	sendJsonResponse(w, map[string]string{"status": "success"})
-}
-
 func createRoom(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	type roomModel struct {
 		Language       string `json="language"`
@@ -2089,6 +2054,13 @@ func updateCodeSession(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		return
 	}
 
+	// Do not save sessions with excessively long content
+	if len(pm.Content) > 64000 {
+		sendJsonResponse(w, map[string]string{"status": "failure"})
+		logger.Printf("Session %d is excessively long. Will not save.", pm.CodeSessionID)
+		return
+	}
+
 	logger.Printf("Going to update code session (timeOnly: %v)\n", pm.TimeOnly)
 
 	if err = runSessionUpdateQuery(pm.CodeSessionID, pm.Language, pm.Content, pm.TimeOnly); err != nil {
@@ -2316,7 +2288,6 @@ func main() {
 	router.POST("/api/forgot-password", forgotPassword)
 	router.POST("/api/reset-password", resetPassword)
 	router.POST("/api/client-clear-term", clientClearTerm)
-	router.POST("/api/save-code-session", saveCodeSession)
 	router.POST("/api/update-code-session", updateCodeSession)
 	router.GET("/api/get-code-sessions", getCodeSessions)
 	router.POST("/api/get-code-session-id", getCodeSessionID)
