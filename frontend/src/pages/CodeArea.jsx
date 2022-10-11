@@ -111,7 +111,7 @@ function CodeArea () {
       {
         number: 1,
         icon: { path: './images/run.png', alt: 'Login' },
-        text: 'Yes. Take me back to the home page.',
+        text: 'Yes, take me back to the home page.',
         callback: () => {
           // Don't use React's navigate here because the user
           // won't be removed from room participants
@@ -121,7 +121,7 @@ function CodeArea () {
       {
         number: 2,
         icon: { path: './images/stop.png', alt: 'Time-limited' },
-        text: 'No. I want to stay here.',
+        text: 'No, I want to stay here.',
         callback: abortBackToHome
       }
     ],
