@@ -606,6 +606,7 @@ body.is-resizing {
     font-size: 1em;
     text-align: center;
     text-decoration: underline;
+    text-decoration-skip-ink: none;
     text-decoration-color: #78dbff;
     text-decoration-thickness: 1.5px;
 }
