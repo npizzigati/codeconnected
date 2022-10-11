@@ -1,1 +1,1 @@
-(./images/name_dark)
+![name](./images/name_dark)
