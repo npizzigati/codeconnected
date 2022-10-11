@@ -825,7 +825,13 @@ func startUpRunner(lang, roomID string, rows int, cols int) error {
 	timer := time.NewTimer(runnerStartupTimeout)
 	returnChan := make(chan error)
 	go func() {
-		room := rooms[roomID]
+		var room *room
+		var ok bool
+		if room, ok = rooms[roomID]; !ok {
+			myErr := fmt.Sprintf("room %s does not exist", roomID)
+			returnChan <- errors.New(myErr)
+			return
+		}
 		cn := room.container
 		ctx := context.Background()
 		cmd := []string{"bash"}
