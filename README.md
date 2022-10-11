@@ -1,1 +1,1 @@
-![name](./images/name_dark)
+![name](./frontend/public/images/name_dark)
