@@ -1515,11 +1515,8 @@ function CodeArea () {
       } else if (ev.data === 'TIMEOUT' || ev.data === 'CONTAINERERROR') {
         running.current = false;
         runButtonDone();
-        showPopup('Something went wrong');
-      } else if (ev.data === 'RESTARTINGRUNNER') {
-        setRunnerReady(false);
-      } else if (ev.data === 'RUNNERRESTARTED') {
-        setRunnerReady(true);
+        setShowRoomClosedDialog(true);
+        setShowSpinner(false);
       } else if (ev.data === 'WSPONG') {
         clearTimeout(wsPongReceiveTimeout.current);
       } else if (ev.data === 'RUNDONE' || ev.data === 'CANCELRUN') {
