@@ -4,8 +4,8 @@
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "esbuild --bundle ./src/index.jsx --sourcemap --outfile=./public/dist/index.js",
-    "start": "esbuild --bundle ./src/index.jsx --sourcemap --outfile=./public/dist/index.js; node app.js",
+    "build": "esbuild --minify --bundle ./src/index.jsx --outfile=./public/dist/index.js",
+    "start": "esbuild --minify --bundle ./src/index.jsx --outfile=./public/dist/index.js; node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
