@@ -852,11 +852,11 @@ func startUpRunner(lang, roomID string, rows int, cols int) error {
 			returnChan <- err
 			return
 		}
-		// Sql container needs a pause to startup postgres
-		// This will give openLanguageConnection a better chance of
-		// correctly opening psql on the first try
+		// Container needs a pause to startup postgres. This will
+		// give openLanguageConnection a better chance of correctly
+		// opening psql on the first try
 		if lang == "postgres" {
-			time.Sleep(5 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 		if err := openLanguageConnection(lang, roomID); err != nil {
 			returnChan <- err
@@ -944,7 +944,7 @@ func openLanguageConnection(lang, roomID string) error {
 	maxTries := 3
 	tries := 1
 	// Wait time for each try
-	waitTime := 4000 * time.Millisecond
+	waitTime := 3500 * time.Millisecond
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func() {
 		close(success)
