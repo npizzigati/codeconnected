@@ -612,7 +612,7 @@ func openWs(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			ws.Write(context.Background(), websocket.MessageText, []byte("WSPONG"))
 		} else {
 			if err := sendToContainer(message, roomID); err != nil {
-				restartRunner(roomID)
+				writeToWebsockets([]byte("CONTAINERERROR"), roomID)
 			}
 		}
 	}
@@ -735,7 +735,6 @@ func startRunnerReader(roomID string) {
 			// Try to reopen language connection
 			if err := openLanguageConnection(room.lang, roomID); err != nil {
 				writeToWebsockets([]byte("CONTAINERERROR"), roomID)
-				restartRunner(roomID)
 			}
 		}
 	}()
@@ -755,9 +754,7 @@ func writeToWebsockets(text []byte, roomID string) {
 			textString != "RUNDONE" &&
 			textString != "CANCELRUN" &&
 			textString != "TIMEOUT" &&
-			textString != "CONTAINERERROR" &&
-			textString != "RESTARTINGRUNNER" &&
-			textString != "RUNNERRESTARTED" {
+			textString != "CONTAINERERROR" {
 			room.termHist = append(room.termHist, text...)
 		}
 	}
@@ -923,7 +920,6 @@ func switchLanguage(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	err := openLanguageConnection(lang, roomID)
 	if err != nil {
 		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
-		restartRunner(roomID)
 	}
 	// TODO: Return a failure status if we fail to switch rooms
 	// within a certain time limit
@@ -1277,12 +1273,10 @@ func abortRun(roomID string) {
 	// Send ctrl-c interrupt
 	if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("\x03")) }, 2*time.Second, false); err != nil {
 		writeToWebsockets([]byte("TIMEOUT"), roomID)
-		restartRunner(roomID)
 		return
 	}
 	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
 		writeToWebsockets([]byte("TIMEOUT"), roomID)
-		restartRunner(roomID)
 		return
 	}
 	writeToWebsockets([]byte("CANCELRUN"), roomID)
@@ -1307,7 +1301,6 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		// reset repl
 		if err := room.awaitSideEffect("promptReady", func() { cn.runner.Write([]byte("exec $0\n")) }, 3*time.Second, false); err != nil {
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
-			restartRunner(roomID)
 			return errors.New("Container Timeout")
 		}
 		// The following cmd depends on run_codeconnected_code method in ~/.pryrc
@@ -1317,13 +1310,11 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 		}, 3*time.Second, true)
 		if err != nil {
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
-			restartRunner(roomID)
 			return errors.New("Container Timeout")
 		}
 	case "postgres":
 		if err := room.awaitSideEffect("newline1", func() { cn.runner.Write([]byte("\\i code.sql\n")) }, 2*time.Second, true); err != nil {
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
-			restartRunner(roomID)
 			return errors.New("Container Timeout")
 		}
 	case "node":
@@ -1342,7 +1333,6 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 			func() { cn.runner.Write([]byte(".runUserCode code.js\n")) }, 2*time.Second, true)
 		if err != nil {
 			writeToWebsockets([]byte("TIMEOUT"), roomID)
-			restartRunner(roomID)
 			return errors.New("Container Timeout")
 		}
 	}
@@ -1365,7 +1355,6 @@ func runCode(roomID string, lang string, linesOfCode int, promptLineEmpty bool) 
 
 	if err := room.awaitSideEffect("promptReady", func() { deleteReplHistory(roomID) }, 2*time.Second, true); err != nil {
 		writeToWebsockets([]byte("TIMEOUT"), roomID)
-		restartRunner(roomID)
 		return errors.New("Container Timeout")
 	}
 	writeToWebsockets([]byte("RUNDONE"), roomID)
@@ -1506,28 +1495,6 @@ func closeRoom(roomID string) {
 		updateRoomAccessTime(room.codeSessionID)
 	}
 	abortContainer(container)
-}
-
-func restartRunner(roomID string) {
-	var room *room
-	var ok bool
-	// Do nothing if room does not exist
-	if room, ok = rooms[roomID]; !ok {
-		return
-	}
-	// Chose abort chan to signal to runCode to abort run and send
-	// http response (if we were running code when runner restarted)
-	close(room.abortRunChan)
-	// Immediately reassign a new chan for the next use
-	room.abortRunChan = make(chan struct{})
-
-	abortContainer(room.container)
-	writeToWebsockets([]byte("RESTARTINGRUNNER"), roomID)
-	if err := startUpRunner(room.lang, roomID, room.termRows, room.termCols); err != nil {
-		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
-		return
-	}
-	writeToWebsockets([]byte("RUNNERRESTARTED"), roomID)
 }
 
 func abortContainer(container *containerDetails) {
