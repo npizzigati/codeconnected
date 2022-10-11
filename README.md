@@ -1,1 +1,1 @@
-![name](./frontend/public/images/name_dark)
+![codeconnected](./frontend/public/images/name_light.png)
