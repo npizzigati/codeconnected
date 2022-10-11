@@ -1,1 +1,1 @@
-(./images/name_dark")
+(./images/name_dark)
