@@ -630,7 +630,6 @@ func startRunnerReader(roomID string) {
 		return
 	}
 	cn.runnerReaderActive = true
-	cn.runnerReaderRestart = true
 	// Wait time before checking whether prompt is ready, in ms
 	promptWait := 200
 	fakeTermBuffer := []byte{}
@@ -777,7 +776,6 @@ func sendToContainer(message []byte, roomID string) error {
 	cn := room.container
 	if _, err := cn.runner.Write(message); err != nil {
 		myErr := fmt.Sprintf("Runner write error: %s", err)
-		writeToWebsockets([]byte("CONTAINERERROR"), roomID)
 		return errors.New(myErr)
 	}
 	return nil
@@ -841,24 +839,28 @@ func startUpRunner(lang, roomID string, rows int, cols int) error {
 		resp, err := createContainer(ctx, cmd)
 		if err != nil {
 			returnChan <- err
+			return
 		}
 		if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 			returnChan <- err
+			return
 		}
 
 		cn.ID = resp.ID
 
 		if err := resizeTTY(cn, cols, rows); err != nil {
 			returnChan <- err
+			return
 		}
 		// Sql container needs a pause to startup postgres
 		// This will give openLanguageConnection a better chance of
 		// correctly opening psql on the first try
 		if lang == "postgres" {
-			time.Sleep(3 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 		if err := openLanguageConnection(lang, roomID); err != nil {
 			returnChan <- err
+			return
 		}
 		returnChan <- nil
 	}()
@@ -939,9 +941,9 @@ func openLanguageConnection(lang, roomID string) error {
 	}
 	r.echo = false
 	// Number of attempts to make
-	maxTries := 5
-	tries := 0
-	// Wait time between tries
+	maxTries := 3
+	tries := 1
+	// Wait time for each try
 	waitTime := 4000 * time.Millisecond
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func() {
@@ -973,6 +975,9 @@ loop:
 		}
 		select {
 		case <-success:
+			// Turn reader restart on now since we know language
+			// connection has been correctly established
+			r.container.runnerReaderRestart = true
 			r.echo = true
 			resetTerminal(roomID)
 			displayInitialPrompt(roomID, true, "1")
@@ -1043,6 +1048,10 @@ func attemptLangConn(lang, roomID string) error {
 	cn.execID = resp.ID
 	cn.runner = cn.connection.Conn
 	cn.bufReader = bufio.NewReader(cn.connection.Reader)
+	// Set reader restart to false to prevent reader from
+	// automatically trying to open the language connection if it
+	// has not been established correctly
+	cn.runnerReaderRestart = false
 	startRunnerReader(roomID)
 	return nil
 }
