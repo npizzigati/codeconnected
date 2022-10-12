@@ -36,4 +36,4 @@ The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user cha
 
 ## Built-in authentication
 
-Sign-in and sign-up functionality is provided, leveraging Amazon SES for email verification. If needed, another email service can be easily swapped in.
+Sign-in and sign-up functionality is provided, leveraging Amazon SES for email verification. If needed, another email service can easily be swapped in.
