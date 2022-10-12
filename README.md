@@ -30,7 +30,7 @@ User coding sessions are saved as text files instead of as stopped Docker contai
 
 ## Real-time collaboration
 
-The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user changes in real time. Changes are relayed between the users through a built-in websocket server.
+The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user changes in real time. Changes are relayed between the users through a built-in WebSocket server.
 
 ## Built-in authentication
 
