@@ -14,9 +14,7 @@ Codeconnected is a collaborative web platform designed for:
 
 Largely written in Go, it is designed to be fast and to work on very modest hardware.
 
-# How it works
-
-## The puzzle pieces
+## Modular architecture
 
 Codeconnected consists of a front-end interface written in JS/React, a back-end main application server written in Go, and a separate code runner/REPL server where each REPL instance is a separate Docker container.
 
@@ -30,7 +28,7 @@ In addition to this security-minded separation of servers, each Docker container
 
 User coding sessions are saved as text files instead of as stopped Docker containers, making it possible for us to save as many sessions as we'd like with negligible resource impact.
 
-## Real-time Collaboration
+## Real-time collaboration
 
 The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user changes in real time. Changes are relayed between the users through a built-in websocket server.
 
