@@ -14,23 +14,33 @@ Codeconnected is a collaborative web platform designed for:
 
 Largely written in Go, it is designed to be fast and to work on very modest hardware.
 
+## Languages
+
+Users can code in Ruby, JavaScript (Node.js) and PostgreSQL.
+
+More languages are planned for the future.
+
+## Real-time collaboration
+
+The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user changes in real time. Changes are relayed between the users through a built-in WebSocket server.
+
+## Code is run in a REPL
+
+Code execution happens in a REPL, which means that users have access to top-level functions and classes after each code run. This can be very useful for debugging. [See it in action](https://youtu.be/VM8BqIv8mUw)
+
 ## Modular architecture
 
 Codeconnected consists of a front-end interface written in JS/React, a back-end main application server written in Go, and a separate code runner/REPL server where each REPL instance is a separate Docker container.
 
 The separation of the main server from the REPL server ensures the main application will always run smoothly regardless of the load on the REPL server caused by user-generated code. It also provides an extra layer of security, since in the unlikely event that malicious user code breaches a Docker container sandbox, this breach will stop at the hard limit of the physical server and have no access to the main application or user data.
 
-## Speaking of security
+## Another layer of security
 
 In addition to this security-minded separation of servers, each Docker container where user code runs is hardened using [gVisor](https://gvisor.dev), a resource-efficient isolation layer.
 
 ## Keeping server requirements modest
 
 User coding sessions are saved as text files instead of as stopped Docker containers, making it possible for us to save as many sessions as we'd like with negligible resource impact.
-
-## Real-time collaboration
-
-The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user changes in real time. Changes are relayed between the users through a built-in WebSocket server.
 
 ## Built-in authentication
 
