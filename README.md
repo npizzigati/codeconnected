@@ -26,7 +26,7 @@ The collaborative editor uses [Yjs](https://github.com/yjs/yjs) to sync user cha
 
 ## Code is run in a REPL
 
-Code execution happens in a REPL, which means that users have access to top-level functions and classes after each code run. This can be very useful for debugging. [See it in action](https://youtu.be/VM8BqIv8mUw)
+Code execution happens in a REPL, which means that users have access to top-level functions and classes after each code run. This can be very useful for debugging. [See it in action](https://youtu.be/VM8BqIv8mUw).
 
 ## Modular architecture
 
