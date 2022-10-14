@@ -2,3 +2,4 @@
 **/node_modules
 server/bin/
 frontend/public/dist/
+/server/.env--local-development
