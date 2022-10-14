@@ -236,7 +236,7 @@ function CodeSessions ({ authed }) {
       newName = 'Ruby';
       break;
     case 'node':
-      newName = 'Javascript';
+      newName = 'JavaScript';
       break;
     case 'postgres':
       newName = 'PostgreSQL';
