@@ -1542,16 +1542,18 @@ func startOrphanedContainerCloser() {
 	go func() {
 		for {
 			time.Sleep(checkInterval * time.Second)
-			closeOrphanedContainers()
+			if err := closeOrphanedContainers(); err != nil {
+				logger.Println(err)
+			}
 		}
 	}()
 }
 
-func closeOrphanedContainers() {
+func closeOrphanedContainers() error {
 	// Get list of containers
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
-		return
+		return err
 	}
 
 	var orphanIDs []string
@@ -1578,6 +1580,7 @@ func closeOrphanedContainers() {
 			logger.Println("error in stopping/removing container: ", err)
 		}
 	}
+	return nil
 }
 
 func indexOf(list []string, queryItem string) int {
