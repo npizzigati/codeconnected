@@ -3,6 +3,10 @@ services:
   server:
     volumes:
       - ./server/bin:/home/appuser
+    env_file:
+      - ./server/.env--local-development
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   frontend:
     volumes:
       - ./frontend/public:/usr/share/nginx/html
