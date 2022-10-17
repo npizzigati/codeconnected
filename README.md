@@ -35,7 +35,7 @@ The back-end runs on one server and user-submitted code runs on another. This:
 - ensures the main application will run smoothly regardless of the load on the REPL server caused by user-submitted code.
 - provides an extra layer of security, since user-submitted code runs in a physically separate environment.
 
-## Isolated containers
+## Hardened containers
 
 In addition to the security-minded separation of servers, each Docker container where user code runs is hardened using [gVisor](https://gvisor.dev), a resource-efficient isolation layer.
 
