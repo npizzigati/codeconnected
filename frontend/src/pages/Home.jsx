@@ -128,17 +128,16 @@ function Home () {
             </div>
           </CSSTransition>
           <header>
-              <div className='flex-pane'>
-                <div className='flex-pane flex-container'>
-                  <div className='media u-marg-left-1'>
-                    <div className='media__image-container'>
-                      <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
-                      </div>
-                    <div className='media__text'>
-                      <div className='site-name site-name--medium'>
-                        <span className='site-name--color1'>code</span>
-                        <span className='site-name--color2'>connected</span>
-                      </div>
+            <div className='flex-pane flex-container'>
+              <div className='flex-container'>
+                <div className='media u-marg-left-1'>
+                  <div className='media__image-container'>
+                    <img className='media__image media__image--tinier' src='./images/codeconnected.png' alt='Logo' />
+                    </div>
+                  <div className='media__text'>
+                    <div className='site-name site-name--medium'>
+                      <span className='site-name--color1'>code</span>
+                      <span className='site-name--color2'>connected</span>
                     </div>
                   </div>
                 </div>
