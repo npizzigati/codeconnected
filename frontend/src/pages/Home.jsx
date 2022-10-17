@@ -8,6 +8,7 @@ import UserQuickdash from './components/UserQuickdash.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
 import Auth from './components/Auth.jsx';
 import CodeSessions from './components/CodeSessions.jsx';
+import GitHubButton from './components/GitHubButton.jsx';
 
 import { requestRoom } from '../helpers/launchUtils.js';
 import { handlePointerDown, debounce, setupWindowResizeListener, changeCSSInnerHeight } from '../helpers/miscUtils.js';
