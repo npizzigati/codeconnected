@@ -42,11 +42,10 @@ button:focus {
 }
 
 h1 {
-    color: #12090f;
     font-family: 'Lato', sans-serif;
     font-weight: 400;
-    /* font-family: 'Share Tech Mono', monospace; */
     font-size: 1.5rem;
+    border-bottom: 3px solid #e4e5e9;
 }
 
 h2 {
@@ -283,8 +282,10 @@ body.is-resizing {
     flex: 2;
     display: flex;
     flex-direction: column;
-    background-color: #fffbff;
+    /* background-color: #fffbff; */
+    background-color: white;
     color: #2c1726;
+    padding: 1.5em 2em 0;
     border-radius: 0.2em;
 }
 
@@ -292,20 +293,11 @@ body.is-resizing {
     flex: 3;
 }
 
-
-.content-block-1 {
-    display: flex;
-    flex: 1;
-    color: #2c1726;
-    padding: 1.2em 0 0 2em;
-}
-
-.content-block-2 {
+.inner-block {
     display: flex;
     flex-direction: column;
     flex: 1;
-    color: #2c1726;
-    padding: 1em 0 0 2em;
+    padding: 1em;
 }
 
 .content-block-image {
@@ -434,8 +426,7 @@ body.is-resizing {
 }
 
 .table-wrapper {
-    max-width: 50em;
-    margin: 0 auto;
+    max-width: 30em;
 }
 
 .table-row {
@@ -451,6 +442,7 @@ body.is-resizing {
     line-height: 0.5em;
     white-space: nowrap;
     text-decoration: underline;
+    text-decoration-thickness: 3px;
 }
 
 .table-row--items {
@@ -1801,6 +1793,10 @@ code-area *::-webkit-scrollbar-thumb:hover {
 
 .u-pointer {
     cursor: pointer;
+}
+
+.u-width-nano {
+    width: 5%
 }
 
 .u-width-1 {

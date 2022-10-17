@@ -155,80 +155,74 @@ function Home () {
           <main ref={mainDomRef}>
             <div className='side-pane' />
             <div className='center-pane'>
-              <div className='content-block-1'>
-                <div className='flex-pane flex-pane--medium flex-container flex-container--col'>
-                  <h1>Start a new coding&nbsp;session&nbsp;&nbsp;&nbsp;</h1>
-                  <div>
-                    <div className='aligned-block u-pad-top-2 u-pad-bot-4 u-pad-left'>
-                      <div
-                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
-                        onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
-                      >
-                        <div className='aligned-block__cell u-center-text'>
-                          <img
-                            className='aligned-block__image aligned-block__image--tiny'
-                            src='./images/ruby.png'
-                            alt='Ruby icon'
-                          />
-                        </div>
-                        <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='thin-font'>Ruby</span>
-                        </div>
+              <div className='inner-block'>
+                <h1>Start a new coding session</h1>
+                <div>
+                  <div className='aligned-block u-pad-top-2 u-pad-bot-4 u-pad-left'>
+                    <div
+                      className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
+                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'ruby')}
+                    >
+                      <div className='aligned-block__cell u-center-text'>
+                        <img
+                          className='aligned-block__image aligned-block__image--tiny'
+                          src='./images/ruby.png'
+                          alt='Ruby icon'
+                        />
                       </div>
-                      <div
-                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
-                        onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
-                      >
-                        <div className='aligned-block__cell u-center-text'>
-                          <img
-                            className='aligned-block__image aligned-block__image--tiny'
-                            src='./images/js.png'
-                            alt='JS icon'
-                          />
-                        </div>
-                        <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='thin-font'>JavaScript</span>
-                        </div>
+                      <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
+                        <span className='thin-font'>Ruby</span>
                       </div>
-                      <div
-                        className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
-                        onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
-                      >
-                        <div className='aligned-block__cell u-center-text'>
-                          <img
-                            className='aligned-block__image aligned-block__image--tiny'
-                            src='./images/postgres.png'
-                            alt='Postgres icon'
-                          />
-                        </div>
-                        <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
-                          <span className='thin-font'>PostgreSQL</span>
-                        </div>
+                    </div>
+                    <div
+                      className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
+                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'node')}
+                    >
+                      <div className='aligned-block__cell u-center-text'>
+                        <img
+                          className='aligned-block__image aligned-block__image--tiny'
+                          src='./images/js.png'
+                          alt='JS icon'
+                        />
+                      </div>
+                      <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
+                        <span className='thin-font'>JavaScript</span>
+                      </div>
+                    </div>
+                    <div
+                      className='aligned-block__row aligned-block__row--wide-spaced aligned-block__row--clickable aligned-block__row--changeable'
+                      onPointerDown={(ev) => handlePointerDown(ev, preLaunch, 'postgres')}
+                    >
+                      <div className='aligned-block__cell u-center-text'>
+                        <img
+                          className='aligned-block__image aligned-block__image--tiny'
+                          src='./images/postgres.png'
+                          alt='Postgres icon'
+                        />
+                      </div>
+                      <div className='aligned-block__cell u-pad-left-2 u-pad-top-1'>
+                        <span className='thin-font'>PostgreSQL</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className='content-block-2'>
-                <div>
-                  <div className='content-block-header'>
-                    <h1>Resume a&nbsp;session&nbsp;&nbsp;&nbsp;</h1>
-                  </div>
+              <div className='inner-block'>
+                <div className='content-block-header'>
+                  <h1>Resume a session</h1>
                 </div>
-                <div className='flex-pane flex-container u-marg-bot-3'>
-                  {auth
-                    ? <div className='code-sessions-container'>
-                        <CodeSessions authed={auth} />
-                      </div>
-                    : <div className='u-pad-top-5'>
-                        <p className='message message--small'>
-                          <span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
-                          <span> / </span>
-                          <span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>sign up</span>
-                          <span> to access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        </p>
-                      </div>}
-                </div>
+                {auth
+                  ? <div className='code-sessions-container'>
+                      <CodeSessions authed={auth} />
+                    </div>
+                  : <div className='u-pad-top-5'>
+                      <p className='message message--small'>
+                        <span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
+                        <span> / </span>
+                        <span className='u-clickable u-underlined' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>sign up</span>
+                        <span> to access previous&nbsp;sessions&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                      </p>
+                    </div>}
               </div>
               <div className='flex-pane flex-container flex-container--main-centered'>
                 <div><img className='content-block-image' src='./images/monster.png' alt='Monster' /></div>

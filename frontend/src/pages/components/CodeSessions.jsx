@@ -34,7 +34,7 @@ function CodeSessions ({ authed }) {
           ? <div className='table-wrapper'>
               <div className='table'>
                 <div className='table-row table-row--heading'>
-                  <h4 className='table-cell table-cell--heading u-width-2' />
+                  <h4 className='table-cell table-cell--heading u-width-nano' />
                   <h4 className='table-cell table-cell--heading u-width-2' />
                   <h4 className='table-cell table-cell--heading u-width-1'>LOC</h4>
                   <h4 className='table-cell table-cell--heading'>Accessed</h4>
