@@ -142,15 +142,17 @@ function Home () {
                   </div>
                 </div>
               </div>
-              <div className='flex-pane flex-container flex-container--main-end u-pad-top-1 u-pad-right-2'>
-                {auth
-                ? <div><UserQuickdash setAuthed={setAuth} /></div>
-                : <div className='header-text u-pad-top-1'>
-                    <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
-                    <span> / </span>
-                    <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>Sign up</span>
-                  </div>}
-              </div>
+              <GitHubButton link='https://github.com/npizzigati/codeconnected'/>
+            </div>
+            <div className='flex-pane flex-container flex-container--main-end u-pad-top-1 u-pad-right-2'>
+              {auth
+              ? <div><UserQuickdash setAuthed={setAuth} /></div>
+              : <div className='header-text u-pad-top-1'>
+                  <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignIn)}>Sign in</span>
+                  <span> / </span>
+                  <span className='sign-in-link' onPointerDown={(ev) => handlePointerDown(ev, displaySignUp)}>Sign up</span>
+                </div>}
+            </div>
           </header>
           <main ref={mainDomRef}>
             <div className='side-pane' />
