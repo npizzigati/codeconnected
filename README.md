@@ -30,18 +30,23 @@ Code execution happens in a REPL, which means that users have access to top-leve
 
 ## Modular architecture
 
-Codeconnected consists of a front-end interface written in JS/React, a back-end main application server written in Go, and a separate code runner/REPL server where each REPL instance is a separate Docker container.
+The back-end runs on one server and user-submitted code runs on another. This:
 
-The separation of the main server from the REPL server ensures the main application will always run smoothly regardless of the load on the REPL server caused by user-generated code. It also provides an extra layer of security, since in the unlikely event that malicious user code breaches a Docker container sandbox, this breach will stop at the hard limit of the physical server and have no access to the main application or user data.
+- ensures the main application will run smoothly regardless of the load on the REPL server caused by user-submitted code.
+- provides an extra layer of security, since user-submitted code runs in a physically separate environment.
 
-## Another layer of security
+## Isolated containers
 
-In addition to this security-minded separation of servers, each Docker container where user code runs is hardened using [gVisor](https://gvisor.dev), a resource-efficient isolation layer.
+In addition to the security-minded separation of servers, each Docker container where user code runs is hardened using [gVisor](https://gvisor.dev), a resource-efficient isolation layer.
 
-## Keeping server requirements modest
+## Modest server requirements
 
-User coding sessions are saved as text files instead of as stopped Docker containers, making it possible for us to save as many sessions as we'd like with negligible resource impact.
+- Fast Go back-end.
+
+- One Docker container is created per session, allowing users to quickly switch between languages in the coding environment without created the overhead of multiple containers.
+
+- User coding sessions are saved as text files instead of stopped Docker containers, saving storage space.
 
 ## Built-in authentication
 
-Sign-in and sign-up functionality is provided, leveraging Amazon SES for email verification. If needed, another email service can easily be swapped in.
+Sign-in and sign-up functionality is provided, using Amazon SES for email verification. If needed, another email service can easily be swapped in.
