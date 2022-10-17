@@ -942,9 +942,9 @@ func openLanguageConnection(lang, roomID string) error {
 	r.echo = false
 	// Number of attempts to make
 	maxTries := 3
-	tries := 1
-	// Wait time for each try
-	waitTime := 3500 * time.Millisecond
+	try := 1
+	// Base time for each try
+	baseWaitTime := 3 * time.Second
 	success := make(chan struct{})
 	r.setEventListener("promptReady", func() {
 		close(success)
@@ -982,9 +982,9 @@ loop:
 			resetTerminal(roomID)
 			displayInitialPrompt(roomID, true, "1")
 			return nil
-		case <-time.After(waitTime):
-			tries++
-			if tries > maxTries {
+		case <-time.After(baseWaitTime + (time.Duration(try) * time.Second)):
+			try++
+			if try > maxTries {
 				break loop
 			}
 		}
