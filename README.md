@@ -43,7 +43,7 @@ In addition to the security-minded separation of servers, each Docker container 
 
 - Fast Go back-end.
 
-- One Docker container is created per session, allowing users to quickly switch between languages in the coding environment without created the overhead of multiple containers.
+- One Docker container is created per session, allowing users to quickly switch between languages in the coding environment without creating the overhead of multiple containers.
 
 - User coding sessions are saved as text files instead of stopped Docker containers, saving storage space.
 
