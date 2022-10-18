@@ -34,7 +34,7 @@ The back-end runs on one server and user-submitted code runs on another. This:
 
 - ensures the main application will run smoothly regardless of the load on the REPL server caused by user-submitted code.
 - provides an extra layer of security, since user-submitted code runs in a physically separate environment.
-- lets you scale up seamlessly to meet demand, simply by provisioning more resources to the REPL server, or by moving it to a better-specced home. A single environment variable tells the main application where it is.
+- lets you scale up seamlessly to meet demand, simply by provisioning more resources to the REPL server or moving it to a better-specced home. A single environment variable tells the main application where it is.
 
 ## Hardened containers
 
