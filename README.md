@@ -7,9 +7,7 @@ Try it out at [codeconnected.dev](https://codeconnected.dev).
 Codeconnected is a collaborative web platform designed for:
 
 - Coding schools and their students looking to practice coding problems online collaboratively.
-
 - Organizations seeking an online whiteboard interviewing tool they can customize.
-
 - Developers looking for a quick online sandbox to try out ideas.
 
 Largely written in Go, it is designed to be fast and to work on very modest hardware.
