@@ -18,6 +18,7 @@ import 'codemirror/mode/ruby/ruby.js';
 import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/mode/sql/sql.js';
 import 'codemirror/keymap/sublime.js';
+import 'codemirror/keymap/vim.js';
 
 import { Terminal } from 'xterm';
 
@@ -39,6 +40,7 @@ function CodeArea () {
   const fakeScrollMidpoint = 50000;
   const runButtonDomRef = useRef(null);
   const stopButtonDomRef = useRef(null);
+  const settingsDomRef = useRef(null);
   const authDomRef = useRef(null);
   const codeAreaDomRef = useRef(null);
   const cmContainerDomRef = useRef(null);
@@ -99,7 +101,9 @@ function CodeArea () {
   const [showBackToHomeDialog, setShowBackToHomeDialog] = useState(false);
   const [showRoomClosedDialog, setShowRoomClosedDialog] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [vimKeysSelected, setVimKeysSelected] = useState(false);
   const nowOnlineEvent = new Event('nowonline');
+  const defaultKeyMap = 'sublime';
   let setupDoneTimestamp;
 
   const backToHomeDialogConfig = {
@@ -194,6 +198,21 @@ function CodeArea () {
       await setupUser();
     })();
   }, [authed]);
+
+  useEffect(() => {
+    if (!setupDone.current) {
+      return;
+    }
+    let keyMap;
+    if (vimKeysSelected) {
+      keyMap = 'vim';
+      document.cookie = 'keymap=vim; max-age=60*60*24*365';
+    } else {
+      keyMap = defaultKeyMap;
+      document.cookie = 'keymap=vim; max-age=0';
+    }
+    cmRef.current.setOption('keyMap', keyMap);
+  }, [vimKeysSelected]);
 
   return (
     <>
@@ -307,6 +326,16 @@ function CodeArea () {
                   updateCodeSession({ timeOnly: false });
                 }}
                 config={{ staticTitle: true }}
+              />
+              <Select
+                ref={settingsDomRef}
+                className='editor-settings'
+                enabled={selectButtonsEnabled}
+                options={[{ value: 'vimkeys', label: `${vimKeysSelected ? '\u2611' : '\u2610'} Vim keys` }]}
+                callback={(ev) => {
+                  setVimKeysSelected(!vimKeysSelected);
+                }}
+                config={{ staticTitle: true, titleImage: './images/settings.png' }}
               />
               {termEnabled && <div className='run-button' ref={runButtonDomRef} onClick={executeContent}>Run</div>}
               <div className='stop-button hidden' ref={stopButtonDomRef} onClick={stopRun}>Stop</div>
@@ -521,10 +550,12 @@ function CodeArea () {
       return;
     }
     const cmWidth = cmContainerDomRef.current.offsetWidth;
-    if (cmWidth < 270) {
+    if (cmWidth < 300) {
       editorTitleDomRef.current.classList.add('hidden');
+      settingsDomRef.current.classList.add('hidden');
     } else {
       editorTitleDomRef.current.classList.remove('hidden');
+      settingsDomRef.current.classList.remove('hidden');
     }
 
     const termWidth = termContainerDomRef.current.offsetWidth;
@@ -1050,6 +1081,19 @@ function CodeArea () {
   }
 
   function setupCodeMirror () {
+    let keyMap;
+    const keyMapCookieValue = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('keymap='))
+      ?.split('=')[1];
+    if (keyMapCookieValue === undefined) {
+      keyMap = defaultKeyMap;
+    } else {
+      keyMap = keyMapCookieValue;
+    }
+    if (keyMap === 'vim') {
+      setVimKeysSelected(true);
+    }
     const cm = CodeMirror.fromTextArea(codeAreaDomRef.current, {
       inputStyle: 'textarea',
       value: '',
@@ -1059,7 +1103,7 @@ function CodeArea () {
       indentUnit: 2,
       tabSize: 2,
       theme: 'tomorrow-night-bright',
-      keyMap: 'sublime',
+      keyMap: keyMap,
       scrollbarStyle: 'overlay',
     });
 

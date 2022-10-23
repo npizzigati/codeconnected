@@ -931,6 +931,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
     white-space: nowrap;
 }
 
+.editor-settings.hidden,
 .editor-title.hidden,
 .repl-title.hidden {
     display: none;
@@ -1041,8 +1042,15 @@ code-area *::-webkit-scrollbar-thumb:hover {
     padding-top: 0.3em;
 }
 
+.select__title-image {
+    height: 1.2em;
+    width: auto;
+    object-fit: scale-down;
+    filter: brightness(70%);
+}
+
 .select:hover {
-    cursor: default;
+    cursor: pointer;
 }
 
 .select-button {
@@ -1093,6 +1101,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
     font-weight: 400;
     color: #c5c5c5;
     padding: 5px 5px;
+    white-space: nowrap;
 }
 
 .select-dropdown__item:hover {
