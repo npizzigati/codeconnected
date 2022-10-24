@@ -6,7 +6,8 @@
   "scripts": {
     "build": "esbuild --minify --bundle ./src/index.jsx --outfile=./public/dist/index.js",
     "start": "esbuild --minify --bundle ./src/index.jsx --outfile=./public/dist/index.js; node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "author": "",
@@ -29,5 +30,6 @@
   },
   "devDependencies": {
     "esbuild": "^0.14.18"
+    "patch-package": "^6.4.7"
   }
 }

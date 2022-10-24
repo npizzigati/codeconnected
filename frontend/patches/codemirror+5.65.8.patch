@@ -1,0 +1,24 @@
+diff --git a/node_modules/codemirror/keymap/vim.js b/node_modules/codemirror/keymap/vim.js
+index 218385a..3166d33 100644
+--- a/node_modules/codemirror/keymap/vim.js
++++ b/node_modules/codemirror/keymap/vim.js
+@@ -189,6 +189,9 @@ function initVim$1(CodeMirror) {
+     //ignore C-w in normal mode
+     { keys: '<C-w>', type: 'idle', context: 'normal' },
+     // Actions
++    { keys: '<C-/>', type: 'action', action: 'toggleComment', context: 'insert' },
++    { keys: '<C-/>', type: 'action', action: 'toggleComment', context: 'normal' },
++    { keys: '<C-/>', type: 'action', action: 'toggleComment', context: 'visual' },
+     { keys: '<C-i>', type: 'action', action: 'jumpListWalk', actionArgs: { forward: true }},
+     { keys: '<C-o>', type: 'action', action: 'jumpListWalk', actionArgs: { forward: false }},
+     { keys: '<C-e>', type: 'action', action: 'scroll', actionArgs: { forward: true, linewise: true }},
+@@ -2920,6 +2923,9 @@ function initVim$1(CodeMirror) {
+         }
+         cm.setCursor(new Pos(cur.line, start + numberStr.length - 1));
+       },
++      toggleComment: function(cm) {
++        cm.toggleComment({ indent: true });
++      },
+       repeatLastEdit: function(cm, actionArgs, vim) {
+         var lastEditInputState = vim.lastEditInputState;
+         if (!lastEditInputState) { return; }
