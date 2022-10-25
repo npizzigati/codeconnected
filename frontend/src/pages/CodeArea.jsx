@@ -13,6 +13,10 @@ import { WebsocketProvider } from 'y-websocket';
 import CodeMirror from 'codemirror/lib/codemirror.js';
 import 'codemirror/addon/edit/closebrackets.js';
 import 'codemirror/addon/comment/comment.js';
+import 'codemirror/addon/hint/show-hint.js';
+import 'codemirror/addon/hint/javascript-hint.js';
+import 'codemirror/addon/hint/anyword-hint.js';
+import 'codemirror/addon/hint/sql-hint.js';
 import 'codemirror/addon/scroll/simplescrollbars.js';
 import 'codemirror/mode/ruby/ruby.js';
 import 'codemirror/mode/javascript/javascript.js';
@@ -1112,6 +1116,9 @@ function CodeArea () {
     // Use Ctrl-Enter to run code
     cm.setOption('extraKeys', {
       'Ctrl-Enter': executeContent,
+      'Ctrl-Space': function (cm) {
+        cm.showHint({ hint: CodeMirror.hint.anyword });
+      },
       Tab: betterTab
     });
 
