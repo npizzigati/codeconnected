@@ -931,7 +931,7 @@ code-area *::-webkit-scrollbar-thumb:hover {
     white-space: nowrap;
 }
 
-.editor-settings.hidden,
+.editor-options.hidden,
 .editor-title.hidden,
 .repl-title.hidden {
     display: none;
@@ -1030,6 +1030,14 @@ code-area *::-webkit-scrollbar-thumb:hover {
 
 .stop-button:active {
     color: #750000;
+}
+
+.options-dialog {
+    position: relative;
+}
+
+.options-dialog:hover {
+    cursor: pointer;
 }
 
 .select {

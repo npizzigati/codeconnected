@@ -27,6 +27,7 @@ import 'codemirror/keymap/vim.js';
 import { Terminal } from 'xterm';
 
 import Select from './components/Select.jsx';
+import OptionsDialog from './components/OptionsDialog.jsx';
 import UserQuickdash from './components/UserQuickdash.jsx';
 import Auth from './components/Auth.jsx';
 import PopupDialog from './components/PopupDialog.jsx';
@@ -44,7 +45,7 @@ function CodeArea () {
   const fakeScrollMidpoint = 50000;
   const runButtonDomRef = useRef(null);
   const stopButtonDomRef = useRef(null);
-  const settingsDomRef = useRef(null);
+  const optionsDialogDomRef = useRef(null);
   const authDomRef = useRef(null);
   const codeAreaDomRef = useRef(null);
   const cmContainerDomRef = useRef(null);
@@ -98,7 +99,7 @@ function CodeArea () {
   const [showCodeMirror, setShowCodeMirror] = useState(false);
   const [runnerReady, setRunnerReady] = useState(false);
   const [showSpinner, setShowSpinner] = useState(true);
-  const [selectButtonsEnabled, setSelectButtonsEnabled] = useState(true);
+  const [buttonsEnabled, setButtonsEnabled] = useState(true);
   const [termEnabled, setTermEnabled] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [timeLeftDisplay, setTimeLeftDisplay] = useState(null);
@@ -320,7 +321,7 @@ function CodeArea () {
             <div className='editor-title-row hidden' ref={editorTitleRowDomRef}>
               <div className='editor-title flex-pane' ref={editorTitleDomRef}>Code Editor</div>
               <Select
-                enabled={selectButtonsEnabled}
+                enabled={buttonsEnabled}
                 options={[{ value: 'ruby', label: 'Ruby' },
                           { value: 'node', label: 'JavaScript' },
                           { value: 'postgres', label: 'PostgreSQL' }]}
@@ -331,10 +332,10 @@ function CodeArea () {
                 }}
                 config={{ staticTitle: true }}
               />
-              <Select
-                ref={settingsDomRef}
-                className='editor-settings'
-                enabled={selectButtonsEnabled}
+              <OptionsDialog
+                ref={optionsDialogDomRef}
+                className='editor-options'
+                enabled={buttonsEnabled}
                 options={[{ value: 'vimkeys', label: `${vimKeysSelected ? '\u2611' : '\u2610'} Vim keys` }]}
                 callback={(ev) => {
                   setVimKeysSelected(!vimKeysSelected);
@@ -371,7 +372,7 @@ function CodeArea () {
             <div className='repl-title-row hidden' ref={replTitleRowDomRef}>
               <div className='repl-title' ref={replTitleDomRef}>{replTitle}</div>
               <Select
-                enabled={selectButtonsEnabled}
+                enabled={buttonsEnabled}
                 options={[{ value: 'clear', label: 'Clear' },
                           { value: 'reset', label: 'Reset' }]}
                 title='Actions'
@@ -533,7 +534,7 @@ function CodeArea () {
       if (updatedSecondsToExpiry <= 0) {
         clearInterval(interval);
         setTermEnabled(false);
-        setSelectButtonsEnabled(false);
+        setButtonsEnabled(false);
         setTimeLeftDisplay('Session expired');
       }
     }, 250);
@@ -556,10 +557,10 @@ function CodeArea () {
     const cmWidth = cmContainerDomRef.current.offsetWidth;
     if (cmWidth < 300) {
       editorTitleDomRef.current.classList.add('hidden');
-      settingsDomRef.current.classList.add('hidden');
+      optionsDialogDomRef.current.classList.add('hidden');
     } else {
       editorTitleDomRef.current.classList.remove('hidden');
-      settingsDomRef.current.classList.remove('hidden');
+      optionsDialogDomRef.current.classList.remove('hidden');
     }
 
     const termWidth = termContainerDomRef.current.offsetWidth;
